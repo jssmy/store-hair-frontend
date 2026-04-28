@@ -1,0 +1,19 @@
+/* ── Close button utility ─────────────────────────────────── */
+
+.close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-surface-alt, #f4f4f5);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background 150ms ease;
+
+    &:hover {
+        background: var(--color-border);
+    }
+}

@@ -1,0 +1,213 @@
+<div class="det-drawer" role="dialog" aria-modal="true" [attr.aria-label]="'Créditos de ' + customerName"
+    (click)="$event.stopPropagation()">
+
+    <div class="det-drawer__handle" aria-hidden="true"></div>
+
+    <!-- ── Header ──────────────────────────────────────────── -->
+    <div class="det-drawer__header">
+        @if (currentStep() === 'detail' && credits().length > 1) {
+        <button class="det-back-btn" type="button" aria-label="Volver" (click)="goBack()">
+            <i stp-icon name="arrow-left" style="font-size: 1.125rem"></i>
+        </button>
+        }
+        <div class="det-drawer__customer">
+            <div class="det-avatar det-avatar--{{ dominantStatus() }}" aria-hidden="true">
+                {{ customerInitials() }}
+            </div>
+            <div class="det-customer-info">
+                <strong class="det-customer-name">{{ customerName }}</strong>
+                <span class="det-customer-meta">
+                    <i stp-icon name="phone" style="font-size: 0.75rem"></i>
+                    {{ customerPhone }}
+                    @if (customerDni) { · DNI {{ customerDni }} }
+                </span>
+                <div class="det-customer-summary">
+                    <span class="det-summary-pill det-summary-pill--count">
+                        {{ credits().length }} crédito{{ credits().length !== 1 ? 's' : '' }}
+                    </span>
+                    @if (totalAlertCount() > 0) {
+                    <span class="det-summary-pill det-summary-pill--alert">
+                        <i stp-icon name="warning" style="font-size: 0.75rem"></i>
+                        {{ totalAlertCount() }} en riesgo
+                    </span>
+                    }
+                </div>
+            </div>
+        </div>
+        <button class="det-close" type="button" aria-label="Cerrar" (click)="close()">
+            <i stp-icon name="x" style="font-size: 1.25rem"></i>
+        </button>
+    </div>
+
+    <!-- ── Alert banner ────────────────────────────────────── -->
+    @if (totalAlertCount() > 0) {
+    <div class="det-alert-wrap">
+        <stp-alert variant="warning" title="Crédito(s) en riesgo"
+            message="Última cuota pendiente con menos del 50% del total pagado." [dismissible]="false">
+        </stp-alert>
+    </div>
+    }
+
+
+    <!-- ── Body: step switch ───────────────────────────────── -->
+    <div class="det-drawer__body">
+        @switch (currentStep()) {
+
+        @case ('list') {
+        <stp-credit-list-step [credits]="credits()" (selected)="selectCredit($event)">
+        </stp-credit-list-step>
+        }
+
+        @case ('detail') {
+        @if (selectedCredit(); as sc) {
+        <stp-credit-detail-step [credit]="sc" [stats]="selectedStats()!" [installmentRows]="selectedInstallmentRows()"
+            [paymentSuccessId]="paymentSuccessId()" (startPayment)="startPayment($event)">
+        </stp-credit-detail-step>
+        }
+        }
+
+        @case ('confirm') {
+        @if (confirmingCredit(); as cc) {
+        @let cs = stats(cc);
+
+            <!-- Sub-paso 1: ingresar monto y forma de pago -->
+            @if (pendingPaymentAmount() === null) {
+            <div class="det-confirm-sheet">
+                <div class="det-confirm-sheet__icon">
+                    <i stp-icon name="hand-coins" style="font-size: 2rem"></i>
+                </div>
+                <h3 class="det-confirm-sheet__title">
+                    Cuota {{ cc.paidInstallments + 1 }} de {{ cc.installments }}
+                </h3>
+                <p class="det-confirm-sheet__text">
+                    Crédito #{{ creditId(cc) }} · cuota estándar
+                    <strong>S/ {{ cs.installmentAmount | number:'1.2-2' }}</strong>
+                </p>
+
+                <div class="det-pay-inputs">
+                    <stp-input label="Efectivo (S/)" type="number"
+                        [value]="paymentEfectivoStr()"
+                        (valueChange)="paymentEfectivoStr.set($event)">
+                    </stp-input>
+                    <stp-input label="Yape (S/)" type="number"
+                        [value]="paymentDigitalStr()"
+                        (valueChange)="paymentDigitalStr.set($event)">
+                    </stp-input>
+                    @if (paymentExceedsLimit()) {
+                    <p class="det-amount-hint det-amount-hint--error">
+                        <i stp-icon name="warning-circle" style="font-size: 0.75rem"></i>
+                        El total (S/ {{ totalPaymentAmount() | number:'1.2-2' }}) supera la cuota de
+                        S/ {{ cs.installmentAmount | number:'1.2-2' }}
+                    </p>
+                    } @else if (totalPaymentAmount() > 0 && totalPaymentAmount() < cs.installmentAmount - 0.001) {
+                    <p class="det-amount-hint det-amount-hint--partial">
+                        <i stp-icon name="info" style="font-size: 0.75rem"></i>
+                        Pago parcial · cuota no se marcará como completa
+                    </p>
+                    }
+                </div>
+
+                <div class="det-confirm-sheet__actions">
+                    <stp-button variant="surface" btnStyle="outlined" size="md" (click)="cancelPayment()">
+                        <i stp-icon name="arrow-left" style="font-size: 0.875rem"></i>
+                        Volver
+                    </stp-button>
+                    <stp-button variant="success" btnStyle="solid" size="md" [disabled]="!isPaymentSplitValid()"
+                        (click)="proceedToConfirm()">
+                        Continuar
+                        <i stp-icon name="arrow-right" style="font-size: 0.875rem"></i>
+                    </stp-button>
+                </div>
+            </div>
+
+            <!-- Sub-paso 2: confirmar -->
+            } @else {
+            <div class="det-confirm-sheet">
+                <div class="det-confirm-sheet__icon">
+                    <i stp-icon name="check-circle" style="font-size: 2rem"></i>
+                </div>
+                <h3 class="det-confirm-sheet__title">
+                    ¿Confirmar pago de cuota {{ cc.paidInstallments + 1 }}?
+                </h3>
+                <p class="det-confirm-sheet__text">
+                    Crédito #{{ creditId(cc) }} ·
+                    <strong>S/ {{ pendingPaymentAmount()! | number:'1.2-2' }}</strong>
+                </p>
+
+                <!-- Desglose de forma de pago -->
+                <div class="det-pay-breakdown">
+                    @if (paymentEfectivoAmount() > 0) {
+                    <div class="det-pay-breakdown__row">
+                        <span><i stp-icon name="money" style="font-size: 0.875rem"></i> Efectivo</span>
+                        <strong>S/ {{ paymentEfectivoAmount() | number:'1.2-2' }}</strong>
+                    </div>
+                    }
+                    @if (paymentDigitalAmount() > 0) {
+                    <div class="det-pay-breakdown__row">
+                        <span><i stp-icon name="device-mobile" style="font-size: 0.875rem"></i> Yape</span>
+                        <strong>S/ {{ paymentDigitalAmount() | number:'1.2-2' }}</strong>
+                    </div>
+                    }
+                </div>
+
+                @if (cs.nextPaymentDate) {
+                <p class="det-confirm-sheet__date">
+                    <i stp-icon name="calendar" style="font-size: 0.875rem"></i>
+                    Próxima fecha de pago: {{ formatFullDate(cs.nextPaymentDate) }}
+                </p>
+                }
+                <div class="det-confirm-sheet__actions">
+                    <stp-button variant="surface" btnStyle="outlined" size="md" (click)="backToInput()">
+                        <i stp-icon name="arrow-left" style="font-size: 0.875rem"></i>
+                        Volver
+                    </stp-button>
+                    <stp-button variant="success" btnStyle="solid" size="md" (click)="confirmPayment()">
+                        <i stp-icon name="check" style="font-size: 1rem"></i>
+                        Confirmar pago
+                    </stp-button>
+                </div>
+            </div>
+            }
+
+        }
+        }
+
+        @case ('success') {
+        <div class="det-success-step" role="status">
+            <span class="icon-badge icon-badge--success icon-badge--xl">
+                <i stp-icon name="check-circle" class="icon--xl"></i>
+            </span>
+            <h3 class="det-success-step__title">¡Pago registrado!</h3>
+            <p class="det-success-step__desc">Se ha realizado la operación con éxito.</p>
+            <div class="det-success-step__meta">
+                <span class="det-success-step__meta-row">
+                    <i stp-icon name="receipt" style="font-size: 0.875rem"></i>
+                    Crédito #{{ successCreditId() }} · Cuota {{ successPaidInstallment() }}
+                </span>
+                @if (successEfectivo() > 0) {
+                <span class="det-success-step__meta-row">
+                    <i stp-icon name="money" style="font-size: 0.875rem"></i>
+                    Efectivo: S/ {{ successEfectivo() | number:'1.2-2' }}
+                </span>
+                }
+                @if (successDigital() > 0) {
+                <span class="det-success-step__meta-row">
+                    <i stp-icon name="device-mobile" style="font-size: 0.875rem"></i>
+                    Yape: S/ {{ successDigital() | number:'1.2-2' }}
+                </span>
+                }
+                <span class="det-success-step__meta-row det-success-step__meta-row--total">
+                    <i stp-icon name="currency-dollar" style="font-size: 0.875rem"></i>
+                    Total: S/ {{ successAmount() | number:'1.2-2' }}
+                </span>
+            </div>
+            <stp-button variant="success" btnStyle="solid" size="md" radius="md" (click)="close()">
+                Aceptar
+            </stp-button>
+        </div>
+        }
+
+        }
+    </div>
+
+</div>

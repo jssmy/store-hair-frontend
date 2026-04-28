@@ -1,0 +1,15 @@
+<div class="stp-empty-state">
+  @if (icon()) {
+    <div class="stp-empty-state__icon">
+      <i stp-icon [name]="icon()" class="icon--2xl"></i>
+    </div>
+  }
+
+  <p class="stp-empty-state__title">{{ title() }}</p>
+
+  @if (description()) {
+    <p class="stp-empty-state__desc">{{ description() }}</p>
+  }
+
+  <ng-content />
+</div>

@@ -1,0 +1,29 @@
+<div [ngClass]="hostClasses()">
+  <select
+    class="stp-select"
+    [id]="id()"
+    [value]="value()"
+    [disabled]="disabled()"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (change)="onSelectChange($event)"
+    [attr.aria-labelledby]="label() ? id() + '-label' : null"
+  >
+    @if (placeholder() && !value()) {
+      <option value="" disabled selected>{{ placeholder() }}</option>
+    }
+    @for (opt of options(); track opt.value) {
+      <option [value]="opt.value" [disabled]="opt.disabled ?? false">
+        {{ opt.label }}
+      </option>
+    }
+  </select>
+
+  <i stp-icon name="caret-down" class="stp-select__caret icon--sm" aria-hidden="true"></i>
+
+  @if (label()) {
+    <label class="stp-label" [for]="id()" [id]="id() + '-label'">
+      {{ label() }}
+    </label>
+  }
+</div>

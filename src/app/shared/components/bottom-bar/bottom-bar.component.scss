@@ -1,0 +1,97 @@
+@use '../../styles/z-index' as z;
+@use '../../styles/breakpoints' as bp;
+
+/* =========================================================
+   Bottom Bar — StorePoint
+   Only visible on mobile (≤ 640px)
+   ========================================================= */
+
+:host {
+  
+  display: none;
+  @include bp.mobile-only {
+    display: block;
+  }
+}
+
+.bottom-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: z.$bottom-bar;
+
+  display: flex;
+  align-items: stretch;
+
+  // Safe area for phones with home indicator (notch)
+  padding-bottom: env(safe-area-inset-bottom);
+
+  &__item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-1);
+    padding: 0.625rem 0.25rem;
+    min-height: 3.5rem;
+
+    color: var(--color-text-disabled);
+    text-decoration: none;
+    transition: color 150ms ease;
+
+    &:hover {
+      color: var(--color-text-secondary);
+    }
+
+    &--active {
+      color: var(--color-primary);
+    }
+  }
+
+  // ── Camera FAB ────────────────────────────────────────────
+  &__fab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.625rem 0.25rem;
+    text-decoration: none;
+    position: relative;
+
+    // The circle lifts above the bar
+    .bottom-bar__icon {
+      width: 3.25rem;
+      height: 3.25rem;
+      border-radius: 50%;
+      background-color: var(--color-primary);
+      color: var(--color-primary-fg);
+      box-shadow: 0 4px 14px color-mix(in srgb, var(--color-primary) 50%, transparent);
+      
+      transition: transform 150ms ease, box-shadow 150ms ease;
+    }
+
+    &--active .bottom-bar__icon {
+      background-color: var(--color-primary-dark, color-mix(in srgb, var(--color-primary) 80%, #000));
+    }
+  }
+
+  &__icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+
+    svg {
+      transition: stroke 150ms ease;
+    }
+  }
+
+  &__label {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    line-height: 1;
+  }
+}

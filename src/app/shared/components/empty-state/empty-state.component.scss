@@ -1,0 +1,30 @@
+.stp-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-1);
+  padding: var(--p-8) var(--p-4);
+  text-align: center;
+
+  &__icon {
+    color: var(--color-text-disabled);
+    margin-bottom: var(--p-2);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--text-xl);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    line-height: var(--leading-snug);
+  }
+
+  &__desc {
+    margin: 0;
+    font-size: var(--text-base);
+    color: var(--color-text-secondary);
+    line-height: var(--leading-normal);
+    max-width: 24rem;
+  }
+}

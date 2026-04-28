@@ -1,0 +1,39 @@
+@use './shared/styles/z-index' as z;
+
+.theme-toggle {
+  position: fixed;
+  top: calc(1rem + env(safe-area-inset-top));
+  right: 1rem;
+  z-index: z.$global-action;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 150ms ease, transform 150ms ease;
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background-color: var(--color-surface-alt);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.92);
+  }
+
+  svg {
+    display: block;
+    flex-shrink: 0;
+  }
+}

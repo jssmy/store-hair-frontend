@@ -1,0 +1,34 @@
+// =========================================================
+// Breakpoint tokens — StorePoint
+//
+// Usage inside a selector:
+//   @include bp.xs-down   { ... }  // ≤ 479px
+//   @include bp.xs-up     { ... }  // ≥ 480px
+//   @include bp.mobile-only { ... } // ≤ 639px
+//   @include bp.sm-up     { ... }  // ≥ 640px  (tablet / desktop)
+//   @include bp.md-up     { ... }  // ≥ 768px  (desktop)
+// =========================================================
+
+$xs:  480px;
+$sm:  640px;
+$md:  768px;
+
+@mixin xs-down {
+    @media (max-width: #{$xs - 1}) { @content; }
+}
+
+@mixin xs-up {
+    @media (min-width: $xs) { @content; }
+}
+
+@mixin mobile-only {
+    @media (max-width: #{$sm - 1}) { @content; }
+}
+
+@mixin sm-up {
+    @media (min-width: $sm) { @content; }
+}
+
+@mixin md-up {
+    @media (min-width: $md) { @content; }
+}

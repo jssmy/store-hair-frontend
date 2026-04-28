@@ -1,0 +1,41 @@
+/* =========================================================
+   Z-Index Scale — StorePoint
+   =========================================================
+   Usage: @use 'path/to/z-index' as z;
+          z-index: z.$header;
+   ========================================================= */
+
+// ── Layer 1: Internal / relative stacking ─────────────────
+// Used inside components with their own stacking context.
+$base:          1;
+
+// ── Layer 2: Fixed chrome (navigation) ────────────────────
+// Persistent UI chrome that stays below interactive overlays.
+$bottom-bar:    10;   // fixed bottom nav bar
+$sticky:        49;   // sticky search / category bars (below header)
+$header:        50;   // fixed top app header
+
+// ── Layer 3: Floating actions ─────────────────────────────
+// Elements that float above page content but below overlays.
+$dropdown:      55;   // floating dropdowns anchored to header
+$cart-bar:      60;   // sale floating cart action bar
+
+// ── Layer 4: Overlays / drawers ───────────────────────────
+// Backdrops and side/bottom drawers.
+$cart-drawer:   80;   // cart drawer overlay backdrop
+
+// ── Layer 5: Fixed utility actions ────────────────────────
+// Fixed-position utility buttons (e.g. theme toggle on login).
+$fixed-action:  100;
+
+// ── Layer 6: Modals ───────────────────────────────────────
+// Full modals and add/edit drawers that block the page.
+$modal:         200;
+
+// ── Layer 7: Global fixed UI ──────────────────────────────
+// Global utility elements that must float above modals.
+$global-action: 1000;
+
+// ── Layer 8: System overlays ──────────────────────────────
+// Full-screen system overlays (loading, errors). Always on top.
+$loader:        9999;

@@ -1,0 +1,159 @@
+<div class="suppliers-page">
+
+    <!-- ── Header ────────────────────────────────────────────── -->
+    <header #suppliersHeader class="suppliers-header">
+        <div class="suppliers-header__row">
+            <div>
+                <h1 class="suppliers-header__title">Proveedores</h1>
+                <p class="suppliers-header__subtitle">
+                    {{ activeCount() }} activo{{ activeCount() !== 1 ? 's' : '' }}
+                    de {{ suppliers().length }} registrados
+                </p>
+            </div>
+            <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                <i stp-icon name="plus" style="font-size: 1rem"></i>
+                Nuevo proveedor
+            </stp-button>
+        </div>
+    </header>
+
+    <!-- ── Search + category sticky bar ────────────────────── -->
+    <div class="suppliers-sticky-bar sticky-bar" [class.suppliers-sticky-bar--stuck]="isStuck()"
+        [class.sticky-bar--stuck]="isStuck()">
+
+        <section class="suppliers-search" aria-label="Buscar proveedores">
+            <div class="suppliers-search__field">
+                <span class="suppliers-search__icon" aria-hidden="true">
+                    <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
+                </span>
+                <input class="suppliers-search__input" type="search" placeholder="Buscar por nombre, RUC o teléfono..."
+                    autocomplete="off" aria-label="Buscar proveedores" [value]="searchQuery()"
+                    (input)="onSearchInput($any($event.target).value)" />
+                @if (searchQuery()) {
+                <button class="suppliers-search__clear" type="button" aria-label="Limpiar búsqueda"
+                    (click)="clearSearch()">
+                    <i stp-icon name="x" style="font-size: 1rem"></i>
+                </button>
+                }
+            </div>
+        </section>
+
+        <section class="suppliers-categories" aria-label="Filtrar por categoría">
+            <div class="suppliers-categories__scroll" role="tablist">
+                @for (cat of categories; track cat) {
+                <stp-button class="suppliers-category-chip"
+                    [class.suppliers-category-chip--active]="activeCategory() === cat" role="tab" size="sm"
+                    radius="full" [variant]="activeCategory() === cat ? 'primary' : 'surface'"
+                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
+                    [attr.aria-selected]="activeCategory() === cat" [attr.aria-label]="categoryLabels[cat]"
+                    (click)="setCategory(cat)">
+                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
+                    {{ categoryLabels[cat] }}
+                </stp-button>
+                }
+            </div>
+        </section>
+
+    </div><!-- /suppliers-sticky-bar -->
+
+    <!-- ── Suppliers list ───────────────────────────────────── -->
+    @if (filteredSuppliers().length > 0) {
+    <section class="suppliers-results" aria-label="Lista de proveedores" aria-live="polite">
+        <p class="suppliers-results__count">
+            @if (isFiltered()) {
+            {{ filteredSuppliers().length }} resultado{{ filteredSuppliers().length !== 1 ? 's' : '' }}
+            } @else {
+            Todos los proveedores
+            }
+        </p>
+
+        <ul class="suppliers-list" role="list">
+            @for (supplier of filteredSuppliers(); track supplier.id) {
+            <stp-swipe-item [options]="swipeOptions(supplier.active)" (optionSelected)="swipeOptionSelected(supplier, $event)" >
+                <li class="supplier-row bg-base" [class.supplier-row--inactive]="!supplier.active">
+
+                    <!-- Avatar -->
+                    <div class="supplier-row__avatar supplier-row__avatar--{{ supplier.category }}" aria-hidden="true">
+                        <span>{{ supplierInitials(supplier.name) }}</span>
+                    </div>
+
+                    <!-- Info -->
+                    <div class="supplier-row__info">
+                        <div class="supplier-row__name-row">
+                            <span class="supplier-row__name">{{ supplier.name }}</span>
+                            @if (!supplier.active) {
+                            <span class="supplier-row__badge supplier-row__badge--inactive">Inactivo</span>
+                            }
+                        </div>
+                        <span class="supplier-row__meta">
+                            {{ categoryIcon(supplier.category) }} {{ categoryLabels[supplier.category] }}
+                            <span class="supplier-row__ruc">· RUC {{ supplier.ruc }}</span>
+                        </span>
+                        <span class="supplier-row__contact">
+                            <i stp-icon name="phone" style="font-size: 0.75rem"></i>
+                            {{ supplier.phone }}
+                            @if (supplier.email) {
+                            <span class="supplier-row__sep">·</span>
+                            <i stp-icon name="envelope" style="font-size: 0.75rem"></i>
+                            {{ supplier.email }}
+                            }
+                        </span>
+                        @if (supplier.address) {
+                        <span class="supplier-row__address">
+                            <i stp-icon name="map-pin" style="font-size: 0.75rem"></i>
+                            {{ supplier.address }}
+                        </span>
+                        }
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="supplier-row__actions">
+                        <button class="supplier-row__btn" type="button"
+                            [attr.aria-label]="supplier.active ? 'Desactivar' : 'Activar'"
+                            (click)="toggleActive(supplier)">
+                            <i stp-icon [name]="supplier.active ? 'toggle-right' : 'toggle-left'"
+                                style="font-size: 1.25rem"
+                                [style.color]="supplier.active ? 'var(--color-success, #16a34a)' : 'var(--color-text-disabled)'">
+                            </i>
+                        </button>
+                        <button class="supplier-row__btn" type="button" aria-label="Editar proveedor"
+                            (click)="openEditDrawer(supplier)">
+                            <i stp-icon name="pencil-simple" style="font-size: 1rem"></i>
+                        </button>
+                    </div>
+
+                </li>
+            </stp-swipe-item>
+            }
+        </ul>
+    </section>
+    }
+
+    <!-- ── Empty state ──────────────────────────────────────── -->
+    @if (filteredSuppliers().length === 0) {
+    <div class="suppliers-empty-state" aria-live="polite">
+        <div class="suppliers-empty-state__icon" aria-hidden="true">
+            <i stp-icon name="truck" style="font-size: 3.5rem"></i>
+        </div>
+        @if (isFiltered()) {
+        <h2 class="suppliers-empty-state__title">Sin resultados</h2>
+        <p class="suppliers-empty-state__text">
+            No se encontró "<strong>{{ searchQuery() }}</strong>" entre tus proveedores.
+        </p>
+        <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+            <i stp-icon name="plus" style="font-size: 1rem"></i>
+            Agregar proveedor
+        </stp-button>
+        } @else {
+        <h2 class="suppliers-empty-state__title">Sin proveedores</h2>
+        <p class="suppliers-empty-state__text">Registra tu primer proveedor para empezar.</p>
+        <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+            <i stp-icon name="plus" style="font-size: 1rem"></i>
+            Agregar proveedor
+        </stp-button>
+        }
+    </div>
+    }
+
+
+</div>

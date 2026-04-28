@@ -1,0 +1,31 @@
+<div [ngClass]="classes()" role="group" [attr.aria-label]="'Cantidad'">
+
+    <button
+        class="stp-input-numeric__btn"
+        type="button"
+        aria-label="Disminuir"
+        [disabled]="!canDecrement() || isDisabled()"
+        (click)="decrement()">
+        <i stp-icon name="minus" [autofill]="false" style="font-size: 0.875rem"></i>
+    </button>
+
+    <input
+        class="stp-input-numeric__input"
+        type="number"
+        [min]="min()"
+        [attr.max]="max()"
+        [value]="effectiveValue()"
+        [disabled]="isDisabled()"
+        (change)="onInput($any($event.target).value)"
+        aria-label="Valor" />
+
+    <button
+        class="stp-input-numeric__btn"
+        type="button"
+        aria-label="Aumentar"
+        [disabled]="!canIncrement() || isDisabled()"
+        (click)="increment()">
+        <i stp-icon name="plus" [autofill]="false"  style="font-size: 0.875rem"></i>
+    </button>
+
+</div>

@@ -1,0 +1,46 @@
+@if (visible()) {
+  <div
+    class="loader-overlay liquid-glass-overlay liquid-glass-overlay--light"
+    role="status"
+    aria-live="polite"
+    aria-label="Cargando"
+  >
+    <div class="loader-content">
+
+      <!-- Spinning ring + logo -->
+      <div class="loader-ring-wrapper" aria-hidden="true">
+
+        <!-- SVG spinning arc -->
+        <svg
+          class="loader-ring"
+          viewBox="0 0 100 100"
+          fill="none"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <!-- Track -->
+          <circle
+            class="loader-ring__track"
+            cx="50" cy="50" r="44"
+            stroke-width="4"
+          />
+          <!-- Animated arc -->
+          <circle
+            class="loader-ring__arc"
+            cx="50" cy="50" r="44"
+            stroke-width="4"
+            stroke-linecap="round"
+          />
+        </svg>
+
+        <!-- Logo circle (liquid glass) -->
+        <div class="loader-logo liquid-glass">
+          <i stp-icon name="shopping-bag" style="font-size: 2.125rem"></i>
+        </div>
+
+      </div>
+
+      <span class="sr-only">Cargando, por favor espera…</span>
+
+    </div>
+  </div>
+}

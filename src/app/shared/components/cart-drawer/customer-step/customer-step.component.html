@@ -1,0 +1,179 @@
+<div class="step__header">
+    <button class="close" type="button" aria-label="Volver al paso anterior" (click)="back.emit()">
+        <i stp-icon name="arrow-left" [autofill]="false" style="font-size: 1.25rem"></i>
+    </button>
+    <h2 class="step__title">Datos del cliente</h2>
+    <div class="step__header-spacer" aria-hidden="true"></div>
+</div>
+
+<div class="step__body">
+
+    @if (view() === 'search') {
+
+    @if (!selectedCustomer()) {
+    <div class="step__search-wrap">
+        <div class="step__search">
+            <i stp-icon name="magnifying-glass" class="step__search-icon" style="font-size: 1.1rem"></i>
+            <input class="step__search-input" type="search" autocomplete="off"
+                placeholder="Buscar por nombre, DNI o teléfono…" [value]="searchQuery()"
+                (input)="onSearchInput($event)">
+            @if (searchQuery()) {
+            <button class="step__search-clear" type="button" aria-label="Limpiar" (click)="clearSearch()">
+                <i stp-icon name="x" [autofill]="false" style="font-size: 1rem"></i>
+            </button>
+            }
+        </div>
+
+        @if (searchResults().length > 0) {
+        <ul class="step__results" role="listbox">
+            @for (c of searchResults(); track c.id) {
+            <li class="step__result" role="option" (click)="selectCustomer(c)">
+                <i stp-icon name="user" class="step__result-icon" style="font-size: 1.1rem"></i>
+                <div class="step__result-info">
+                    <span class="step__result-name">{{ c.names }}</span>
+                    <span class="step__result-meta">
+                        {{ c.phone }}
+                        @if (c.dni) { · DNI {{ c.dni }} }
+                    </span>
+                </div>
+                <i stp-icon name="caret-right" class="step__result-chevron" style="font-size: 1rem"></i>
+            </li>
+            }
+        </ul>
+        } @else if (searchQuery().trim()) {
+        <div class="step__empty">
+            <p class="step__empty-text">No se encontró ningún cliente</p>
+            <stp-button variant="primary" btnStyle="outlined" radius="md" size="sm" (click)="showNewForm()">
+                + Registrar nuevo cliente
+            </stp-button>
+        </div>
+        } @else {
+        <div class="step__hint">
+            <i stp-icon name="users" class="step__hint-icon" style="font-size: 2rem"></i>
+            <p class="step__hint-text">Busca al cliente o regístralo como nuevo</p>
+            <stp-button variant="surface" btnStyle="outlined" radius="md" size="sm" (click)="showNewForm()">
+                + Nuevo cliente
+            </stp-button>
+        </div>
+        }
+    </div>
+    }
+
+    @if (selectedCustomer(); as customer) {
+    <div class="step__selected">
+        <div class="step__customer-card">
+            <div class="step__customer-avatar">
+                <i stp-icon name="user" [autofill]="false" style="font-size: 1.25rem"></i>
+            </div>
+            <div class="step__customer-info">
+                <strong class="step__customer-name">{{ customer.names }}</strong>
+                <span class="step__customer-meta">
+                    <i stp-icon name="phone" [autofill]="false" style="font-size: 0.85rem"></i>
+                    {{ customer.phone }}
+                    @if (customer.dni) {
+                    · DNI {{ customer.dni }}
+                    }
+                </span>
+            </div>
+            <button class="step__change-btn" type="button" (click)="clearSelection()">Cambiar</button>
+        </div>
+
+        <mat-expansion-panel class="step__wa-panel">
+            <mat-expansion-panel-header>
+                <mat-panel-title class="step__wa-panel-title">
+                    <i stp-icon name="whatsapp-logo" [autofill]="false" style="font-size: 1.1rem"></i>
+                    <span>Se le notificará a <strong>{{ selectedCustomer()?.phone }}</strong></span>
+                </mat-panel-title>
+            </mat-expansion-panel-header>
+            <pre class="step__wa-message">{{ whatsappMessage() }}</pre>
+        </mat-expansion-panel>
+    </div>
+    }
+
+    }
+
+    @if (view() === 'new-form') {
+    <div class="step__form">
+        <div class="step__field">
+            <label class="step__field-label">Nombres y apellidos <span class="required">*</span></label>
+            <input class="step__field-input-text" type="text" autocomplete="name" placeholder="Ej: María García López"
+                [value]="newNames()" (input)="newNames.set($any($event.target).value)">
+            @if (formErrors()['names']) {
+            <span class="step__field-error">{{ formErrors()['names'] }}</span>
+            }
+        </div>
+        <div class="step__field">
+            <label class="step__field-label">Teléfono <span class="required">*</span></label>
+            <input class="step__field-input-text" type="tel" autocomplete="tel" placeholder="987654321" maxlength="9"
+                [value]="newPhone()" (input)="newPhone.set($any($event.target).value)">
+            @if (formErrors()['phone']) {
+            <span class="step__field-error">{{ formErrors()['phone'] }}</span>
+            }
+        </div>
+        <div class="step__field">
+            <label class="step__field-label">
+                DNI <span class="step__field-optional">(opcional)</span>
+            </label>
+            <input class="step__field-input-text" type="text" autocomplete="off" placeholder="12345678" maxlength="8"
+                [value]="newDni()" (input)="newDni.set($any($event.target).value)">
+            @if (formErrors()['dni']) {
+            <span class="step__field-error">{{ formErrors()['dni'] }}</span>
+            }
+        </div>
+    </div>
+    }
+
+    @if (view() === 'update-confirm') {
+    <div class="step__alert">
+        <i stp-icon name="warning" class="step__alert-icon" style="font-size: 2rem"></i>
+        <p class="step__alert-text">
+            El teléfono <strong>{{ newPhone() }}</strong> ya está registrado para
+            <strong>{{ phoneCollision()?.names }}</strong>.
+        </p>
+        <p class="step__alert-sub">¿Deseas actualizar sus datos con la información que ingresaste?</p>
+    </div>
+    }
+
+</div>
+
+<div class="step__summary">
+    <div class="step__summary-row step__summary-row--total">
+        <strong>Total a cobrar</strong>
+        <strong>S/ {{ total() | number:'1.2-2' }}</strong>
+    </div>
+</div>
+
+<div class="step__actions">
+    @if (view() === 'search') {
+    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="back.emit()">
+        Volver
+    </stp-button>
+        @if (selectedCustomer()) {
+        <stp-button [disabled]="!selectedCustomer()" variant="primary" btnStyle="solid" radius="md" size="md"
+            (click)="confirmSale()">
+            Confirmar venta
+        </stp-button>
+        } @else {
+            <stp-button variant="danger" btnStyle="solid" radius="md" size="md"
+            (click)="confirmSale()">
+            Confirmar venta sin notificar
+        </stp-button>
+        }
+    }
+    @if (view() === 'new-form') {
+    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="cancelNewForm()">
+        Cancelar
+    </stp-button>
+    <stp-button variant="primary" btnStyle="solid" radius="md" size="md" (click)="saveNewCustomer()">
+        Guardar cliente
+    </stp-button>
+    }
+    @if (view() === 'update-confirm') {
+    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="cancelUpdate()">
+        No, volver
+    </stp-button>
+    <stp-button variant="warning" btnStyle="solid" radius="md" size="md" (click)="confirmUpdate()">
+        Sí, actualizar
+    </stp-button>
+    }
+</div>

@@ -1,0 +1,42 @@
+<nav class="sidebar" [class.sidebar--open]="isOpen()" aria-label="Navegación principal">
+
+@for (item of navItems; track item.route) {
+    <a
+      class="sidebar__item"
+      [routerLink]="item.route"
+      routerLinkActive="sidebar__item--active"
+      [attr.aria-label]="item.label"
+      (click)="closeRequest.emit()"
+    >
+      <span class="sidebar__icon" aria-hidden="true">
+        @switch (item.icon) {
+          @case ('notices') {
+            <i stp-icon name="bell" style="font-size: 1.25rem"></i>
+          }
+          @case ('products') {
+            <i stp-icon name="package" style="font-size: 1.25rem"></i>
+          }
+          @case ('caja') {
+            <i stp-icon name="credit-card" style="font-size: 1.25rem"></i>
+          }
+          @case ('dashboard') {
+            <i stp-icon name="squares-four" style="font-size: 1.25rem"></i>
+          }
+          @case ('camera') {
+            <i stp-icon name="shopping-cart" style="font-size: 1.25rem"></i>
+          }
+          @case ('suppliers') {
+            <i stp-icon name="users" style="font-size: 1.25rem"></i>
+          }
+          @case ('piggy-bank') {
+            <i stp-icon name="piggy-bank" style="font-size: 1.25rem"></i>
+          }
+          @case ('demo') {
+            <i stp-icon name="palette" style="font-size: 1.25rem"></i>
+          }
+        }
+      </span>
+      <span class="sidebar__label">{{ item.label }}</span>
+    </a>
+  }
+</nav>

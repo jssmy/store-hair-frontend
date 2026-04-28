@@ -1,0 +1,45 @@
+<div class="cart-drawer"
+         role="dialog"
+         aria-modal="true"
+         aria-label="Carrito de venta"
+         (click)="$event.stopPropagation()">
+
+        <div class="cart-drawer__handle" aria-hidden="true"></div>
+
+
+        @if (step() === 'listItems') {
+        <stp-cart-step
+            [items]="items()"
+            [swipeOptions]="swipeOptions"
+            (quantityChange)="updateQty($event.productId, $event.quantity)"
+            (remove)="removeItem($event)"
+            (close)="close()"
+            (clear)="clear()"
+            (checkout)="goToPayment()" />
+        } @else if (step() === 'paymentMethod') {
+        <stp-payment-step
+            [total]="total()"
+            (back)="goBack()"
+            (confirm)="onPaymentConfirmed($event)" />
+        } @else if (step() === 'customerInformation') {
+        <stp-customer-step
+            [items]="items()"
+            [payment]="pendingPayment()!"
+            [total]="total()"
+            (back)="goBackFromCustomer()"
+            (confirm)="onCustomerConfirmed($event)" />
+        } @else {
+        <div class="cart-drawer__success">
+            <div class="cart-drawer__success-icon">
+                <i stp-icon name="check-circle" [autofill]="false" style="font-size: 4rem"></i>
+            </div>
+            <h2 class="cart-drawer__success-title">¡Operación registrada!</h2>
+            <p class="cart-drawer__success-sub">La venta fue registrada con éxito.</p>
+            <stp-button variant="primary" btnStyle="solid" radius="md" size="md"
+                (click)="done()">
+                Listo
+            </stp-button>
+        </div>
+        }
+
+    </div>

@@ -1,0 +1,59 @@
+$variants: ('success', 'warning', 'error', 'info');
+
+.stp-alert {
+  --stp-alert-bg:     transparent;
+  --stp-alert-fg:     currentColor;
+  --stp-alert-border: transparent;
+
+  display: flex;
+  align-items: flex-start;
+  gap: var(--p-3);
+  padding: var(--p-3) var(--p-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--stp-alert-border);
+  background-color: var(--stp-alert-bg);
+  color: var(--stp-alert-fg);
+
+  &__icon {
+    flex-shrink: 0;
+    margin-top: 0.0625rem;
+  }
+
+  &__body {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.1875rem;
+  }
+
+  &__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-semibold);
+    line-height: var(--leading-snug);
+  }
+
+  &__message {
+    margin: 0;
+    font-size: var(--text-sm);
+    line-height: var(--leading-normal);
+    opacity: 0.9;
+  }
+
+  &__close {
+    flex-shrink: 0;
+    margin-top: -0.125rem;
+    opacity: 0.7;
+    transition: opacity var(--duration-base) var(--ease-default);
+
+    &:hover { opacity: 1; }
+  }
+}
+
+@each $v in $variants {
+  .stp-alert--#{$v} {
+    --stp-alert-bg:     var(--color-#{$v}-light);
+    --stp-alert-fg:     var(--color-#{$v});
+    --stp-alert-border: color-mix(in srgb, var(--color-#{$v}) 25%, transparent);
+  }
+}

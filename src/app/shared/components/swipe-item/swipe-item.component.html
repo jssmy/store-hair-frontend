@@ -1,0 +1,15 @@
+<div class="swipe-container">
+    <div class="actions">
+        @for (item of options(); track $index) {
+        <button (click)="optionSelected.emit(item)" [class]="item.stpClass">
+              <i stp-icon [name]="item.icon"></i>
+            {{item.label}}
+        </button>
+        }
+    </div>
+
+    <div class="content" (pointerdown)="onStart($event)" (pointermove)="onMove($event)" (pointerup)="onEnd()"
+        (pointercancel)="onEnd()" [style.transform]="'translateX(' + offset + 'px)'" [class.animate]="animate">
+        <ng-content></ng-content>
+    </div>
+</div>

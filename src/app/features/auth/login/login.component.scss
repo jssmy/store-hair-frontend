@@ -1,0 +1,266 @@
+@use '../../../shared/styles/z-index' as z;
+
+/* =========================================================
+   Login Page — Fullscreen mobile-first
+   ========================================================= */
+
+.login-page {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+  position: relative;
+}
+
+/* =========================================================
+   Main content area
+   ========================================================= */
+
+.login-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  width: 100%;
+  max-width: 480px;
+  margin-inline: auto;
+  padding: 5rem 1.5rem 2rem;
+}
+
+/* =========================================================
+   Theme toggle (top-right)
+   ========================================================= */
+
+.theme-toggle {
+  position: fixed;
+  top: 1rem;
+  right: 1rem;
+  z-index: z.$fixed-action;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--color-border);
+  background-color: var(--color-surface);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: background-color 200ms ease, color 200ms ease, box-shadow 150ms ease, transform 150ms ease;
+  box-shadow: var(--shadow-sm);
+
+  &:hover {
+    background-color: var(--color-surface-alt);
+    color: var(--color-text-primary);
+    box-shadow: var(--shadow-md);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+
+  &:active {
+    transform: scale(0.9);
+  }
+}
+
+/* =========================================================
+   Brand header
+   ========================================================= */
+
+.login-header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-1);
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.brand-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 0.875rem;
+  background-color: var(--color-primary);
+  color: var(--color-primary-fg);
+  margin-bottom: 0.25rem;
+}
+
+.brand-name {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.brand-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+/* =========================================================
+   Form
+   ========================================================= */
+
+.login-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+}
+
+/* Field group */
+.field-group {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--gap-1) / 2);
+}
+
+.field-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--gap-1);
+}
+
+.field-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text-primary);
+  cursor: pointer;
+}
+
+/* Inline error */
+.field-error {
+  font-size: 0.8125rem;
+  color: var(--color-error);
+  display: flex;
+  align-items: center;
+  gap: calc(var(--gap-1) / 2);
+}
+
+/* Forgot password */
+.forgot-link {
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--color-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color 150ms ease, text-decoration-color 150ms ease;
+
+  &:hover {
+    color: var(--color-primary-hover);
+    text-decoration: underline;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* =========================================================
+   Remember me
+   ========================================================= */
+
+.remember-row {
+  margin-top: -0.25rem;
+}
+
+.checkbox-label {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1);
+  cursor: pointer;
+  user-select: none;
+}
+
+.checkbox-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.checkbox-custom {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.125rem;
+  height: 1.125rem;
+  border: 1.5px solid var(--color-border);
+  border-radius: 0.25rem;
+  background-color: var(--color-bg);
+  transition: border-color 150ms ease, background-color 150ms ease;
+  flex-shrink: 0;
+
+  .checkbox-input:checked + & {
+    background-color: var(--color-primary);
+    border-color: var(--color-primary);
+
+    &::after {
+      content: '';
+      display: block;
+      width: 5px;
+      height: 9px;
+      border: 2px solid var(--color-primary-fg);
+      border-top: none;
+      border-left: none;
+      transform: rotate(45deg) translate(-1px, -1px);
+    }
+  }
+
+  .checkbox-input:focus-visible + & {
+    outline: 2px solid var(--color-primary);
+    outline-offset: 2px;
+  }
+}
+
+.checkbox-text {
+  font-size: 0.875rem;
+  color: var(--color-text-secondary);
+}
+
+
+/* =========================================================
+   Footer
+   ========================================================= */
+
+.login-footer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--gap-2);
+  text-align: center;
+  padding-bottom: var(--p-2);
+}
+
+.footer-tagline {
+  margin: 0;
+  font-size: 0.8125rem;
+  color: var(--color-text-secondary);
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1);
+}
+
+
+.footer-icon {
+  flex-shrink: 0;
+}
+
+.footer-copy {
+  margin: 0;
+  font-size: 0.75rem;
+  color: var(--color-text-disabled);
+}

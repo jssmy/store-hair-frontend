@@ -1,0 +1,20 @@
+<div [ngClass]="hostClasses()" role="tablist">
+  @for (tab of tabs(); track tab.value) {
+    <button
+      role="tab"
+      type="button"
+      class="stp-tabs__tab"
+      [class.stp-tabs__tab--active]="isActive(tab)"
+      [class.stp-tabs__tab--disabled]="tab.disabled"
+      [attr.aria-selected]="isActive(tab)"
+      [attr.aria-disabled]="tab.disabled ?? false"
+      [tabindex]="isActive(tab) ? 0 : -1"
+      (click)="selectTab(tab)"
+    >
+      @if (tab.icon) {
+        <i class="ph ph-{{ tab.icon }} stp-tabs__icon" aria-hidden="true"></i>
+      }
+      {{ tab.label }}
+    </button>
+  }
+</div>

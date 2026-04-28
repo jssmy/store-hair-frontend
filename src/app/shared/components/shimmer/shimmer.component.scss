@@ -1,0 +1,28 @@
+@keyframes shimmer {
+    from { background-position: -1000px 0; }
+    to   { background-position: 1000px 0; }
+}
+
+@keyframes fullView {
+    to { width: 100%; }
+}
+
+:host {
+    display: block;
+    width: 0;
+    height: 100%;
+    overflow: hidden;
+    background: linear-gradient(to right, #e6e6e6 5%, #cccccc 25%, #e6e6e6 35%);
+    background-size: 1000px 100%;
+    animation: shimmer 3s infinite, fullView 0.5s forwards linear;
+
+    &.stp-shimmer--radius-sm   { border-radius: var(--radius-sm); }
+    &.stp-shimmer--radius-md   { border-radius: var(--radius-md); }
+    &.stp-shimmer--radius-lg   { border-radius: var(--radius-lg); }
+    &.stp-shimmer--radius-xl   { border-radius: var(--radius-xl); }
+    &.stp-shimmer--radius-full { border-radius: var(--radius-full); }
+}
+
+[data-theme='dark'] :host {
+    background: linear-gradient(to right, #2a2a2a 5%, #3d3d3d 25%, #2a2a2a 35%);
+}

@@ -1,0 +1,12 @@
+<span [ngClass]="hostClasses()" [attr.aria-label]="name() || alt()">
+  @if (showImage()) {
+    <img
+      class="stp-avatar__img"
+      [src]="src()"
+      [alt]="alt() || name()"
+      loading="lazy"
+    />
+  } @else {
+    <span class="stp-avatar__initials" aria-hidden="true">{{ initials() }}</span>
+  }
+</span>

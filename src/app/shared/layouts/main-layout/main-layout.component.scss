@@ -1,0 +1,70 @@
+@use '../../styles/breakpoints' as bp;
+@use '../../styles/z-index' as z;
+
+/* =========================================================
+   stp-main-layout — Shell with header + sidebar + footer
+   ========================================================= */
+
+:host {
+  display: block;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.layout {
+  --header-height: 3.75rem;
+
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--color-bg);
+
+  &__body {
+    flex: 1;
+    display: flex;
+    flex-direction: row;
+
+    // Center sidebar + content together so sidebar sits flush
+    // with the left edge of the page content (not at viewport edge)
+    max-width: 81rem; // ~13rem sidebar + ~52rem content + padding
+    width: 100%;
+    margin-inline: auto;
+    padding-inline: 1.25rem;
+
+    @include bp.mobile-only {
+      padding-inline: 0;
+    }
+  }
+
+  // Scrim shown behind the open sidebar drawer on mobile
+  &__backdrop {
+    @include bp.sm-up {
+      display: none;
+    }
+
+    position: fixed;
+    // Start below the header so the header stays above the overlay
+    top: calc(var(--header-height, 3.75rem) + env(safe-area-inset-top));
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: z.$cart-drawer - 1;
+    animation: fadeIn 200ms ease;
+  }
+
+  &__content {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+
+    // Offset for fixed bottom bar on mobile
+    @include bp.mobile-only {
+      padding-bottom: calc(3.5rem + env(safe-area-inset-bottom));
+    }
+  }
+}

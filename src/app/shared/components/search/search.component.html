@@ -1,0 +1,28 @@
+<div [ngClass]="hostClasses()">
+  <i stp-icon name="magnifying-glass" class="stp-search__icon icon--md" aria-hidden="true"></i>
+
+  <input
+    class="stp-search__input"
+    type="search"
+    [id]="id()"
+    [value]="value()"
+    [placeholder]="placeholder()"
+    [disabled]="disabled()"
+    autocomplete="off"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (input)="onInput($event)"
+    [attr.aria-label]="placeholder()"
+  />
+
+  @if (hasValue()) {
+    <button
+      type="button"
+      class="stp-search__clear icon-btn"
+      aria-label="Limpiar búsqueda"
+      (click)="clear()"
+    >
+      <i stp-icon name="x-circle" class="icon--sm"></i>
+    </button>
+  }
+</div>

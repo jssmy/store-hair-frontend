@@ -1,0 +1,584 @@
+<div class="demo-page">
+
+    <!-- ── Header ─────────────────────────────────────────────── -->
+    <div class="demo-header">
+        <h1 class="demo-header__title">Design System</h1>
+        <p class="demo-header__sub">Componentes UI · StorePoint</p>
+    </div>
+
+    <!-- ── Table of contents ──────────────────────────────────── -->
+    <nav class="demo-toc" aria-label="Secciones">
+        <a class="demo-toc__link" href="#buttons">Button</a>
+        <a class="demo-toc__link" href="#badges">Badge</a>
+        <a class="demo-toc__link" href="#tags">Tag</a>
+        <a class="demo-toc__link" href="#alerts">Alert</a>
+        <a class="demo-toc__link" href="#avatars">Avatar</a>
+        <a class="demo-toc__link" href="#cards">Card</a>
+        <a class="demo-toc__link" href="#inputs">Input</a>
+        <a class="demo-toc__link" href="#numeric">InputNumeric</a>
+        <a class="demo-toc__link" href="#search">Search</a>
+        <a class="demo-toc__link" href="#select">Select</a>
+        <a class="demo-toc__link" href="#checkboxes">Checkbox</a>
+        <a class="demo-toc__link" href="#tabs">Tabs</a>
+        <a class="demo-toc__link" href="#shimmer">Shimmer</a>
+        <a class="demo-toc__link" href="#empty">EmptyState</a>
+        <a class="demo-toc__link" href="#icons">Icons</a>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════════════
+         BUTTON
+    ════════════════════════════════════════════════════════════ -->
+    <section id="buttons" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Button</h2>
+            <code class="demo-section-head__selector">stp-button</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants · solid</p>
+            <div class="demo-row">
+                <stp-button variant="primary">Primary</stp-button>
+                <stp-button variant="success">Success</stp-button>
+                <stp-button variant="warning">Warning</stp-button>
+                <stp-button variant="danger">Danger</stp-button>
+                <stp-button variant="info">Info</stp-button>
+                <stp-button variant="default">Default</stp-button>
+                <stp-button variant="surface">Surface</stp-button>
+                <stp-button variant="surface-alt">Surface Alt</stp-button>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Styles · primary</p>
+            <div class="demo-row">
+                <stp-button variant="primary" btnStyle="solid">Solid</stp-button>
+                <stp-button variant="primary" btnStyle="outlined">Outlined</stp-button>
+                <stp-button variant="primary" btnStyle="ghost">Ghost</stp-button>
+                <stp-button variant="danger" btnStyle="solid">Solid</stp-button>
+                <stp-button variant="danger" btnStyle="outlined">Outlined</stp-button>
+                <stp-button variant="danger" btnStyle="ghost">Ghost</stp-button>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes</p>
+            <div class="demo-row">
+                <stp-button variant="primary" size="sm">Small</stp-button>
+                <stp-button variant="primary" size="md">Medium</stp-button>
+                <stp-button variant="primary" size="lg">Large</stp-button>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Radius</p>
+            <div class="demo-row">
+                <stp-button variant="surface" btnStyle="outlined" radius="sm">sm</stp-button>
+                <stp-button variant="surface" btnStyle="outlined" radius="md">md</stp-button>
+                <stp-button variant="surface" btnStyle="outlined" radius="xl">xl</stp-button>
+                <stp-button variant="surface" btnStyle="outlined" radius="full">full</stp-button>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">States & with icon</p>
+            <div class="demo-row">
+                <stp-button variant="primary" [loading]="true">Guardando</stp-button>
+                <stp-button variant="primary" [disabled]="true">Deshabilitado</stp-button>
+                <stp-button variant="primary" radius="full">
+                    <i stp-icon name="plus" style="font-size: 1rem"></i>
+                    Agregar
+                </stp-button>
+                <stp-button variant="success" btnStyle="outlined" radius="md">
+                    <i stp-icon name="check-circle" style="font-size: 1rem"></i>
+                    Confirmar
+                </stp-button>
+                <stp-button variant="danger" btnStyle="ghost">
+                    <i stp-icon name="trash" style="font-size: 1rem"></i>
+                    Eliminar
+                </stp-button>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         BADGE
+    ════════════════════════════════════════════════════════════ -->
+    <section id="badges" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Badge</h2>
+            <code class="demo-section-head__selector">stp-badge</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants · light</p>
+            <div class="demo-row">
+                <stp-badge variant="primary">Primary</stp-badge>
+                <stp-badge variant="success">Success</stp-badge>
+                <stp-badge variant="warning">Warning</stp-badge>
+                <stp-badge variant="error">Error</stp-badge>
+                <stp-badge variant="info">Info</stp-badge>
+                <stp-badge variant="surface">Surface</stp-badge>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Styles</p>
+            <div class="demo-row">
+                <stp-badge variant="primary" badgeStyle="light">Light</stp-badge>
+                <stp-badge variant="primary" badgeStyle="solid">Solid</stp-badge>
+                <stp-badge variant="primary" badgeStyle="outlined">Outlined</stp-badge>
+                <stp-badge variant="success" badgeStyle="light">Light</stp-badge>
+                <stp-badge variant="success" badgeStyle="solid">Solid</stp-badge>
+                <stp-badge variant="success" badgeStyle="outlined">Outlined</stp-badge>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes & dot</p>
+            <div class="demo-row">
+                <stp-badge variant="primary" size="sm">Small</stp-badge>
+                <stp-badge variant="primary" size="md">Medium</stp-badge>
+                <stp-badge variant="success" [dot]="true">Activo</stp-badge>
+                <stp-badge variant="error" [dot]="true">Error</stp-badge>
+                <stp-badge variant="warning" [dot]="true">Alerta</stp-badge>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TAG
+    ════════════════════════════════════════════════════════════ -->
+    <section id="tags" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Tag</h2>
+            <code class="demo-section-head__selector">stp-tag</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants · light</p>
+            <div class="demo-row">
+                <stp-tag variant="primary">Primary</stp-tag>
+                <stp-tag variant="success">Success</stp-tag>
+                <stp-tag variant="warning">Warning</stp-tag>
+                <stp-tag variant="error">Error</stp-tag>
+                <stp-tag variant="info">Info</stp-tag>
+                <stp-tag variant="surface">Surface</stp-tag>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Styles</p>
+            <div class="demo-row">
+                <stp-tag variant="primary" tagStyle="light">Light</stp-tag>
+                <stp-tag variant="primary" tagStyle="solid">Solid</stp-tag>
+                <stp-tag variant="primary" tagStyle="outlined">Outlined</stp-tag>
+                <stp-tag variant="success" tagStyle="light">Light</stp-tag>
+                <stp-tag variant="success" tagStyle="solid">Solid</stp-tag>
+                <stp-tag variant="success" tagStyle="outlined">Outlined</stp-tag>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Con ícono & removible</p>
+            <div class="demo-row">
+                <stp-tag variant="primary" icon="package">Inventario</stp-tag>
+                <stp-tag variant="success" icon="check-circle">Activo</stp-tag>
+                <stp-tag variant="error" icon="x-circle">Agotado</stp-tag>
+                <stp-tag variant="warning" [removable]="true">Removible</stp-tag>
+                <stp-tag variant="info" [removable]="true" icon="bell">Con ícono</stp-tag>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ALERT
+    ════════════════════════════════════════════════════════════ -->
+    <section id="alerts" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Alert</h2>
+            <code class="demo-section-head__selector">stp-alert</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants</p>
+            <div class="demo-stack">
+                <stp-alert variant="info"
+                    title="Información"
+                    message="Los cambios se guardarán automáticamente." />
+                <stp-alert variant="success"
+                    title="¡Éxito!"
+                    message="El inventario fue actualizado correctamente." />
+                <stp-alert variant="warning"
+                    title="Atención"
+                    message="Tienes 3 productos con stock bajo." />
+                <stp-alert variant="error"
+                    title="Error"
+                    message="No se pudo completar la operación. Intenta nuevamente." />
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Dismissible</p>
+            <div class="demo-stack">
+                @if (alertVisible()) {
+                <stp-alert variant="info"
+                    title="Alerta descartable"
+                    message="Haz clic en la X para cerrar."
+                    [dismissible]="true"
+                    (dismissed)="alertVisible.set(false)" />
+                } @else {
+                <stp-button variant="surface" btnStyle="outlined" size="sm"
+                    (click)="alertVisible.set(true)">
+                    Mostrar alerta
+                </stp-button>
+                }
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         AVATAR
+    ════════════════════════════════════════════════════════════ -->
+    <section id="avatars" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Avatar</h2>
+            <code class="demo-section-head__selector">stp-avatar</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants</p>
+            <div class="demo-row">
+                <stp-avatar name="Juan Pérez" variant="primary" />
+                <stp-avatar name="Ana García" variant="success" />
+                <stp-avatar name="Luis Torres" variant="warning" />
+                <stp-avatar name="María López" variant="error" />
+                <stp-avatar name="Carlos Ruiz" variant="info" />
+                <stp-avatar name="Pedro Díaz" variant="surface" />
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes</p>
+            <div class="demo-row demo-row--align-end">
+                <div class="demo-chip">
+                    <stp-avatar name="US" size="xs" variant="primary" />
+                    <span class="demo-chip__label">xs</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-avatar name="US" size="sm" variant="primary" />
+                    <span class="demo-chip__label">sm</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-avatar name="US" size="md" variant="primary" />
+                    <span class="demo-chip__label">md</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-avatar name="US" size="lg" variant="primary" />
+                    <span class="demo-chip__label">lg</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-avatar name="US" size="xl" variant="primary" />
+                    <span class="demo-chip__label">xl</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CARD
+    ════════════════════════════════════════════════════════════ -->
+    <section id="cards" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Card</h2>
+            <code class="demo-section-head__selector">stp-card</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Shadow & padding</p>
+            <div class="demo-grid-3">
+                <stp-card shadow="none" padding="md">
+                    <p class="demo-card-label">shadow="none"</p>
+                </stp-card>
+                <stp-card shadow="sm" padding="md">
+                    <p class="demo-card-label">shadow="sm"</p>
+                </stp-card>
+                <stp-card shadow="md" padding="md">
+                    <p class="demo-card-label">shadow="md"</p>
+                </stp-card>
+                <stp-card shadow="lg" padding="sm">
+                    <p class="demo-card-label">shadow="lg" · padding="sm"</p>
+                </stp-card>
+                <stp-card padding="lg" radius="xl">
+                    <p class="demo-card-label">padding="lg" · radius="xl"</p>
+                </stp-card>
+                <stp-card [border]="false" padding="md">
+                    <p class="demo-card-label">border=false</p>
+                </stp-card>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Interactive</p>
+            <div class="demo-grid-3">
+                <stp-card [interactive]="true" padding="md">
+                    <p class="demo-card-label">interactive=true · hover me</p>
+                </stp-card>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         INPUT
+    ════════════════════════════════════════════════════════════ -->
+    <section id="inputs" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Input</h2>
+            <code class="demo-section-head__selector">stp-input</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Tipos</p>
+            <div class="demo-form-grid">
+                <stp-input label="Nombre completo" [(value)]="textVal" />
+                <stp-input label="Contraseña" type="password" [(value)]="passwordVal" />
+                <stp-input label="Correo electrónico" type="email" autocomplete="email" [(value)]="textVal" />
+                <stp-input label="Precio S/" type="number" [(value)]="textVal" />
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Estado de error</p>
+            <div class="demo-form-grid">
+                <stp-input label="RUC *" [hasError]="true" [(value)]="errorVal" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         INPUT NUMERIC
+    ════════════════════════════════════════════════════════════ -->
+    <section id="numeric" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">InputNumeric</h2>
+            <code class="demo-section-head__selector">stp-input-numeric</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes</p>
+            <div class="demo-row demo-row--align-end">
+                <div class="demo-chip">
+                    <stp-input-numeric size="sm" [min]="1" [(value)]="numericVal" />
+                    <span class="demo-chip__label">sm</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-input-numeric size="md" [min]="1" [(value)]="numericVal" />
+                    <span class="demo-chip__label">md</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-input-numeric size="lg" [min]="1" [(value)]="numericVal" />
+                    <span class="demo-chip__label">lg</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Radius & con límites</p>
+            <div class="demo-row demo-row--align-end">
+                <div class="demo-chip">
+                    <stp-input-numeric radius="sm" [(value)]="numericVal" />
+                    <span class="demo-chip__label">radius="sm"</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-input-numeric radius="full" [(value)]="numericVal" />
+                    <span class="demo-chip__label">radius="full"</span>
+                </div>
+                <div class="demo-chip">
+                    <stp-input-numeric [min]="1" [max]="10" [(value)]="numericVal" />
+                    <span class="demo-chip__label">min=1 max=10</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SEARCH
+    ════════════════════════════════════════════════════════════ -->
+    <section id="search" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Search</h2>
+            <code class="demo-section-head__selector">stp-search</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes</p>
+            <div class="demo-stack">
+                <div class="demo-chip demo-chip--block">
+                    <stp-search size="sm" placeholder="Buscar producto..." [(value)]="searchVal" />
+                    <span class="demo-chip__label">size="sm"</span>
+                </div>
+                <div class="demo-chip demo-chip--block">
+                    <stp-search size="md" placeholder="Buscar producto..." [(value)]="searchVal" />
+                    <span class="demo-chip__label">size="md"</span>
+                </div>
+                <div class="demo-chip demo-chip--block">
+                    <stp-search size="lg" placeholder="Buscar producto..." [(value)]="searchVal" />
+                    <span class="demo-chip__label">size="lg"</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SELECT
+    ════════════════════════════════════════════════════════════ -->
+    <section id="select" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Select</h2>
+            <code class="demo-section-head__selector">stp-select</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes</p>
+            <div class="demo-form-grid">
+                <stp-select label="Categoría" size="sm"
+                    [options]="selectOptions" [(value)]="selectVal" />
+                <stp-select label="Categoría" size="md"
+                    [options]="selectOptions" [(value)]="selectVal" />
+                <stp-select label="Categoría" size="lg"
+                    [options]="selectOptions" [(value)]="selectVal" />
+                <stp-select label="Categoría *" [hasError]="true"
+                    [options]="selectOptions" [(value)]="selectVal" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         CHECKBOX
+    ════════════════════════════════════════════════════════════ -->
+    <section id="checkboxes" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Checkbox</h2>
+            <code class="demo-section-head__selector">stp-checkbox</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Variants</p>
+            <div class="demo-row">
+                <stp-checkbox label="Primary"  variant="primary" [(checked)]="cbPrimary" />
+                <stp-checkbox label="Success"  variant="success" [(checked)]="cbSuccess" />
+                <stp-checkbox label="Warning"  variant="warning" [(checked)]="cbWarning" />
+                <stp-checkbox label="Error"    variant="error"   [(checked)]="cbError" />
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Sizes & indeterminate</p>
+            <div class="demo-row">
+                <stp-checkbox label="Small"         size="sm" [(checked)]="cbSmall" />
+                <stp-checkbox label="Medium"        size="md" [(checked)]="cbPrimary" />
+                <stp-checkbox label="Indeterminate" [indeterminate]="true" [(checked)]="cbPrimary" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         TABS
+    ════════════════════════════════════════════════════════════ -->
+    <section id="tabs" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Tabs</h2>
+            <code class="demo-section-head__selector">stp-tabs</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">variant="underline"</p>
+            <stp-tabs [tabs]="tabItems" variant="underline" [(activeTab)]="activeUnderline" />
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">variant="pills"</p>
+            <stp-tabs [tabs]="tabItems" variant="pills" [(activeTab)]="activePills" />
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">variant="segment" · fullWidth</p>
+            <stp-tabs [tabs]="tabItems" variant="segment" [fullWidth]="true" [(activeTab)]="activeSegment" />
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">size="sm"</p>
+            <stp-tabs [tabs]="tabItems" variant="pills" size="sm" [(activeTab)]="activePills" />
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         SHIMMER
+    ════════════════════════════════════════════════════════════ -->
+    <section id="shimmer" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Shimmer</h2>
+            <code class="demo-section-head__selector">stp-shimmer</code>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Skeleton de tarjeta</p>
+            <div class="demo-shimmer-card">
+                <stp-shimmer radius="full" class="demo-shimmer-circle" />
+                <div class="demo-shimmer-lines">
+                    <stp-shimmer radius="full" class="demo-shimmer-line demo-shimmer-line--lg" />
+                    <stp-shimmer radius="full" class="demo-shimmer-line demo-shimmer-line--sm" />
+                </div>
+            </div>
+        </div>
+
+        <div class="demo-group">
+            <p class="demo-group__title">Radius options</p>
+            <div class="demo-stack">
+                <stp-shimmer radius="sm"   class="demo-shimmer-block" />
+                <stp-shimmer radius="md"   class="demo-shimmer-block" />
+                <stp-shimmer radius="lg"   class="demo-shimmer-block" />
+                <stp-shimmer radius="xl"   class="demo-shimmer-block" />
+                <stp-shimmer radius="full" class="demo-shimmer-block" />
+            </div>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         EMPTY STATE
+    ════════════════════════════════════════════════════════════ -->
+    <section id="empty" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">EmptyState</h2>
+            <code class="demo-section-head__selector">stp-empty-state</code>
+        </div>
+
+        <div class="demo-group">
+            <stp-card padding="lg">
+                <stp-empty-state
+                    icon="package"
+                    title="Sin productos"
+                    description="No se encontraron productos que coincidan con tu búsqueda." />
+            </stp-card>
+        </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════════════
+         ICONS
+    ════════════════════════════════════════════════════════════ -->
+    <section id="icons" class="demo-section">
+        <div class="demo-section-head">
+            <h2 class="demo-section-head__title">Icons</h2>
+            <code class="demo-section-head__selector">[stp-icon] · Phosphor</code>
+        </div>
+
+        <div class="demo-icon-grid">
+            @for (name of ICONS; track name) {
+            <div class="demo-icon-item">
+                <i [attr.stp-icon]="''" [attr.name]="name" style="font-size: 1.5rem"></i>
+                <span class="demo-icon-item__name">{{ name }}</span>
+            </div>
+            }
+        </div>
+    </section>
+
+</div>

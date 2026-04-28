@@ -1,0 +1,26 @@
+@if (visible()) {
+  <div [ngClass]="hostClasses()" role="alert">
+    <i stp-icon [name]="resolvedIcon()" class="stp-alert__icon icon--md"></i>
+
+    <div class="stp-alert__body">
+      @if (title()) {
+        <strong class="stp-alert__title">{{ title() }}</strong>
+      }
+      @if (message()) {
+        <p class="stp-alert__message">{{ message() }}</p>
+      }
+      <ng-content />
+    </div>
+
+    @if (dismissible()) {
+      <button
+        type="button"
+        class="stp-alert__close icon-btn"
+        aria-label="Cerrar alerta"
+        (click)="dismiss()"
+      >
+        <i stp-icon name="x" class="icon--sm"></i>
+      </button>
+    }
+  </div>
+}

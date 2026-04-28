@@ -1,0 +1,36 @@
+.swipe-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.actions {
+  position: absolute;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  display: flex;
+}
+
+.actions button {
+  width: 80px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-1);
+  i {
+    font-size: 1.2rem;
+  }
+}
+
+
+.content {
+  
+  touch-action: pan-y; /* importante */
+}
+
+.content.animate {
+  transition: transform 0.2s ease;
+}

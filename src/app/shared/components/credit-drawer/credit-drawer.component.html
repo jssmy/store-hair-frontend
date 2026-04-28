@@ -1,0 +1,139 @@
+<div class="crd-drawer" role="dialog" aria-modal="true" aria-label="Registrar crédito"
+    (click)="$event.stopPropagation()">
+
+    <div class="crd-drawer__handle" aria-hidden="true"></div>
+
+    <div class="crd-drawer__header">
+        <h2 class="crd-drawer__title">{{ editing ? 'Editar crédito' : 'Nuevo crédito' }}</h2>
+        <button class="crd-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
+            <i stp-icon name="x" style="font-size: 1.25rem"></i>
+        </button>
+    </div>
+
+    @if (success()) {
+    <div class="crd-drawer__success">
+        <div class="crd-drawer__success-icon">
+            <i stp-icon name="check-circle" style="font-size: 3.5rem"></i>
+        </div>
+        <p class="crd-drawer__success-text">
+            {{ editing ? 'Crédito actualizado' : 'Crédito registrado' }}
+        </p>
+    </div>
+    } @else {
+
+    <div class="crd-drawer__body">
+
+        <p class="crd-section-label">Cliente</p>
+
+        <stp-input
+            label="Nombre del cliente *"
+            [value]="form().customerName"
+            (valueChange)="patchForm({ customerName: $event })" />
+
+        <stp-input
+            label="Teléfono *"
+            type="tel"
+            autocomplete="tel"
+            [value]="form().customerPhone"
+            (valueChange)="patchForm({ customerPhone: $event })" />
+
+        <p class="crd-section-label">Monto</p>
+
+        <div class="crd-field">
+            <label class="crd-field__label">Total de la venta *</label>
+            <div class="crd-field__input">
+                <span class="crd-field__prefix">S/</span>
+                <input class="crd-field__control" type="number" min="0" step="0.10"
+                    placeholder="0.00" [value]="total() || ''"
+                    (input)="onTotalInput($event)" />
+            </div>
+        </div>
+
+        <div class="crd-field-row">
+            <div class="crd-field">
+                <label class="crd-field__label">Efectivo inicial</label>
+                <div class="crd-field__input">
+                    <span class="crd-field__prefix">S/</span>
+                    <input class="crd-field__control" type="number" min="0" step="0.10"
+                        placeholder="0.00" [value]="creditEfectivo() || ''"
+                        (input)="onEfectivoInput($event)" />
+                </div>
+            </div>
+            <div class="crd-field">
+                <label class="crd-field__label">Yape inicial</label>
+                <div class="crd-field__input">
+                    <span class="crd-field__prefix">S/</span>
+                    <input class="crd-field__control" type="number" min="0" step="0.10"
+                        placeholder="0.00" [value]="creditDigital() || ''"
+                        (input)="onDigitalInput($event)" />
+                </div>
+            </div>
+        </div>
+
+        @if (initialAmount() > 0) {
+        <div class="crd-info-row">
+            <span>Abono inicial</span>
+            <span>S/ {{ initialAmount() | number:'1.2-2' }}</span>
+        </div>
+        <div class="crd-info-row">
+            <span>Saldo a financiar</span>
+            <span>S/ {{ financed() | number:'1.2-2' }}</span>
+        </div>
+        }
+
+        <p class="crd-section-label">Plan de pago</p>
+
+        <div class="crd-field">
+            <label class="crd-field__label">Número de cuotas</label>
+            <div class="crd-chips">
+                @for (opt of INSTALLMENT_OPTIONS; track opt) {
+                <button type="button" class="crd-chip"
+                    [class.crd-chip--active]="installments() === opt"
+                    (click)="installments.set(opt)">
+                    {{ opt }}
+                </button>
+                }
+            </div>
+        </div>
+
+        <div class="crd-field">
+            <label class="crd-field__label">Frecuencia de pago</label>
+            <div class="crd-chips">
+                @for (f of FREQUENCIES; track f.value) {
+                <button type="button" class="crd-chip"
+                    [class.crd-chip--active]="frequency() === f.value"
+                    (click)="frequency.set(f.value)">
+                    {{ f.label }}
+                </button>
+                }
+            </div>
+        </div>
+
+        <div class="crd-info-row">
+            <span>Primera cuota</span>
+            <span>{{ firstPaymentDateLabel() }}</span>
+        </div>
+
+        @if (total() > 0) {
+        <div class="crd-info-row crd-info-row--highlight">
+            <span>{{ installments() }} cuota{{ installments() !== 1 ? 's' : '' }} {{ frequency() }}</span>
+            <span>S/ {{ installmentAmount() | number:'1.2-2' }} c/u</span>
+        </div>
+        }
+
+    </div><!-- /body -->
+
+    <div class="crd-drawer__footer">
+        <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
+            Cancelar
+        </stp-button>
+        <stp-button variant="primary" btnStyle="solid" size="md"
+            [disabled]="!canSubmit()"
+            [loading]="submitting()"
+            (click)="submit()">
+            {{ editing ? 'Guardar cambios' : 'Registrar crédito' }}
+        </stp-button>
+    </div>
+
+    }<!-- /not success -->
+</div>

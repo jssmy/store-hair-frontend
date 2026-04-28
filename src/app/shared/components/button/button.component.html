@@ -1,0 +1,37 @@
+<ng-template #btnContent>
+  <ng-content />
+</ng-template>
+
+@if (isLink()) {
+  <a
+    class="stp-btn"
+    [ngClass]="hostClasses()"
+    [class.stp-btn--ripple]="rippleActive()"
+    [href]="href()"
+    [attr.target]="target()"
+    [attr.rel]="rel()"
+    [attr.aria-disabled]="disabled() || null"
+    (click)="triggerRipple()"
+  >
+    <span class="stp-btn__content">
+      <ng-container [ngTemplateOutlet]="btnContent" />
+    </span>
+  </a>
+} @else {
+  <button
+    class="stp-btn"
+    [ngClass]="hostClasses()"
+    [type]="type()"
+    [disabled]="disabled() || loading()"
+    [attr.aria-disabled]="disabled() || loading() || null"
+    [attr.aria-busy]="loading() || null"
+    (click)="triggerRipple()"
+  >
+    @if (loading()) {
+      <span class="stp-btn__spinner" aria-hidden="true"></span>
+    }
+    <span class="stp-btn__content">
+      <ng-container [ngTemplateOutlet]="btnContent" />
+    </span>
+  </button>
+}

@@ -1,0 +1,47 @@
+<div
+  class="stp-wrapper"
+  [class.stp-focused]="focused()"
+  [class.stp-floated]="floated()"
+  [class.stp-disabled]="disabled()"
+  [class.stp-error]="hasError()"
+  [class.stp-no-label]="!label()"
+>
+  <input
+    class="stp-input"
+    [id]="id()"
+    [type]="resolvedType()"
+    [value]="value()"
+    [disabled]="disabled()"
+    [autocomplete]="autocomplete()"
+    (focus)="onFocus()"
+    (blur)="onBlur()"
+    (input)="onInput($event)"
+    [attr.aria-labelledby]="label() ? id() + '-label' : null"
+  />
+
+  <!-- Built-in password toggle -->
+  @if (isPassword()) {
+    <button
+      type="button"
+      class="stp-btn stp-password-toggle"
+      [class.stp-password-toggle--ripple]="toggleRippleActive()"
+      (click)="togglePassword()"
+      [attr.aria-label]="showPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+      [attr.aria-pressed]="showPassword()"
+      tabindex="0"
+    >
+      @if (showPassword()) {
+        <i stp-icon name="eye-slash" style="font-size: 1.125rem"></i>
+      } @else {
+        <i stp-icon name="eye" style="font-size: 1.125rem"></i>
+      }
+    </button>
+  }
+
+  <!-- Floating label (optional) -->
+  @if (label()) {
+    <label class="stp-label" [for]="id()" [id]="id() + '-label'">
+      {{ label() }}
+    </label>
+  }
+</div>

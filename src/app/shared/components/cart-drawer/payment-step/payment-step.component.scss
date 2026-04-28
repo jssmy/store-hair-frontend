@@ -1,0 +1,188 @@
+@use '../_step-shared';
+
+
+:host {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+    animation: step-enter 0.22s ease;
+}
+
+.step__payment {
+    max-height: 475px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+}
+
+.step__methods {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.75rem;
+    padding: var(--p-4) var(--p-5);
+    flex-shrink: 0;
+}
+
+.step__method-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--gap-1);
+    padding: var(--p-4);
+    border-radius: var(--radius-md);
+    border: 2px solid var(--color-border);
+    background: var(--color-surface);
+    color: var(--color-text-disabled);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease;
+
+    &__label {
+        font-size: 0.875rem;
+        font-weight: 600;
+        color: var(--color-text-primary);
+    }
+
+    &--active {
+        border-color: var(--color-primary);
+        background: var(--color-primary-light);
+        color: var(--color-text-primary);
+    }
+
+    &--active:has(.step__method-label) {
+        .step__method-label {
+            color: var(--color-text-primary);
+            font-weight: 700;
+        }
+
+    }
+
+
+    &:hover:not(&--active) {
+        border-color: var(--color-text-secondary);
+        background: var(--color-surface-alt);
+    }
+}
+
+.step__method-icon {
+    font-size: 1.75rem;
+    line-height: 1;
+}
+
+
+.step__form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-4);
+    padding: var(--p-2) var(--p-5) var(--p-4);
+}
+
+.step__field {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-2);
+}
+
+.step__field-label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+}
+
+.step__field-input {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: var(--color-bg);
+    transition: border-color 0.15s ease;
+
+    &:focus-within {
+        border-color: var(--color-primary);
+    }
+}
+
+.step__field-prefix {
+    padding: 0.625rem 0.625rem 0.625rem var(--p-3);
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    background: var(--color-surface);
+    border-right: 1.5px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.step__field-control {
+    flex: 1;
+    padding: 0.625rem var(--p-3);
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 0.9rem;
+    color: var(--color-text-primary);
+
+    &::-webkit-inner-spin-button,
+    &::-webkit-outer-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+
+}
+
+.step__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--p-2);
+}
+
+.step__chip {
+    padding: var(--p-2) var(--p-3);
+    border-radius: var(--radius-full);
+    border: 1.5px solid var(--color-border);
+    background: var(--color-surface);
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+
+    &--active {
+        border-color: var(--color-primary);
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+
+    &:hover:not(&--active) {
+        border-color: var(--color-text-disabled);
+        background: var(--color-surface-alt);
+    }
+}
+
+.step__info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--p-2) var(--p-3);
+    border-radius: var(--radius-sm);
+    font-size: 0.875rem;
+    background: var(--color-surface);
+    color: var(--color-text-secondary);
+
+    &--success {
+        background: var(--color-success-light);
+        color: var(--color-success);
+    }
+
+    &--warning {
+        background: var(--color-warning-light);
+        color: var(--color-warning);
+    }
+
+    &--highlight {
+        background: var(--color-primary-light);
+        color: var(--color-primary);
+        font-weight: 600;
+    }
+}

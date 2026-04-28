@@ -1,0 +1,175 @@
+:host { display: block; }
+
+.crd-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.crd-list__item { display: contents; }
+
+.crd-summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  padding: 0.875rem 1rem;
+  width: 100%;
+  background: var(--color-surface);
+  border: none;
+  border-bottom: 1px solid var(--color-border);
+  text-align: left;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  cursor: pointer;
+  outline: none;
+  position: relative;
+  transition: background var(--duration-fast) var(--ease-default);
+
+  &:last-of-type { border-bottom: none; }
+  &:hover         { background: var(--color-surface-alt, #f5f5f5); }
+  &:focus-visible { box-shadow: inset 0 0 0 2px var(--color-primary); }
+
+  &--alert   { background: color-mix(in srgb, var(--color-warning-light) 40%, var(--color-surface)); }
+  &--overdue { background: color-mix(in srgb, var(--color-error-light)   25%, var(--color-surface)); }
+  &--completed { opacity: 0.85; }
+
+  &__header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__header-left {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+  }
+
+  &__id {
+    font-size: 0.8125rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__alert-icon {
+    display: flex;
+    align-items: center;
+    color: var(--color-warning-hover, #b45309);
+    animation: crd-pulse 1.8s ease-in-out infinite;
+  }
+
+  &__date {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+    white-space: nowrap;
+  }
+
+  &__amounts-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+  }
+
+  &__paid {
+    display: flex;
+    align-items: baseline;
+    gap: 0.25rem;
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+    strong { color: var(--color-text-primary); font-size: 0.875rem; }
+  }
+
+  &__of {
+    font-size: 0.6875rem;
+    color: var(--color-text-disabled);
+  }
+
+  &__pct {
+    font-size: 0.9375rem;
+    font-weight: 800;
+    color: var(--color-primary);
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &--alert   { color: var(--color-warning, #d97706); }
+    &--overdue { color: var(--color-error, #dc2626); }
+  }
+
+  &__progress {
+    height: 5px;
+    border-radius: 9999px;
+    background: var(--color-border);
+    overflow: hidden;
+  }
+
+  &__progress-bar {
+    height: 100%;
+    border-radius: 9999px;
+    background: var(--color-primary);
+    transition: width var(--duration-slower) var(--ease-out);
+
+    &--alert   { background: var(--color-warning, #d97706); }
+    &--overdue { background: var(--color-error, #dc2626); }
+    &--success { background: var(--color-success, #16a34a); }
+  }
+
+  &__footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.25rem;
+  }
+
+  &__installments {
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+
+  &__next {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+    strong { color: var(--color-text-primary); }
+
+    &--overdue { color: var(--color-error, #dc2626); font-weight: 600; }
+  }
+
+  &__chevron {
+    position: absolute;
+    right: 1rem;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 0.875rem;
+    color: var(--color-text-disabled);
+  }
+}
+
+.crd-summary-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 0.125rem 0.5rem;
+  border-radius: 9999px;
+  white-space: nowrap;
+
+  &--active    { background: var(--color-primary-light);  color: var(--color-primary); }
+  &--overdue   { background: var(--color-error-light);    color: var(--color-error-hover, #b91c1c); }
+  &--completed { background: var(--color-success-light);  color: var(--color-success-hover, #15803d); }
+}
+
+@keyframes crd-pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.45; }
+}

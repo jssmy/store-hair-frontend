@@ -1,0 +1,348 @@
+<div class="credits-page">
+
+    <!-- ── Header ────────────────────────────────────────────── -->
+    <header #creditsHeader class="credits-header">
+        <div class="credits-header__row">
+            <div>
+                <h1 class="credits-header__title">Créditos</h1>
+                <p class="credits-header__subtitle">
+                    @if (viewMode() === 'credits') {
+                    {{ activeCreditsCount() }} crédito{{ activeCreditsCount() !== 1 ? 's' : '' }} activo{{ activeCreditsCount() !== 1 ? 's' : '' }}
+                    · {{ credits().length }} en total
+                    } @else {
+                    {{ activeCustomerCount() }} cliente{{ activeCustomerCount() !== 1 ? 's' : '' }} con crédito activo
+                    · {{ customerGroups().length }} en total
+                    }
+                </p>
+            </div>
+        </div>
+    </header>
+
+    <!-- ── Alert banner ──────────────────────────────────────── -->
+    @if (displayAlertCount() > 0) {
+    <stp-alert
+        variant="warning"
+        [title]="alertBannerTitle()"
+        message="Última cuota pendiente y menos del 50% del total pagado."
+        [dismissible]="true">
+    </stp-alert>
+    }
+
+    <!-- ── Sticky bar ─────────────────────────────────────────── -->
+    <div class="credits-sticky-bar sticky-bar" [class.credits-sticky-bar--stuck]="isStuck()"
+        [class.sticky-bar--stuck]="isStuck()">
+
+        <!-- View mode toggle -->
+        <div class="credits-view-tabs">
+            <stp-tabs
+                [tabs]="VIEW_MODES"
+                variant="segment"
+                size="sm"
+                [fullWidth]="true"
+                [activeTab]="viewMode()"
+                (tabChange)="setViewMode($event)">
+            </stp-tabs>
+        </div>
+
+        <stp-search
+            [placeholder]="viewMode() === 'credits' ? 'Buscar por nombre, teléfono o DNI...' : 'Buscar cliente...'"
+            size="md"
+            [value]="searchQuery()"
+            (valueChange)="onSearchInput($event)"
+            (cleared)="clearSearch()">
+        </stp-search>
+
+        <section class="credits-filters" aria-label="Filtrar">
+            <div class="credits-filters__scroll" role="tablist">
+                @for (f of FILTERS; track f.value) {
+                <stp-button class="credits-filter-chip"
+                    [class.credits-filter-chip--active]="activeFilter() === f.value"
+                    role="tab" size="sm" radius="full"
+                    [variant]="activeFilter() === f.value ? 'primary' : 'surface'"
+                    [btnStyle]="activeFilter() === f.value ? 'solid' : 'outlined'"
+                    [attr.aria-selected]="activeFilter() === f.value"
+                    (click)="setFilter(f.value)">
+                    {{ f.label }}
+                    @if (f.value === 'active' && displayAlertCount() > 0) {
+                    <stp-badge variant="error" badgeStyle="solid">{{ displayAlertCount() }}</stp-badge>
+                    }
+                </stp-button>
+                }
+            </div>
+        </section>
+
+    </div>
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- ── Vista: Por crédito ──────────────────────────────── -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    @if (viewMode() === 'credits') {
+
+        @if (filteredCredits().length > 0) {
+        <section class="credits-results" aria-label="Lista de créditos" aria-live="polite">
+            <p class="credits-results__count">
+                @if (isFiltered()) {
+                {{ filteredCredits().length }} crédito{{ filteredCredits().length !== 1 ? 's' : '' }}
+                } @else {
+                Todos los créditos
+                }
+            </p>
+
+            <ul class="credits-list" role="list">
+                @for (credit of filteredCredits(); track credit.id) {
+                @let s = creditStats(credit);
+                <li class="credit-row-item">
+                    <button type="button" class="credit-row credit-row--{{ credit.status }}"
+                        [class.credit-row--alert]="s.hasAlert"
+                        [attr.aria-label]="'Ver crédito #' + creditId(credit) + ' de ' + credit.customerName"
+                        (click)="openSingleCreditDrawer(credit)">
+
+                        <!-- Avatar -->
+                        <div class="credit-row__avatar credit-row__avatar--{{ credit.status }}" aria-hidden="true">
+                            {{ customerInitials(credit.customerName) }}
+                        </div>
+
+                        <!-- Info -->
+                        <div class="credit-row__info">
+
+                            <div class="credit-row__name-row">
+                                <span class="credit-row__name">{{ credit.customerName }}</span>
+                                @if (s.hasAlert) {
+                                <span class="credit-row__alert-icon" aria-label="Crédito en riesgo">
+                                    <i stp-icon name="warning" style="font-size: 0.875rem"></i>
+                                </span>
+                                }
+                                <span class="credit-row__id"># {{ creditId(credit) }}</span>
+                            </div>
+
+                            <span class="credit-row__contact">
+                                <i stp-icon name="phone" style="font-size: 0.6875rem"></i>
+                                {{ credit.customerPhone }}
+                                @if (credit.customerDni) { · DNI {{ credit.customerDni }} }
+                            </span>
+
+                            <div class="credit-row__meta-row">
+                                <span class="crd-status-badge crd-status-badge--{{ credit.status }}">
+                                    {{ statusLabel(credit.status) }}
+                                </span>
+                                <span class="crd-installments">
+                                    {{ credit.paidInstallments }}/{{ credit.installments }} cuotas
+                                    · {{ frequencyLabels[credit.frequency] | lowercase }}
+                                </span>
+                            </div>
+
+                            <div class="credit-row__progress" role="progressbar"
+                                [attr.aria-valuenow]="(s.paidPercentage * 100) | number:'1.0-0'"
+                                aria-valuemin="0" aria-valuemax="100">
+                                <div class="credit-row__progress-bar"
+                                    [style.width.%]="s.paidPercentage * 100"
+                                    [class.credit-row__progress-bar--alert]="s.hasAlert"
+                                    [class.credit-row__progress-bar--overdue]="credit.status === 'overdue'"
+                                    [class.credit-row__progress-bar--success]="credit.status === 'completed'">
+                                </div>
+                            </div>
+
+                            <div class="credit-row__amounts">
+                                <span>Pagado <strong>S/ {{ s.totalPaid | number:'1.2-2' }}</strong></span>
+                                <span class="credit-row__total">de S/ {{ credit.total | number:'1.2-2' }}</span>
+                            </div>
+
+                            @if (s.nextPaymentDate) {
+                            <span class="credit-row__next-date"
+                                [class.credit-row__next-date--overdue]="credit.status === 'overdue'">
+                                <i stp-icon name="calendar" style="font-size: 0.75rem"></i>
+                                {{ credit.status === 'overdue' ? 'Vencido:' : 'Próx. cuota:' }}
+                                {{ formatDate(s.nextPaymentDate) }}
+                                · <strong>S/ {{ s.installmentAmount | number:'1.2-2' }}</strong>
+                            </span>
+                            }
+
+                        </div>
+
+                        <!-- Right: pct + chevron -->
+                        <div class="credit-row__right" aria-hidden="true">
+                            <span class="credit-row__pct"
+                                [class.credit-row__pct--alert]="s.hasAlert"
+                                [class.credit-row__pct--overdue]="credit.status === 'overdue'">
+                                {{ (s.paidPercentage * 100) | number:'1.0-0' }}%
+                            </span>
+                            <i stp-icon name="caret-right" class="credit-row__chevron"></i>
+                        </div>
+
+                    </button>
+                </li>
+                }
+            </ul>
+        </section>
+        }
+
+        @if (filteredCredits().length === 0) {
+            @if (isFiltered()) {
+            <stp-empty-state icon="receipt" title="Sin resultados"
+                description="No se encontraron créditos con ese criterio.">
+                <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                    <i stp-icon name="plus" style="font-size: 1rem"></i>
+                    Agregar crédito
+                </stp-button>
+            </stp-empty-state>
+            } @else {
+            <stp-empty-state icon="receipt" title="Sin créditos registrados"
+                description="Registra el primer crédito para empezar.">
+                <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                    <i stp-icon name="plus" style="font-size: 1rem"></i>
+                    Agregar crédito
+                </stp-button>
+            </stp-empty-state>
+            }
+        }
+
+    }
+
+    <!-- ════════════════════════════════════════════════════════ -->
+    <!-- ── Vista: Por cliente ──────────────────────────────── -->
+    <!-- ════════════════════════════════════════════════════════ -->
+    @else {
+
+        @if (filteredCustomers().length > 0) {
+        <section class="credits-results" aria-label="Lista de clientes" aria-live="polite">
+            <p class="credits-results__count">
+                @if (isFiltered()) {
+                {{ filteredCustomers().length }} cliente{{ filteredCustomers().length !== 1 ? 's' : '' }}
+                } @else {
+                Todos los clientes
+                }
+            </p>
+
+            <ul class="credits-list" role="list">
+                @for (group of filteredCustomers(); track group.customerPhone) {
+                <li class="customer-row-item">
+                    <button type="button" class="customer-row"
+                        [class.customer-row--alert]="group.alertCount > 0"
+                        [class.customer-row--overdue]="group.overdueCount > 0 && group.activeCount === 0"
+                        [class.customer-row--completed]="group.completedCount === group.credits.length"
+                        [attr.aria-label]="'Ver créditos de ' + group.customerName"
+                        (click)="openDetailDrawer(group)">
+
+                        <!-- Avatar -->
+                        <div class="customer-row__avatar customer-row__avatar--{{ dominantStatus(group) }}"
+                            aria-hidden="true">
+                            {{ customerInitials(group.customerName) }}
+                        </div>
+
+                        <!-- Info -->
+                        <div class="customer-row__info">
+
+                            <div class="customer-row__name-row">
+                                <span class="customer-row__name">{{ group.customerName }}</span>
+                                @if (group.alertCount > 0) {
+                                <span class="customer-row__alert-icon" aria-label="Cliente en riesgo">
+                                    <i stp-icon name="warning" style="font-size: 0.875rem"></i>
+                                </span>
+                                }
+                            </div>
+
+                            <span class="customer-row__contact">
+                                <i stp-icon name="phone" style="font-size: 0.6875rem"></i>
+                                {{ group.customerPhone }}
+                                @if (group.customerDni) {
+                                · DNI {{ group.customerDni }}
+                                }
+                            </span>
+
+                            <!-- Status pills -->
+                            <div class="customer-row__status-row">
+                                <span class="cst-count-badge">
+                                    {{ group.credits.length }} crédito{{ group.credits.length !== 1 ? 's' : '' }}
+                                </span>
+                                @if (group.activeCount > 0) {
+                                <span class="cst-status-pill cst-status-pill--active">
+                                    {{ group.activeCount }} activo{{ group.activeCount !== 1 ? 's' : '' }}
+                                </span>
+                                }
+                                @if (group.overdueCount > 0) {
+                                <span class="cst-status-pill cst-status-pill--overdue">
+                                    {{ group.overdueCount }} vencido{{ group.overdueCount !== 1 ? 's' : '' }}
+                                </span>
+                                }
+                                @if (group.completedCount > 0) {
+                                <span class="cst-status-pill cst-status-pill--completed">
+                                    {{ group.completedCount }} completado{{ group.completedCount !== 1 ? 's' : '' }}
+                                </span>
+                                }
+                                @if (group.alertCount > 0) {
+                                <span class="cst-status-pill cst-status-pill--alert">
+                                    <i stp-icon name="warning" style="font-size: 0.6875rem"></i>
+                                    {{ group.alertCount }} en riesgo
+                                </span>
+                                }
+                            </div>
+
+                            <!-- Progress bar (aggregate) -->
+                            <div class="customer-row__progress" role="progressbar"
+                                [attr.aria-valuenow]="(paidPercentage(group) * 100) | number:'1.0-0'"
+                                aria-valuemin="0" aria-valuemax="100">
+                                <div class="customer-row__progress-bar"
+                                    [style.width.%]="paidPercentage(group) * 100"
+                                    [class.customer-row__progress-bar--alert]="group.alertCount > 0"
+                                    [class.customer-row__progress-bar--overdue]="group.overdueCount > 0"
+                                    [class.customer-row__progress-bar--success]="group.completedCount === group.credits.length">
+                                </div>
+                            </div>
+
+                            <div class="customer-row__amounts">
+                                <span class="customer-row__paid">
+                                    Pagado <strong>S/ {{ group.totalPaid | number:'1.2-2' }}</strong>
+                                </span>
+                                <span class="customer-row__total">de S/ {{ group.totalAmount | number:'1.2-2' }}</span>
+                            </div>
+
+                            @if (group.nextPaymentDate) {
+                            <span class="customer-row__next-date"
+                                [class.customer-row__next-date--overdue]="group.overdueCount > 0">
+                                <i stp-icon name="calendar" style="font-size: 0.75rem"></i>
+                                Próx. cuota: {{ formatDate(group.nextPaymentDate) }}
+                                · <strong>S/ {{ group.nextPaymentAmount | number:'1.2-2' }}</strong>
+                            </span>
+                            }
+                        </div>
+
+                        <!-- Right: pct + chevron -->
+                        <div class="customer-row__right" aria-hidden="true">
+                            <span class="customer-row__pct"
+                                [class.customer-row__pct--alert]="group.alertCount > 0"
+                                [class.customer-row__pct--overdue]="group.overdueCount > 0">
+                                {{ (paidPercentage(group) * 100) | number:'1.0-0' }}%
+                            </span>
+                            <i stp-icon name="caret-right" class="customer-row__chevron"></i>
+                        </div>
+
+                    </button>
+                </li>
+                }
+            </ul>
+        </section>
+        }
+
+        @if (filteredCustomers().length === 0) {
+            @if (isFiltered()) {
+            <stp-empty-state icon="users" title="Sin resultados"
+                description="No se encontraron clientes con ese criterio.">
+                <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                    <i stp-icon name="plus" style="font-size: 1rem"></i>
+                    Agregar crédito
+                </stp-button>
+            </stp-empty-state>
+            } @else {
+            <stp-empty-state icon="users" title="Sin clientes con crédito"
+                description="Registra el primer crédito de un cliente para empezar.">
+                <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                    <i stp-icon name="plus" style="font-size: 1rem"></i>
+                    Agregar crédito
+                </stp-button>
+            </stp-empty-state>
+            }
+        }
+
+    }
+
+</div>

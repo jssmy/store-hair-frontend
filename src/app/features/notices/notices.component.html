@@ -1,0 +1,84 @@
+<main class="dash-main" role="main">
+
+    <!-- Greeting -->
+    <section class="dash-greeting" aria-label="Saludo">
+        <div class="dash-greeting__text">
+            <h1 class="dash-greeting__title">¡Hola, {{ currentUserName }}!</h1>
+            <p class="dash-greeting__subtitle">Estas son las últimas noticias de tu negocio</p>
+        </div>
+        <div class="dash-greeting__date" aria-live="polite">
+            {{ currentYear }}
+        </div>
+    </section>
+
+    <!-- Activity feed -->
+    <section class="dash-feed" aria-label="Actividad reciente">
+
+        <!-- Filter bar -->
+        <div class="dash-filter-bar" role="tablist" aria-label="Filtrar actividad">
+            @for (filter of filters; track filter) {
+            <stp-button size="sm" radius="md" [variant]="activeFilter() === filter ? 'primary' : 'surface'"
+                [btnStyle]="activeFilter() === filter ? 'solid' : 'ghost'" role="tab"
+                [attr.aria-selected]="activeFilter() === filter" (click)="setFilter(filter)">
+                @switch (filter) {
+                @case ('ventas') {
+                <i stp-icon name="shopping-bag" style="font-size: 0.875rem"></i>
+                }
+                @case ('productos') {
+                <i stp-icon name="package" style="font-size: 0.875rem"></i>
+                }
+                @case ('caja') {
+                <i stp-icon name="credit-card" style="font-size: 0.875rem"></i>
+                }
+                }
+                {{ filterLabels[filter] }}
+            </stp-button>
+            }
+        </div>
+
+        <!-- Activity list -->
+        <ul class="dash-activity-list" role="list">
+            @for (item of filteredActivities(); track item.id) {
+            <li class="dash-activity-item dash-activity-item--{{ item.category }}" role="listitem">
+
+                <!-- User avatar -->
+                <div class="dash-activity-avatar dash-avatar--{{ item.user | lowercase }}" aria-hidden="true">
+                    {{ userInitial(item.user) }}
+                </div>
+
+                <!-- Content -->
+                <div class="dash-activity-content">
+                    <p class="dash-activity-text">
+                        <strong class="dash-activity-user">{{ item.user }}</strong>
+                        {{ item.action }}
+                        <span class="dash-activity-detail">{{ item.detail }}</span>
+                    </p>
+                    @if (item.amount) {
+                    <span class="dash-activity-amount"
+                        [class.dash-activity-amount--negative]="item.amount.startsWith('-')">
+                        {{ item.amount }}
+                    </span>
+                    }
+                </div>
+
+                <!-- Category badge + time -->
+                <div class="dash-activity-meta">
+                    <span class="dash-category-badge dash-category-badge--{{ item.category }}">
+                        {{ item.category }}
+                    </span>
+                    <time class="dash-activity-time" [attr.datetime]="item.time.toISOString()">
+                        {{ relativeTime(item.time) }}
+                    </time>
+                </div>
+
+            </li>
+            } @empty {
+            <li class="dash-activity-empty" role="listitem">
+                <i stp-icon name="file-text" style="font-size: 2.5rem"></i>
+                <p>Sin actividad en esta categoría</p>
+            </li>
+            }
+        </ul>
+
+    </section>
+</main>

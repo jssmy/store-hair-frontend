@@ -1,0 +1,77 @@
+<ul class="crd-list" role="list">
+    @for (credit of credits(); track credit.id) {
+    @let s = stats(credit);
+    <li class="crd-list__item">
+        <button class="crd-summary crd-summary--{{ credit.status }}"
+            [class.crd-summary--alert]="s.hasAlert"
+            type="button"
+            [attr.aria-label]="'Ver crédito ' + creditId(credit)"
+            (click)="selected.emit(credit.id)">
+
+            <!-- Header row: status · ID · alert · date -->
+            <div class="crd-summary__header">
+                <div class="crd-summary__header-left">
+                    <span class="crd-summary-badge crd-summary-badge--{{ credit.status }}">
+                        {{ statusLabel(credit.status) }}
+                    </span>
+                    <span class="crd-summary__id"># {{ creditId(credit) }}</span>
+                    @if (s.hasAlert) {
+                    <span class="crd-summary__alert-icon">
+                        <i stp-icon name="warning" style="font-size: 0.75rem"></i>
+                    </span>
+                    }
+                </div>
+                <span class="crd-summary__date">
+                    <i stp-icon name="calendar-blank" style="font-size: 0.6875rem"></i>
+                    {{ formatDate(createdAtDate(credit)) }}
+                </span>
+            </div>
+
+            <!-- Amounts + percentage -->
+            <div class="crd-summary__amounts-row">
+                <span class="crd-summary__paid">
+                    Pagado <strong>S/ {{ s.totalPaid | number:'1.2-2' }}</strong>
+                    <span class="crd-summary__of">de S/ {{ credit.total | number:'1.2-2' }}</span>
+                </span>
+                <span class="crd-summary__pct"
+                    [class.crd-summary__pct--alert]="s.hasAlert"
+                    [class.crd-summary__pct--overdue]="credit.status === 'overdue'">
+                    {{ (s.paidPercentage * 100) | number:'1.0-0' }}%
+                </span>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="crd-summary__progress" role="progressbar"
+                [attr.aria-valuenow]="(s.paidPercentage * 100) | number:'1.0-0'"
+                aria-valuemin="0" aria-valuemax="100">
+                <div class="crd-summary__progress-bar"
+                    [style.width.%]="s.paidPercentage * 100"
+                    [class.crd-summary__progress-bar--alert]="s.hasAlert"
+                    [class.crd-summary__progress-bar--overdue]="credit.status === 'overdue'"
+                    [class.crd-summary__progress-bar--success]="credit.status === 'completed'">
+                </div>
+            </div>
+
+            <!-- Installments + next payment -->
+            <div class="crd-summary__footer">
+                <span class="crd-summary__installments">
+                    {{ credit.paidInstallments }}/{{ credit.installments }} cuotas
+                    · {{ frequencyLabels[credit.frequency] | lowercase }}
+                </span>
+                @if (s.nextPaymentDate) {
+                <span class="crd-summary__next"
+                    [class.crd-summary__next--overdue]="credit.status === 'overdue'">
+                    <i stp-icon name="calendar" style="font-size: 0.6875rem"></i>
+                    {{ credit.status === 'overdue' ? 'Vencido:' : 'Próx.:' }}
+                    {{ formatDate(s.nextPaymentDate) }}
+                    · <strong>S/ {{ s.installmentAmount | number:'1.2-2' }}</strong>
+                </span>
+                }
+            </div>
+
+            <i stp-icon name="caret-right" class="crd-summary__chevron"></i>
+
+        </button>
+    </li>
+    }
+</ul>

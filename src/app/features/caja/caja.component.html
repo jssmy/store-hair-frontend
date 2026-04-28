@@ -1,0 +1,92 @@
+<div class="caja">
+
+  <!-- Header -->
+  <header class="caja__header">
+    <div>
+      <h1 class="caja__title">Caja</h1>
+      <p class="caja__subtitle">{{ today | date:'EEEE, d \'de\' MMMM yyyy' : '' : 'es' }}</p>
+    </div>
+    <span class="caja__estado-chip" [class.caja__estado-chip--abierta]="estado() === 'abierta'">
+      <span class="caja__estado-dot"></span>
+      {{ estado() === 'abierta' ? 'Abierta' : 'Cerrada' }}
+    </span>
+  </header>
+
+  <!-- Saldo actual -->
+  <div class="caja__saldo-card">
+    <span class="caja__saldo-label">Saldo actual</span>
+    <p class="caja__saldo-value">{{ saldoActual() | currency:'PEN':'S/ ' }}</p>
+    <div class="caja__saldo-row">
+      <span class="caja__saldo-meta">
+        Inicial: {{ saldoInicial() | currency:'PEN':'S/ ' }}
+      </span>
+      <span class="caja__saldo-meta caja__saldo-meta--date">
+        {{ today | date:'HH:mm' }} hrs
+      </span>
+    </div>
+  </div>
+
+  <!-- Métricas -->
+  <div class="caja__metrics">
+    <div class="caja__metric-card caja__metric-card--ingreso">
+      <div class="caja__metric-icon">
+        <i stp-icon name="arrow-up" style="font-size: 1rem"></i>
+      </div>
+      <div>
+        <span class="caja__metric-label">Ingresos</span>
+        <p class="caja__metric-value">{{ totalIngresos() | currency:'PEN':'S/ ' }}</p>
+      </div>
+    </div>
+
+    <div class="caja__metric-card caja__metric-card--egreso">
+      <div class="caja__metric-icon">
+        <i stp-icon name="arrow-down" style="font-size: 1rem"></i>
+      </div>
+      <div>
+        <span class="caja__metric-label">Egresos</span>
+        <p class="caja__metric-value">{{ totalEgresos() | currency:'PEN':'S/ ' }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Movimientos -->
+  <div class="caja__card">
+    <div class="caja__card-header">
+      <h2 class="caja__card-title">Movimientos</h2>
+      <span class="caja__card-count">{{ movimientos().length }}</span>
+    </div>
+
+    <ul class="caja__mov-list">
+      @for (mov of movimientos(); track mov.id) {
+        <li class="caja__mov-item">
+          <span class="caja__mov-icon" [class.caja__mov-icon--ingreso]="mov.tipo === 'ingreso'" [class.caja__mov-icon--egreso]="mov.tipo === 'egreso'">
+            @if (mov.tipo === 'ingreso') {
+              <i stp-icon name="arrow-up" style="font-size: 0.875rem"></i>
+            } @else {
+              <i stp-icon name="arrow-down" style="font-size: 0.875rem"></i>
+            }
+          </span>
+          <div class="caja__mov-info">
+            <span class="caja__mov-concepto">{{ mov.concepto }}</span>
+            <span class="caja__mov-hora">{{ mov.hora }} hrs</span>
+          </div>
+          <span class="caja__mov-monto" [class.caja__mov-monto--ingreso]="mov.tipo === 'ingreso'" [class.caja__mov-monto--egreso]="mov.tipo === 'egreso'">
+            {{ mov.tipo === 'ingreso' ? '+' : '-' }}{{ mov.monto | currency:'PEN':'S/ ' }}
+          </span>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Acción cierre -->
+  <button class="caja__action-btn" [class.caja__action-btn--cerrar]="estado() === 'abierta'" (click)="toggleEstado()">
+    @if (estado() === 'abierta') {
+      <i stp-icon name="lock" style="font-size: 1.125rem"></i>
+      Cerrar Caja
+    } @else {
+      <i stp-icon name="lock-open" style="font-size: 1.125rem"></i>
+      Abrir Caja
+    }
+  </button>
+
+</div>

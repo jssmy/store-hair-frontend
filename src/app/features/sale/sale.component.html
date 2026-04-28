@@ -1,0 +1,94 @@
+<div class="sale-page">
+
+    <!-- ── Header ───────────────────────────────────────────── -->
+    <header #saleHeader class="sale-header">
+        <h1 class="sale-header__title">Nueva Venta</h1>
+        <p class="sale-header__subtitle">Selecciona productos para agregar al carrito</p>
+    </header>
+
+    <!-- ── Sticky search + categories ──────────────────────── -->
+    <div class="sale-sticky-bar sticky-bar" [class.sale-sticky-bar--stuck]="isStuck()" [class.sticky-bar--stuck]="isStuck()">
+
+        <section class="sale-search" aria-label="Buscar productos">
+            <div class="sale-search__field">
+                <span class="sale-search__icon" aria-hidden="true">
+                    <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
+                </span>
+                <input class="sale-search__input" type="search" placeholder="Buscar producto..." autocomplete="off"
+                    aria-label="Buscar productos" [value]="searchQuery()"
+                    (input)="onSearchInput($any($event.target).value)" />
+                @if (searchQuery()) {
+                <button class="sale-search__clear" type="button" aria-label="Limpiar búsqueda"
+                    (click)="clearSearch()">
+                    <i stp-icon name="x" style="font-size: 1rem"></i>
+                </button>
+                }
+            </div>
+        </section>
+
+        <section class="sale-categories" aria-label="Filtrar por categoría">
+            <div class="sale-categories__scroll" role="tablist">
+                @for (cat of categories; track cat) {
+                <stp-button class="sale-category-chip"
+                    [class.sale-category-chip--active]="activeCategory() === cat" role="tab" size="sm" radius="full"
+                    [variant]="activeCategory() === cat ? 'primary' : 'surface'"
+                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
+                    [attr.aria-selected]="activeCategory() === cat" [attr.aria-label]="categoryLabels[cat]"
+                    (click)="setCategory(cat)">
+                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
+                    {{ categoryLabels[cat] }}
+                </stp-button>
+                }
+            </div>
+        </section>
+
+    </div><!-- /sale-sticky-bar -->
+
+    <!-- ── Empty state (before search) ─────────────────────── -->
+    @if (!hasSearched()) {
+    <div class="sale-empty-state" aria-live="polite">
+        <span class="sale-empty-state__icon" aria-hidden="true">🛒</span>
+        <p class="sale-empty-state__text">Busca o filtra por categoría para ver productos</p>
+    </div>
+    } @else if (filteredProducts().length === 0) {
+    <!-- ── Empty state (no results) ──────────────────────── -->
+    <div class="sale-empty-state sale-empty-state--no-results" aria-live="polite">
+        <span class="sale-empty-state__icon" aria-hidden="true">🔍</span>
+        <p class="sale-empty-state__text">Sin resultados para "<strong>{{ searchQuery() }}</strong>"</p>
+    </div>
+    } @else {
+
+    <!-- ── Product grid ───────────────────────────────────── -->
+    <ul class="sale-grid" aria-label="Productos">
+        
+        @for (product of filteredProducts(); track product.id) {
+            
+            @defer(on viewport) {
+                <li stp-sale-product-card
+                    [product]="product"
+                    [inCart]="isInCart(product.id)"
+                    (addToCart)="addToCart(product, $event)"
+                    (touchstart)="onTouchStart($event)"
+                    (touchend)="onTouchEnd($event, product.id)">
+                </li>
+            } @placeholder {
+                <li class="sale-grid__placeholder"><stp-shimmer radius="md"></stp-shimmer></li>
+            }
+        }
+    </ul>
+    }
+
+</div><!-- /sale-page -->
+
+<!-- ── Cart sticky bar ──────────────────────────────────────── -->
+@if (cartItems().length > 0) {
+<div class="sale-cart-bar" role="status" aria-live="polite">
+    <stp-button variant="info" btnStyle="solid"  radius="md" size="md"
+        (click)="openCart()" aria-label="Ver carrito">
+        <span class="sale-cart-bar__count">{{ cartCount() }}</span>
+        <span class="sale-cart-bar__label">Ver carrito</span>
+        <span class="sale-cart-bar__total">S/ {{ cartTotal() | number:'1.2-2' }}</span>
+    </stp-button>
+</div>
+}
+

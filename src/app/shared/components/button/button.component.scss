@@ -1,0 +1,256 @@
+/* =========================================================
+   stp-button — variant × style matrix
+   Variants: default | primary | warning | danger | info | success | surface | surface-alt
+   Styles:   solid | outlined | ghost
+   ========================================================= */
+
+// Maps each variant to its CSS custom property base name
+// Tokens follow: --color-{base}, --color-{base}-hover, --color-{base}-fg, --color-{base}-light
+$variants: (
+  'default':     ('primary',  'primary-hover',  'primary-fg',  'primary-light'),
+  'primary':     ('primary',  'primary-hover',  'primary-fg',  'primary-light'),
+  'warning':     ('warning',  'warning-hover',  'warning-fg',  'warning-light'),
+  'danger':      ('error',    'error-hover',    'error-fg',    'error-light'),
+  'info':        ('info',     'info-hover',     'info-fg',     'info-light'),
+  'success':     ('success',  'success-hover',  'success-fg',  'success-light'),
+  'surface':     ('surface',  'surface-alt',    'text-primary', 'surface'),
+  'surface-alt': ('surface-alt', 'border',      'text-primary', 'surface-alt'),
+);
+
+// ---- Base button reset --------------------------------------------------
+.stp-btn {
+  --stp-btn-bg:          transparent;
+  --stp-btn-fg:          inherit;
+  --stp-btn-border:      transparent;
+  --stp-btn-ring:        transparent;
+  --stp-ripple-color:    rgba(255, 255, 255, 0.3);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-1);
+  position: relative;
+  overflow: hidden;
+  min-height: 2.75rem;
+  padding: var(--p-0) var(--p-5);
+  border: 1.5px solid var(--stp-btn-border);
+  border-radius: 0.75rem;
+  background-color: var(--stp-btn-bg);
+  color: var(--stp-btn-fg);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  cursor: pointer;
+  user-select: none;
+  text-decoration: none;
+  width: 100%;
+
+  // ---- Size modifiers ----
+  &.stp-btn--sm {
+    min-height: 2rem;
+    padding: var(--p-0) var(--p-3);
+    font-size: 0.8125rem;
+    border-radius: 0.5rem;
+    gap: 0.375rem;
+  }
+
+  &.stp-btn--md {
+    min-height: 2.75rem;
+    padding: var(--p-0) var(--p-5);
+    font-size: 0.9375rem;
+    border-radius: 0.75rem;
+    gap: var(--gap-1);
+  }
+
+  &.stp-btn--lg {
+    min-height: 3.5rem;
+    padding: 0 1.75rem;
+    font-size: 1.0625rem;
+    border-radius: 0.875rem;
+    gap: 0.625rem;
+  }
+
+  // ---- Radius overrides (override size default) ----
+  // sm   →  8px  — subtle rounding, inline/chip feel
+  // md   → 14px — standard iOS/Android rounded button
+  // xl   → 20px — prominent card-button look
+  // full → 9999px — pill shape
+  &.stp-btn--radius-sm   { border-radius: var(--radius-sm); }
+  &.stp-btn--radius-md   { border-radius: var(--radius-md); }
+  &.stp-btn--radius-xl   { border-radius: var(--radius-xl); }
+  &.stp-btn--radius-full { border-radius: var(--radius-full); }
+
+  // ---- Shadow modifiers ----
+  &.stp-btn--shadow-sm { box-shadow: var(--shadow-sm); }
+  &.stp-btn--shadow-md { box-shadow: var(--shadow-md); }
+  &.stp-btn--shadow-lg { box-shadow: var(--shadow-lg); }
+  &.stp-btn--shadow-xl { box-shadow: var(--shadow-xl); }
+  white-space: nowrap;
+  transition:
+    background-color 150ms ease,
+    border-color 150ms ease,
+    color 150ms ease,
+    box-shadow 150ms ease,
+    transform 100ms ease;
+
+  // Ripple pseudo-element
+  &::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: var(--stp-ripple-color);
+    transform: translate(-50%, -50%) scale(0);
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &.stp-btn--ripple::after {
+    animation: stp-btn-ripple 600ms ease-out forwards;
+  }
+
+  // Focus ring
+  &:focus-visible {
+    outline: 2px solid var(--stp-btn-ring);
+    outline-offset: 3px;
+  }
+
+  // Active press
+  &:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  // Disabled
+  &:disabled,
+  &.stp-btn--disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+}
+
+// ---- Content wrapper (prevents layout shift during loading) --------------
+.stp-btn__content {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--gap-1);
+}
+
+.stp-btn--loading .stp-btn__content {
+  opacity: 0.6;
+}
+
+// ---- Spinner -------------------------------------------------------------
+.stp-btn__spinner {
+  display: block;
+  width: 1rem;
+  height: 1rem;
+  border: 2px solid color-mix(in srgb, currentColor 30%, transparent);
+  border-top-color: currentColor;
+  border-radius: 50%;
+  animation: stp-spin 600ms linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes stp-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes stp-btn-ripple {
+  0%   { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
+  100% { transform: translate(-50%, -50%) scale(3); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .stp-btn__spinner { animation-duration: 1800ms; }
+  .stp-btn--ripple::after { animation: none !important; }
+}
+
+// ---- Variant × Style matrix ---------------------------------------------
+
+// Solid style (default)
+@mixin btn-solid($bg, $bg-hover, $fg, $light) {
+  --stp-btn-bg:       var(--color-#{$bg});
+  --stp-btn-fg:       var(--color-#{$fg});
+  --stp-btn-border:   var(--color-#{$bg});
+  --stp-btn-ring:     var(--color-#{$bg});
+
+  &:hover:not(:disabled) {
+    --stp-btn-bg:     var(--color-#{$bg-hover});
+    --stp-btn-border: var(--color-#{$bg-hover});
+    box-shadow: var(--shadow-sm);
+  }
+}
+
+// Outlined style
+@mixin btn-outlined($bg, $bg-hover, $fg, $light) {
+  --stp-btn-bg:       var(--color-surface-alt);
+  --stp-btn-fg:       var(--color-#{$bg});
+  --stp-btn-border:   var(--color-#{$bg});
+  --stp-btn-ring:     var(--color-#{$bg});
+  --stp-ripple-color: color-mix(in srgb, var(--color-#{$bg}) 20%, transparent);
+
+  &:hover:not(:disabled) {
+    --stp-btn-bg:     var(--color-#{$light});
+  }
+}
+
+// Ghost style
+@mixin btn-ghost($bg, $bg-hover, $fg, $light) {
+  --stp-btn-bg:       transparent;
+  --stp-btn-fg:       var(--color-#{$bg});
+  --stp-btn-border:   transparent;
+  --stp-btn-ring:     var(--color-#{$bg});
+  --stp-ripple-color: color-mix(in srgb, var(--color-#{$bg}) 20%, transparent);
+
+  &:hover:not(:disabled) {
+    --stp-btn-bg:     var(--color-#{$light});
+  }
+}
+
+// Generate all variant + style combinations
+@each $variant, $colors in $variants {
+  $bg:       nth($colors, 1);
+  $bg-hover: nth($colors, 2);
+  $fg:       nth($colors, 3);
+  $light:    nth($colors, 4);
+
+  .stp-btn--#{$variant} {
+    // Solid (default when no style modifier is present, also explicit)
+    &.stp-btn--solid {
+      @include btn-solid($bg, $bg-hover, $fg, $light);
+    }
+
+    &.stp-btn--outlined {
+      @include btn-outlined($bg, $bg-hover, $fg, $light);
+    }
+
+    &.stp-btn--ghost {
+      @include btn-ghost($bg, $bg-hover, $fg, $light);
+    }
+  }
+}
+
+// 'default' variant without explicit style → solid primary
+.stp-btn--default:not(.stp-btn--outlined):not(.stp-btn--ghost) {
+  @include btn-solid('primary', 'primary-hover', 'primary-fg', 'primary-light');
+}
+
+// Surface variants: $bg is a background token (not a brand color), so
+// ghost/outlined must use text-primary as the foreground color.
+.stp-btn--surface,
+.stp-btn--surface-alt {
+  &.stp-btn--ghost,
+  &.stp-btn--outlined {
+    --stp-btn-fg:   var(--color-text-primary);
+    --stp-btn-ring: var(--color-border);
+  }
+
+  &.stp-btn--outlined {
+    --stp-btn-border: var(--color-border);
+  }
+}

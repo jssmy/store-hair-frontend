@@ -1,0 +1,141 @@
+<div class="products-page">
+
+    <!-- ── Header ────────────────────────────────────────────── -->
+    <header #productHeader class="products-header">
+        <div class="products-header__row">
+            <div>
+                <h1 class="products-header__title">Inventario</h1>
+                <p class="products-header__subtitle">{{ products().length }} productos registrados</p>
+            </div>
+            <stp-button variant="primary" btnStyle="solid" size="md" radius="md"
+                (click)="openInventoryDrawer()">
+                <i stp-icon name="package" style="font-size: 1rem"></i>
+                Actualizar inventario
+            </stp-button>
+        </div>
+    </header>
+
+    <!-- ── Search + categories sticky bar ──────────────────── -->
+    <div class="products-sticky-bar sticky-bar" [class.products-sticky-bar--stuck]="isStuck()"
+        [class.sticky-bar--stuck]="isStuck()">
+
+        <section class="products-search" aria-label="Buscar productos">
+            <div class="products-search__field">
+                <span class="products-search__icon" aria-hidden="true">
+                    <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
+                </span>
+                <input class="products-search__input" type="search" placeholder="Buscar producto..."
+                    autocomplete="off" aria-label="Buscar productos" [value]="searchQuery()"
+                    (input)="onSearchInput($any($event.target).value)" />
+                @if (searchQuery()) {
+                <button class="products-search__clear" type="button" aria-label="Limpiar búsqueda"
+                    (click)="clearSearch()">
+                    <i stp-icon name="x" style="font-size: 1rem"></i>
+                </button>
+                }
+            </div>
+        </section>
+
+        <section class="products-categories" aria-label="Filtrar por categoría">
+            <div class="products-categories__scroll" role="tablist">
+                @for (cat of categories; track cat) {
+                <stp-button class="products-category-chip"
+                    [class.products-category-chip--active]="activeCategory() === cat"
+                    role="tab" size="sm" radius="full"
+                    [variant]="activeCategory() === cat ? 'primary' : 'surface'"
+                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
+                    [attr.aria-selected]="activeCategory() === cat"
+                    [attr.aria-label]="categoryLabels[cat]"
+                    (click)="setCategory(cat)">
+                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
+                    {{ categoryLabels[cat] }}
+                </stp-button>
+                }
+            </div>
+        </section>
+
+    </div><!-- /products-sticky-bar -->
+
+    <!-- ── Product list ──────────────────────────────────────── -->
+    @if (filteredProducts().length > 0) {
+    <section class="products-results" aria-label="Lista de productos" aria-live="polite">
+        <p class="products-results__count">
+            @if (isFiltered()) {
+            {{ filteredProducts().length }} resultado{{ filteredProducts().length !== 1 ? 's' : '' }}
+            } @else {
+            Todos los productos
+            }
+        </p>
+
+        <ul class="products-list" role="list">
+            @for (product of filteredProducts(); track product.id) {
+            <li class="product-row">
+
+                <!-- Avatar -->
+                <div class="product-row__avatar product-row__avatar--{{ product.category }}"
+                    aria-hidden="true">
+                    @if (product.imageUrl) {
+                    <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
+                    } @else {
+                    <span>{{ productInitials(product.name) }}</span>
+                    }
+                </div>
+
+                <!-- Info -->
+                <div class="product-row__info">
+                    <span class="product-row__name">{{ product.name }}</span>
+                    <span class="product-row__meta">
+                        {{ categoryIcon(product.category) }} {{ categoryLabels[product.category] }}
+                        <span class="product-row__unit">· {{ product.unit }}</span>
+                    </span>
+                    @if (product.supplier) {
+                    <span class="product-row__supplier">
+                        <i stp-icon name="truck" style="font-size: 0.75rem"></i>
+                        {{ product.supplier }}
+                    </span>
+                    }
+                </div>
+
+                <!-- Price + Stock -->
+                <div class="product-row__aside">
+                    <span class="product-row__price">S/ {{ product.price.toFixed(2) }}</span>
+                    <span class="product-row__stock product-row__stock--{{ stockStatus(product.stock) }}">
+                        @if (product.stock === 0) {
+                        <i stp-icon name="x-circle" style="font-size: 0.75rem"></i>
+                        Agotado
+                        } @else if (product.stock <= 5) {
+                        <i stp-icon name="warning-circle" style="font-size: 0.75rem"></i>
+                        {{ product.stock }} bajo
+                        } @else {
+                        <i stp-icon name="check-circle" style="font-size: 0.75rem"></i>
+                        {{ product.stock }}
+                        }
+                    </span>
+                </div>
+
+            </li>
+            }
+        </ul>
+    </section>
+    }
+
+    <!-- ── No results + add CTA ──────────────────────────────── -->
+    @if (filteredProducts().length === 0 && isFiltered()) {
+    <div class="products-empty-state" aria-live="polite">
+        <div class="products-empty-state__icon" aria-hidden="true">
+            <i stp-icon name="package" style="font-size: 3.5rem"></i>
+        </div>
+        <h2 class="products-empty-state__title">Sin resultados</h2>
+        <p class="products-empty-state__text">
+            No se encontró "<strong>{{ searchQuery() }}</strong>" en tu inventario.
+        </p>
+        <stp-button variant="primary" btnStyle="solid" size="md" radius="md"
+            (click)="openInventoryDrawer(searchQuery())">
+            <i stp-icon name="plus" style="font-size: 1rem"></i>
+            Agregar "{{ searchQuery() }}"
+        </stp-button>
+    </div>
+    }
+
+
+</div>

@@ -1,0 +1,27 @@
+<label [ngClass]="hostClasses()" [attr.for]="id()">
+  <span class="stp-checkbox__control" (click)="toggle()" role="checkbox" [attr.aria-checked]="indeterminate() ? 'mixed' : checked()" [attr.aria-disabled]="disabled()" tabindex="0" (keydown.space)="toggle(); $event.preventDefault()">
+    <input
+      class="stp-checkbox__input"
+      type="checkbox"
+      [id]="id()"
+      [checked]="checked()"
+      [disabled]="disabled()"
+      [indeterminate]="indeterminate()"
+      tabindex="-1"
+      aria-hidden="true"
+    />
+    <span class="stp-checkbox__box">
+      @if (indeterminate()) {
+        <span class="stp-checkbox__dash"></span>
+      } @else if (checked()) {
+        <svg class="stp-checkbox__check" viewBox="0 0 12 9" fill="none">
+          <path d="M1 4l3.5 3.5L11 1" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round"/>
+        </svg>
+      }
+    </span>
+  </span>
+
+  @if (label()) {
+    <span class="stp-checkbox__label">{{ label() }}</span>
+  }
+</label>

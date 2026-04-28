@@ -1,0 +1,158 @@
+<div class="profile">
+
+  <header class="profile__page-header">
+    <h1 class="profile__title">Mi perfil</h1>
+  </header>
+
+  <!-- Avatar -->
+  <div class="profile__card profile__card--avatar">
+    <div class="profile__banner"></div>
+    <div class="profile__avatar-content">
+      <div class="profile__avatar-ring">
+        <button
+          class="profile__avatar-btn"
+          type="button"
+          (click)="fileInput.click()"
+          aria-label="Cambiar foto de perfil"
+        >
+          @if (avatarUrl()) {
+            <img class="profile__avatar-img" [src]="avatarUrl()" alt="Foto de perfil">
+          } @else {
+            <span class="profile__avatar-initial" aria-hidden="true">{{ userInitial() }}</span>
+          }
+        </button>
+        <span class="profile__avatar-camera" aria-hidden="true">
+          <i stp-icon name="camera" [autofill]="false" style="font-size: 0.875rem"></i>
+        </span>
+      </div>
+      <input #fileInput type="file" accept="image/*" style="display:none" (change)="onAvatarChange($event)">
+      <p class="profile__avatar-name">{{ name() }}</p>
+      <p class="profile__avatar-hint">Toca para cambiar la foto</p>
+    </div>
+  </div>
+
+  <!-- Información personal -->
+  <div class="profile__card">
+    <div class="profile__card-header">
+      <div class="profile__card-icon profile__card-icon--primary">
+        <i stp-icon name="user-circle" aria-hidden="true" style="font-size: 1.125rem"></i>
+      </div>
+      <div class="profile__card-meta">
+        <h2 class="profile__section-title">Información personal</h2>
+        <p class="profile__section-desc">Correo electrónico y número de contacto</p>
+      </div>
+      @if (!editingInfo()) {
+        <button
+          class="profile__edit-btn"
+          type="button"
+          (click)="startEditingInfo()"
+          aria-label="Editar información personal"
+        >
+          <i stp-icon name="pencil-simple" aria-hidden="true" style="font-size: 1rem"></i>
+        </button>
+      }
+    </div>
+
+    <div class="profile__divider"></div>
+
+    @if (!editingInfo()) {
+      <div class="profile__field-list">
+        <div class="profile__field-row">
+          <span class="profile__field-label">Correo electrónico</span>
+          <span class="profile__field-value">{{ email() || '—' }}</span>
+        </div>
+        <div class="profile__field-row">
+          <span class="profile__field-label">Número de teléfono</span>
+          <span class="profile__field-value">{{ phone() || '—' }}</span>
+        </div>
+      </div>
+    } @else {
+      <div class="profile__fields">
+        <stp-input
+          label="Correo electrónico"
+          type="email"
+          [(value)]="email"
+          autocomplete="email"
+        />
+        <stp-input
+          label="Número de teléfono"
+          type="tel"
+          [(value)]="phone"
+          autocomplete="tel"
+        />
+      </div>
+      <div class="profile__actions">
+        <stp-button variant="surface" btnStyle="outlined" size="md" type="button" (click)="cancelProfile()">
+          Cancelar
+        </stp-button>
+        <stp-button variant="primary" size="md" type="button" (click)="saveProfile()">
+          Guardar cambios
+        </stp-button>
+      </div>
+    }
+  </div>
+
+  <!-- Seguridad -->
+  <div class="profile__card">
+    <div class="profile__card-header">
+      <div class="profile__card-icon profile__card-icon--warning">
+        <i stp-icon name="lock-key" aria-hidden="true" style="font-size: 1.125rem"></i>
+      </div>
+      <div class="profile__card-meta">
+        <h2 class="profile__section-title">Seguridad</h2>
+        <p class="profile__section-desc">Contraseña de acceso a tu cuenta</p>
+      </div>
+      @if (!editingPassword()) {
+        <button
+          class="profile__edit-btn"
+          type="button"
+          (click)="editingPassword.set(true)"
+          aria-label="Cambiar contraseña"
+        >
+          <i stp-icon name="pencil-simple" aria-hidden="true" style="font-size: 1rem"></i>
+        </button>
+      }
+    </div>
+
+    <div class="profile__divider"></div>
+
+    @if (!editingPassword()) {
+      <div class="profile__field-list">
+        <div class="profile__field-row">
+          <span class="profile__field-label">Contraseña</span>
+          <span class="profile__field-value profile__field-value--masked">••••••••</span>
+        </div>
+      </div>
+    } @else {
+      <div class="profile__fields">
+        <stp-input
+          label="Contraseña actual"
+          type="password"
+          [(value)]="currentPassword"
+          autocomplete="current-password"
+        />
+        <stp-input
+          label="Nueva contraseña"
+          type="password"
+          [(value)]="newPassword"
+          autocomplete="new-password"
+        />
+        <stp-input
+          label="Confirmar nueva contraseña"
+          type="password"
+          [(value)]="confirmPassword"
+          autocomplete="new-password"
+        />
+      </div>
+      <div class="profile__actions">
+        <stp-button variant="surface" btnStyle="outlined" size="md" type="button" (click)="cancelPassword()">
+          Cancelar
+        </stp-button>
+        <stp-button variant="primary" size="md" type="button" (click)="savePassword()">
+          Actualizar contraseña
+        </stp-button>
+      </div>
+    }
+  </div>
+
+</div>

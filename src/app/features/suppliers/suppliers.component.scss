@@ -1,0 +1,330 @@
+@use '../../shared/styles/breakpoints' as bp;
+
+/* =========================================================
+   Suppliers — StorePoint
+   ========================================================= */
+
+:host {
+  display: block;
+}
+
+.suppliers-page {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  width: 100%;
+  max-width: 52rem;
+  padding: 1.5rem 1.25rem 6rem;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+
+.suppliers-header {
+  padding: var(--p-5);
+  background-color: var(--color-primary);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-md);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary-fg);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--color-primary-fg) 72%, transparent);
+  }
+}
+
+/* ── Sticky bar (search + categories) ────────────────────── */
+
+.suppliers-search {
+  &__field {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+
+  &__icon {
+    position: absolute;
+    left: 0.875rem;
+    color: var(--color-text-disabled);
+    display: flex;
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    padding: 0.75rem 2.75rem;
+    border: 1.5px solid var(--color-border);
+    border-radius: 0.875rem;
+    background-color: var(--color-surface);
+    color: var(--color-text-primary);
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 150ms ease, box-shadow 150ms ease;
+    appearance: textfield;
+
+    &::placeholder { color: var(--color-text-disabled); }
+    &::-webkit-search-cancel-button { display: none; }
+
+    &:focus {
+      border-color: var(--color-primary);
+      box-shadow: 0 0 0 3px var(--color-primary-light);
+    }
+  }
+
+  &__clear {
+    position: absolute;
+    right: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.75rem;
+    height: 1.75rem;
+    border: none;
+    border-radius: 50%;
+    background: var(--color-surface-alt, #ebebeb);
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background 150ms ease;
+
+    &:hover { background: var(--color-border); }
+  }
+}
+
+/* ── Category chips ───────────────────────────────────────── */
+
+.suppliers-categories {
+  &__scroll {
+    display: flex;
+    gap: var(--gap-1);
+    overflow-x: auto;
+    padding-bottom: var(--p-1);
+    scrollbar-width: none;
+
+    &::-webkit-scrollbar { display: none; }
+  }
+}
+
+.suppliers-category-chip { flex-shrink: 0; }
+
+/* ── Results ──────────────────────────────────────────────── */
+
+.suppliers-results {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+
+  &__count {
+    margin: 0;
+    font-size: 0.8125rem;
+    color: var(--color-text-secondary);
+    font-weight: 500;
+  }
+}
+
+/* ── Supplier list ────────────────────────────────────────── */
+
+@mixin cat-avatar-colors {
+  &--abarrotes { background: #fef3c7; color: #92400e; }
+  &--bebidas   { background: #dbeafe; color: #1e40af; }
+  &--lacteos   { background: #e0f2fe; color: #0369a1; }
+  &--snacks    { background: #ffedd5; color: #9a3412; }
+  &--limpieza  { background: #dcfce7; color: #166534; }
+  &--higiene   { background: #f3e8ff; color: #6b21a8; }
+  &--panaderia { background: #fef9c3; color: #854d0e; }
+  &--carnes    { background: #fee2e2; color: #991b1b; }
+  &--general   { background: #f1f5f9; color: #475569; }
+}
+
+.suppliers-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  
+}
+
+.supplier-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid var(--color-border);
+  transition: background 120ms;
+
+  &:last-child { border-bottom: none; }
+
+  &--inactive {
+    .supplier-row__name,
+    .supplier-row__meta,
+    .supplier-row__contact,
+    .supplier-row__address,
+    .supplier-row__ruc {
+      color: var(--color-text-disabled);
+      
+    }
+
+    .supplier-row__avatar {
+      opacity: 0.5;
+    }
+  }
+
+  &__avatar {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+
+    @include cat-avatar-colors;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__name-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+  }
+
+  &__name {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__badge {
+    font-size: 0.6875rem;
+    font-weight: 600;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    white-space: nowrap;
+    flex-shrink: 0;
+
+    &--inactive {
+      background: color-mix(in srgb, var(--color-text-disabled) 15%, transparent);
+      color: var(--color-text-disabled);
+    }
+  }
+
+  &__meta {
+    font-size: 0.75rem;
+    color: var(--color-text-secondary);
+  }
+
+  &__ruc {
+    color: var(--color-text-secondary);
+  }
+
+  &__contact {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+    flex-wrap: wrap;
+  }
+
+  &__sep {
+    margin: 0 0.125rem;
+  }
+
+  &__address {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: 0.6875rem;
+    color: var(--color-text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    flex-shrink: 0;
+
+    @include bp.mobile-only {
+      display: none;
+    }
+
+  }
+
+  &__btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: none;
+    border-radius: 50%;
+    background: transparent;
+    color: var(--color-text-secondary);
+    cursor: pointer;
+    transition: background 120ms;
+
+    &:hover { background: var(--color-surface-alt, #ebebeb); }
+  }
+}
+
+/* ── Empty state ──────────────────────────────────────────── */
+
+.suppliers-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 3rem 1.5rem;
+  text-align: center;
+
+  &__icon { color: var(--color-text-disabled); opacity: 0.6; }
+
+  &__title {
+    margin: 0;
+    font-size: 1.125rem;
+    font-weight: 700;
+    color: var(--color-text-primary);
+  }
+
+  &__text {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--color-text-secondary);
+    max-width: 22rem;
+    line-height: 1.5;
+  }
+}
+

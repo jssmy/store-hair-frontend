@@ -1,0 +1,276 @@
+@use '../../shared/styles/breakpoints' as bp;
+
+.caja {
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-2);
+  padding: 1.5rem 1.25rem;
+  padding-bottom: calc(var(--gap-2) + 80px);
+  max-width: 52rem;
+  width: 100%;
+}
+
+// ── Header ────────────────────────────────────────────────────────────────────
+
+.caja__header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--gap-2);
+  flex-wrap: wrap;
+  padding: var(--p-5) var(--p-5) var(--p-4);
+  background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 80%, #7c3aed) 100%);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-md);
+}
+
+.caja__title {
+  margin: 0 0 0.25rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--color-primary-fg);
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+}
+
+.caja__subtitle {
+  margin: 0;
+  font-size: 0.85rem;
+  color: color-mix(in srgb, var(--color-primary-fg) 72%, transparent);
+  text-transform: capitalize;
+}
+
+.caja__estado-chip {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid color-mix(in srgb, var(--color-primary-fg) 30%, transparent);
+  border-radius: var(--radius-full);
+  padding: 6px 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: color-mix(in srgb, var(--color-primary-fg) 80%, transparent);
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  &--abierta {
+    border-color: color-mix(in srgb, #4ade80 40%, transparent);
+    color: #4ade80;
+  }
+}
+
+.caja__estado-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  flex-shrink: 0;
+}
+
+// ── Saldo card ────────────────────────────────────────────────────────────────
+
+.caja__saldo-card {
+  background: #1b2d1a;
+  border-radius: var(--radius-lg);
+  padding: var(--gap-2);
+  color: #fff;
+}
+
+.caja__saldo-label {
+  font-size: 0.78rem;
+  font-weight: 500;
+  opacity: 0.6;
+}
+
+.caja__saldo-value {
+  margin: 0.35rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: #8fd44e;
+}
+
+.caja__saldo-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.caja__saldo-meta {
+  font-size: 0.72rem;
+  opacity: 0.55;
+
+  &--date { opacity: 0.4; }
+}
+
+// ── Métricas ──────────────────────────────────────────────────────────────────
+
+.caja__metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--gap-2);
+}
+
+.caja__metric-card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--gap-2);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1);
+
+  &--ingreso .caja__metric-icon { background: color-mix(in srgb, #4ade80 15%, transparent); color: #3a9e4a; }
+  &--egreso  .caja__metric-icon { background: color-mix(in srgb, #f87171 15%, transparent); color: #d63c3c; }
+}
+
+.caja__metric-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.caja__metric-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--color-text-secondary, #888);
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+
+.caja__metric-value {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+// ── Card (shared) ─────────────────────────────────────────────────────────────
+
+.caja__card {
+  background: var(--color-surface);
+  border-radius: var(--radius-lg);
+  padding: var(--gap-2);
+  box-shadow: var(--shadow-sm);
+}
+
+.caja__card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--gap-2);
+}
+
+.caja__card-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.caja__card-count {
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: var(--color-surface-alt);
+  color: var(--color-text-secondary, #888);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+}
+
+// ── Movimientos ───────────────────────────────────────────────────────────────
+
+.caja__mov-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--gap-1);
+}
+
+.caja__mov-item {
+  display: flex;
+  align-items: center;
+  gap: var(--gap-1);
+  padding: 0.5rem 0;
+
+  & + & {
+    border-top: 1px solid var(--color-border);
+  }
+}
+
+.caja__mov-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  &--ingreso { background: color-mix(in srgb, #4ade80 15%, transparent); color: #3a9e4a; }
+  &--egreso  { background: color-mix(in srgb, #f87171 15%, transparent); color: #d63c3c; }
+}
+
+.caja__mov-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.caja__mov-concepto {
+  display: block;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--color-text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.caja__mov-hora {
+  display: block;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary, #888);
+}
+
+.caja__mov-monto {
+  font-size: 0.9rem;
+  font-weight: 700;
+  flex-shrink: 0;
+
+  &--ingreso { color: #3a9e4a; }
+  &--egreso  { color: #d63c3c; }
+}
+
+// ── Botón acción ──────────────────────────────────────────────────────────────
+
+.caja__action-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 0.9rem;
+  border: none;
+  border-radius: var(--radius-lg);
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-secondary, #888);
+  box-shadow: var(--shadow-sm);
+  transition: opacity 0.15s;
+
+  &--cerrar {
+    background: #d63c3c;
+    color: #fff;
+  }
+
+  &:active { opacity: 0.8; }
+}

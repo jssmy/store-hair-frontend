@@ -1,0 +1,97 @@
+$variants: ('primary', 'success', 'warning', 'error');
+
+.stp-checkbox {
+  --stp-cb-color:  var(--color-primary);
+  --stp-cb-size:   1.25rem;
+  --stp-cb-radius: var(--radius-sm);
+
+  display: inline-flex;
+  align-items: center;
+  gap: var(--p-3);
+  cursor: pointer;
+  user-select: none;
+
+  &--sm {
+    --stp-cb-size: 1rem;
+    font-size: var(--text-sm);
+
+    .stp-checkbox__label { font-size: var(--text-sm); }
+  }
+
+  &--md {
+    --stp-cb-size: 1.25rem;
+    font-size: var(--text-base);
+  }
+
+  &--disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  &__input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+  }
+
+  &__control {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    outline: none;
+
+    &:focus-visible .stp-checkbox__box {
+      box-shadow: 0 0 0 3px color-mix(in srgb, var(--stp-cb-color) 25%, transparent);
+    }
+  }
+
+  &__box {
+    width: var(--stp-cb-size);
+    height: var(--stp-cb-size);
+    border-radius: var(--stp-cb-radius);
+    border: 1.5px solid var(--color-border);
+    background-color: var(--color-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition:
+      border-color var(--duration-base) var(--ease-default),
+      background-color var(--duration-base) var(--ease-default);
+    flex-shrink: 0;
+  }
+
+  &--checked &__box,
+  &--indeterminate &__box {
+    border-color: var(--stp-cb-color);
+    background-color: var(--stp-cb-color);
+    color: #fff;
+  }
+
+  &__check {
+    width: 70%;
+    height: auto;
+  }
+
+  &__dash {
+    display: block;
+    width: 50%;
+    height: 1.75px;
+    border-radius: 9999px;
+    background-color: currentColor;
+  }
+
+  &__label {
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
+    color: var(--color-text-primary);
+    line-height: var(--leading-snug);
+  }
+}
+
+@each $v in $variants {
+  .stp-checkbox--#{$v} { --stp-cb-color: var(--color-#{$v}); }
+}

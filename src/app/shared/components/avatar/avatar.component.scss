@@ -1,0 +1,53 @@
+$variants: (
+  'primary': ('primary', 'primary-fg'),
+  'success': ('success', 'success-fg'),
+  'warning': ('warning', 'warning-fg'),
+  'error':   ('error',   'error-fg'),
+  'info':    ('info',    'info-fg'),
+  'surface': ('surface-alt', 'text-primary'),
+);
+
+.stp-avatar {
+  --stp-avatar-size: 2.5rem;
+  --stp-avatar-bg:   var(--color-surface-alt);
+  --stp-avatar-fg:   var(--color-text-primary);
+  --stp-avatar-font: var(--text-base);
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--stp-avatar-size);
+  height: var(--stp-avatar-size);
+  border-radius: 50%;
+  background-color: var(--stp-avatar-bg);
+  color: var(--stp-avatar-fg);
+  overflow: hidden;
+  flex-shrink: 0;
+  user-select: none;
+
+  &--xs { --stp-avatar-size: 1.5rem;  --stp-avatar-font: var(--text-xs); }
+  &--sm { --stp-avatar-size: 2rem;    --stp-avatar-font: var(--text-sm); }
+  &--md { --stp-avatar-size: 2.5rem;  --stp-avatar-font: var(--text-base); }
+  &--lg { --stp-avatar-size: 3rem;    --stp-avatar-font: var(--text-xl); }
+  &--xl { --stp-avatar-size: 4rem;    --stp-avatar-font: var(--text-2xl); }
+
+  &__img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  &__initials {
+    font-size: var(--stp-avatar-font);
+    font-weight: var(--font-semibold);
+    line-height: 1;
+    letter-spacing: var(--tracking-wide);
+  }
+}
+
+@each $variant, $colors in $variants {
+  .stp-avatar--#{$variant} {
+    --stp-avatar-bg: var(--color-#{nth($colors, 1)});
+    --stp-avatar-fg: var(--color-#{nth($colors, 2)});
+  }
+}

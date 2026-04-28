@@ -1,0 +1,37 @@
+<!-- Image / placeholder -->
+<div class="product-card__image">
+
+    <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
+
+
+    <!-- In-cart badge -->
+    @if (inCart()) {
+    <span class="product-card__cart-badge" aria-label="En el carrito">
+        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="20 6 9 17 4 12" />
+        </svg>
+    </span>
+    }
+</div>
+
+<!-- Info -->
+<div class="product-card__body">
+    <p class="product-card__name">{{ product().name }}</p>
+    <p class="product-card__price">S/ {{ product().price | number:'1.2-2' }}</p>
+    <p class="product-card__stock" [class.product-card__stock--low]="product().stock > 0 && product().stock <= 5"
+        [class.product-card__stock--out]="product().stock === 0">
+        @if (product().stock === 0) { Sin stock } @else { {{ product().stock }} {{ product().unit }}(s) }
+    </p>
+</div>
+
+<!-- Quantity + Add -->
+<div class="product-card__actions">
+    <stp-input-numeric [value]="quantity()" [min]="1" [max]="product().stock > 0 ? product().stock : null" size="md"
+        radius="full" (valueChange)="quantity.set($event ?? 1)" />
+
+    <stp-button class="product-card__add-btn" size="md" variant="primary" btnStyle="solid" radius="md"
+        [disabled]="product().stock === 0" (click)="add()">
+        Agregar
+    </stp-button>
+</div>

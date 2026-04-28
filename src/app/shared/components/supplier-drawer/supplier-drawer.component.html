@@ -1,0 +1,82 @@
+<div class="sup-drawer" role="dialog" aria-modal="true" [attr.aria-label]="title"
+    (click)="$event.stopPropagation()">
+
+    <div class="sup-drawer__handle" aria-hidden="true"></div>
+
+    <div class="sup-drawer__header">
+        <h2 class="sup-drawer__title">{{ title }}</h2>
+        <button class="sup-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
+            <i stp-icon name="x" style="font-size: 1.25rem"></i>
+        </button>
+    </div>
+
+    @if (success()) {
+    <div class="sup-drawer__success">
+        <div class="sup-drawer__success-icon">
+            <i stp-icon name="check-circle" style="font-size: 3.5rem"></i>
+        </div>
+        <p class="sup-drawer__success-text">
+            {{ editing ? 'Proveedor actualizado' : 'Proveedor registrado' }}
+        </p>
+    </div>
+    } @else {
+
+    <div class="sup-drawer__body">
+
+        <stp-input
+            label="Nombre / Razón social *"
+            [value]="form().name"
+            (valueChange)="patchForm({ name: $event })" />
+
+        <div class="sup-field-row">
+            <stp-input
+                label="RUC *"
+                [value]="form().ruc"
+                (valueChange)="patchForm({ ruc: $event })" />
+            <stp-input
+                label="Teléfono *"
+                type="tel"
+                autocomplete="tel"
+                [value]="form().phone"
+                (valueChange)="patchForm({ phone: $event })" />
+        </div>
+
+        <div class="sup-field">
+            <label class="sup-field__label" for="sup-category">Categoría</label>
+            <select id="sup-category" class="sup-field__select"
+                [value]="form().category"
+                (change)="patchForm({ category: $any($event.target).value })">
+                @for (cat of categoryOptions; track cat) {
+                <option [value]="cat">{{ categoryIcon(cat) }} {{ categoryLabels[cat] }}</option>
+                }
+            </select>
+        </div>
+
+        <stp-input
+            label="Correo electrónico"
+            type="email"
+            autocomplete="email"
+            [value]="form().email"
+            (valueChange)="patchForm({ email: $event })" />
+
+        <stp-input
+            label="Dirección"
+            [value]="form().address"
+            (valueChange)="patchForm({ address: $event })" />
+
+    </div><!-- /body -->
+
+    <div class="sup-drawer__footer">
+        <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
+            Cancelar
+        </stp-button>
+        <stp-button variant="primary" btnStyle="solid" size="md"
+            [disabled]="!canSubmit()"
+            [loading]="submitting()"
+            (click)="submit()">
+            {{ submitLabel }}
+        </stp-button>
+    </div>
+
+    }<!-- /not success -->
+</div>

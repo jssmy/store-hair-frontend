@@ -1,0 +1,140 @@
+<div class="dashboard">
+
+  <!-- Page Header -->
+  <header class="dashboard__header">
+    <div>
+      <h1 class="dashboard__title">Dashboard</h1>
+      <p class="dashboard__subtitle">Manage sales with care and precision.</p>
+    </div>
+    <div class="dashboard__date-chip">
+      <i stp-icon name="calendar" style="font-size: 0.875rem"></i>
+      <span>January 2024 – May 2024</span>
+      <i stp-icon name="caret-down" style="font-size: 0.75rem"></i>
+    </div>
+  </header>
+
+  <!-- Update Alert Card -->
+  <div class="dashboard__alert-card">
+    <div class="dashboard__alert-header">
+      <span class="dashboard__alert-dot"></span>
+      <span class="dashboard__alert-label">Update</span>
+    </div>
+    <p class="dashboard__alert-date">Feb 12th 2024</p>
+    <p class="dashboard__alert-text">
+      Sales revenue increased
+      <span class="dashboard__alert-highlight">40%</span>
+      in 1 week
+    </p>
+    <button class="dashboard__alert-link">
+      See Statistics
+      <i stp-icon name="caret-right" style="font-size: 0.75rem"></i>
+    </button>
+  </div>
+
+  <!-- Metric Cards -->
+  <div class="dashboard__metrics">
+    <div class="dashboard__metric-card">
+      <div class="dashboard__metric-header">
+        <span class="dashboard__metric-title">Net Income</span>
+        <span class="dashboard__metric-dots"><i></i><i></i><i></i></span>
+      </div>
+      <p class="dashboard__metric-value"><sup>$</sup> 193.000</p>
+      <div class="dashboard__metric-trend dashboard__metric-trend--up">
+        <i stp-icon name="trend-up" style="font-size: 0.875rem"></i>
+        +35% from last month
+      </div>
+    </div>
+
+    <div class="dashboard__metric-card">
+      <div class="dashboard__metric-header">
+        <span class="dashboard__metric-title">Total Return</span>
+        <span class="dashboard__metric-dots"><i></i><i></i><i></i></span>
+      </div>
+      <p class="dashboard__metric-value"><sup>$</sup> 32.000</p>
+      <div class="dashboard__metric-trend dashboard__metric-trend--down">
+        <i stp-icon name="trend-down" style="font-size: 0.875rem"></i>
+        -24% from last month
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Card -->
+  <div class="dashboard__card">
+    <div class="dashboard__card-header">
+      <h2 class="dashboard__card-title">Transaction</h2>
+      <span class="dashboard__metric-dots"><i></i><i></i><i></i></span>
+    </div>
+    <ul class="dashboard__tx-list">
+      @for (tx of transactions; track tx.name) {
+        <li class="dashboard__tx-item">
+          <span class="dashboard__tx-icon">{{ tx.emoji }}</span>
+          <div class="dashboard__tx-info">
+            <span class="dashboard__tx-name">{{ tx.name }}</span>
+            <span class="dashboard__tx-date">{{ tx.date }}</span>
+          </div>
+          <div class="dashboard__tx-meta">
+            <span
+              class="dashboard__tx-status"
+              [class.dashboard__tx-status--completed]="tx.status === 'Completed'"
+            >{{ tx.status }}</span>
+            <span class="dashboard__tx-id">{{ tx.id }}</span>
+          </div>
+        </li>
+      }
+    </ul>
+  </div>
+
+  <!-- Revenue Card -->
+  <div class="dashboard__card">
+    <div class="dashboard__card-header">
+      <h2 class="dashboard__card-title">Revenue</h2>
+      <div class="dashboard__revenue-legend">
+        <span class="dashboard__legend-dot dashboard__legend-dot--income"></span> Income
+        <span class="dashboard__legend-dot dashboard__legend-dot--expenses"></span> Expenses
+      </div>
+    </div>
+    <div class="dashboard__revenue-summary">
+      <span class="dashboard__revenue-amount">$193.000</span>
+      <span class="dashboard__revenue-trend">
+        <i stp-icon name="trend-up" style="font-size: 0.75rem"></i>
+        +35% from last month
+      </span>
+    </div>
+    <svg class="dashboard__bar-chart" viewBox="0 0 296 82" preserveAspectRatio="none" aria-hidden="true">
+      @for (bar of revenueBarData; track bar.month) {
+        <rect [attr.x]="bar.incomeX"   [attr.y]="bar.incomeY"   width="12" [attr.height]="bar.incomeH"   fill="#1e3020" rx="3"/>
+        <rect [attr.x]="bar.expensesX" [attr.y]="bar.expensesY" width="12" [attr.height]="bar.expensesH" fill="#a3d560" rx="3"/>
+      }
+    </svg>
+    <div class="dashboard__bar-labels" aria-hidden="true">
+      @for (bar of revenueBarData; track bar.month) {
+        <span>{{ bar.month }}</span>
+      }
+    </div>
+  </div>
+
+  <!-- Sales Report Card -->
+  <div class="dashboard__card">
+    <div class="dashboard__card-header">
+      <h2 class="dashboard__card-title">Sales Report</h2>
+      <span class="dashboard__metric-dots"><i></i><i></i><i></i></span>
+    </div>
+    <div class="dashboard__sales-list">
+      @for (item of salesItems; track item.label) {
+        <div class="dashboard__sales-item">
+          <div class="dashboard__sales-label-row">
+            <span class="dashboard__sales-label">{{ item.label }}</span>
+            <span class="dashboard__sales-count">({{ item.count }})</span>
+          </div>
+          <div class="dashboard__sales-track">
+            <div class="dashboard__sales-fill" [style.width.%]="item.pct"></div>
+          </div>
+        </div>
+      }
+      <div class="dashboard__sales-axis" aria-hidden="true">
+        <span>0</span><span>100</span><span>200</span><span>300</span><span>400</span>
+      </div>
+    </div>
+  </div>
+
+</div>

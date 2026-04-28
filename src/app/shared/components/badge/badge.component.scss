@@ -1,0 +1,71 @@
+$variants: (
+  'primary': ('primary', 'primary-hover', 'primary-fg', 'primary-light'),
+  'success': ('success', 'success-hover', 'success-fg', 'success-light'),
+  'warning': ('warning', 'warning-hover', 'warning-fg', 'warning-light'),
+  'error':   ('error',   'error-hover',   'error-fg',   'error-light'),
+  'info':    ('info',    'info-hover',    'info-fg',    'info-light'),
+  'surface': ('surface-alt', 'border', 'text-primary', 'surface'),
+);
+
+.stp-badge {
+  --stp-badge-bg:     transparent;
+  --stp-badge-fg:     currentColor;
+  --stp-badge-border: transparent;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3125rem;
+  border-radius: var(--radius-full);
+  border: 1px solid var(--stp-badge-border);
+  background-color: var(--stp-badge-bg);
+  color: var(--stp-badge-fg);
+  font-weight: var(--font-semibold);
+  white-space: nowrap;
+  line-height: 1;
+
+  &--sm {
+    font-size: var(--text-xs);
+    padding: 0.1875rem 0.5rem;
+  }
+
+  &--md {
+    font-size: var(--text-sm);
+    padding: 0.25rem 0.625rem;
+  }
+
+  &__dot {
+    display: inline-block;
+    width: 0.4375rem;
+    height: 0.4375rem;
+    border-radius: 50%;
+    background-color: currentColor;
+    flex-shrink: 0;
+  }
+}
+
+@each $variant, $colors in $variants {
+  $bg:    nth($colors, 1);
+  $hover: nth($colors, 2);
+  $fg:    nth($colors, 3);
+  $light: nth($colors, 4);
+
+  .stp-badge--#{$variant} {
+    &.stp-badge--solid {
+      --stp-badge-bg:     var(--color-#{$bg});
+      --stp-badge-fg:     var(--color-#{$fg});
+      --stp-badge-border: var(--color-#{$bg});
+    }
+
+    &.stp-badge--light {
+      --stp-badge-bg:     var(--color-#{$light});
+      --stp-badge-fg:     var(--color-#{$bg});
+      --stp-badge-border: transparent;
+    }
+
+    &.stp-badge--outlined {
+      --stp-badge-bg:     transparent;
+      --stp-badge-fg:     var(--color-#{$bg});
+      --stp-badge-border: var(--color-#{$bg});
+    }
+  }
+}

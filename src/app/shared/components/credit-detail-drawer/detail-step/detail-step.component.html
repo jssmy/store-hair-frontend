@@ -1,0 +1,173 @@
+<article class="det-credit-card det-credit-card--{{ credit().status }}"
+    [class.det-credit-card--alert]="stats().hasAlert">
+
+    <!-- Card header -->
+    <div class="det-credit-card__header">
+        <div class="det-credit-card__header-left">
+            <span class="det-credit-card__num"># {{ creditId(credit()) }}</span>
+            <span class="det-credit-card__date">
+                <i stp-icon name="calendar-blank" style="font-size: 0.75rem"></i>
+                {{ formatDate(createdAtDate(credit())) }}
+            </span>
+        </div>
+        <span class="det-status-badge det-status-badge--{{ credit().status }}">
+            {{ statusLabel(credit().status) }}
+        </span>
+    </div>
+
+    <!-- Products -->
+    <section class="det-section">
+        <h4 class="det-section__title">
+            <i stp-icon name="shopping-cart" style="font-size: 0.875rem"></i>
+            Productos entregados
+        </h4>
+        @if (credit().items.length > 0) {
+        <ul class="det-items">
+            @for (item of credit().items; track item.product.id) {
+            <li class="det-item">
+                <span class="det-item__qty">×{{ item.quantity }}</span>
+                <span class="det-item__name">{{ item.product.name }}</span>
+                <span class="det-item__subtotal">
+                    S/ {{ item.product.price * item.quantity | number:'1.2-2' }}
+                </span>
+            </li>
+            }
+        </ul>
+        } @else {
+        <p class="det-no-items">Sin detalle de productos registrado.</p>
+        }
+        <div class="det-total-row">
+            <span>Total de la venta</span>
+            <strong>S/ {{ credit().total | number:'1.2-2' }}</strong>
+        </div>
+    </section>
+
+    <!-- Forma de pago (collapsible) -->
+    <mat-expansion-panel class="det-expansion-panel" [expanded]="false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <i stp-icon name="hand-coins" style="font-size: 0.875rem"></i>
+                Forma de pago
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="det-payment-rows">
+            @if (credit().creditEfectivo > 0) {
+            <div class="det-payment-row">
+                <span><i stp-icon name="money" style="font-size: 0.8rem"></i> Efectivo inicial</span>
+                <span>S/ {{ credit().creditEfectivo | number:'1.2-2' }}</span>
+            </div>
+            }
+            @if (credit().creditDigital > 0) {
+            <div class="det-payment-row">
+                <span><i stp-icon name="device-mobile" style="font-size: 0.8rem"></i> Yape inicial</span>
+                <span>S/ {{ credit().creditDigital | number:'1.2-2' }}</span>
+            </div>
+            }
+            @if (credit().initialAmount > 0) {
+            <div class="det-payment-row det-payment-row--sub">
+                <span>Abono inicial total</span>
+                <span>S/ {{ credit().initialAmount | number:'1.2-2' }}</span>
+            </div>
+            }
+            <div class="det-payment-row det-payment-row--highlight">
+                <span>
+                    {{ credit().installments }} cuota{{ credit().installments !== 1 ? 's' : '' }}
+                    {{ frequencyLabels[credit().frequency] | lowercase }}
+                </span>
+                <span>S/ {{ stats().installmentAmount | number:'1.2-2' }} c/u</span>
+            </div>
+        </div>
+    </mat-expansion-panel>
+
+    <!-- Plan de crédito (collapsible) -->
+    <mat-expansion-panel class="det-expansion-panel" [expanded]="false">
+        <mat-expansion-panel-header>
+            <mat-panel-title>
+                <i stp-icon name="chart-bar" style="font-size: 0.875rem"></i>
+                Plan de crédito
+            </mat-panel-title>
+        </mat-expansion-panel-header>
+
+        <div class="det-progress-block" [class.det-progress-block--alert]="stats().hasAlert">
+            <div class="det-progress-header">
+                <span class="det-progress-label">
+                    Pagado <strong>S/ {{ stats().totalPaid | number:'1.2-2' }}</strong>
+                    <span class="det-progress-of">de S/ {{ credit().total | number:'1.2-2' }}</span>
+                </span>
+                <span class="det-progress-pct" [class.det-progress-pct--alert]="stats().hasAlert">
+                    {{ (stats().paidPercentage * 100) | number:'1.0-0' }}%
+                </span>
+            </div>
+            <div class="det-progress-bar-wrap">
+                <div class="det-progress-bar"
+                    [style.width.%]="stats().paidPercentage * 100"
+                    [class.det-progress-bar--alert]="stats().hasAlert"
+                    [class.det-progress-bar--overdue]="credit().status === 'overdue'"
+                    [class.det-progress-bar--success]="credit().status === 'completed'">
+                </div>
+            </div>
+            <span class="det-progress-meta">
+                {{ credit().paidInstallments }}/{{ credit().installments }} cuotas pagadas
+                · {{ frequencyLabels[credit().frequency] }}
+            </span>
+        </div>
+
+        <ul class="det-schedule">
+            @for (row of installmentRows(); track row.number) {
+            <li class="det-schedule-row"
+                [class.det-schedule-row--paid]="row.paid"
+                [class.det-schedule-row--next]="row.isNext"
+                [class.det-schedule-row--overdue]="row.isOverdue">
+                <span class="det-schedule-row__icon" aria-hidden="true">
+                    @if (row.paid) { <i stp-icon name="check-circle" style="font-size:1rem"></i> }
+                    @else if (row.isOverdue) { <i stp-icon name="warning-circle" style="font-size:1rem"></i> }
+                    @else if (row.isNext) { <i stp-icon name="clock" style="font-size:1rem"></i> }
+                    @else { <i stp-icon name="circle" style="font-size:1rem"></i> }
+                </span>
+                <span class="det-schedule-row__label">Cuota {{ row.number }}</span>
+                <span class="det-schedule-row__date">{{ formatDate(row.date) }}</span>
+                <span class="det-schedule-row__amount">S/ {{ row.amount | number:'1.2-2' }}</span>
+                <span class="det-schedule-row__status">
+                    @if (row.paid) { Pagada }
+                    @else if (row.isOverdue) { Vencida }
+                    @else if (row.isNext) { Próxima }
+                    @else { Pendiente }
+                </span>
+            </li>
+            }
+        </ul>
+
+        @if (stats().nextPaymentDate) {
+        <div class="det-next-payment" [class.det-next-payment--overdue]="credit().status === 'overdue'">
+            <i stp-icon name="calendar-check" style="font-size: 1.125rem"></i>
+            <div class="det-next-payment__info">
+                <span class="det-next-payment__label">
+                    {{ credit().status === 'overdue' ? 'Pago vencido' : 'Próxima fecha de pago' }}
+                </span>
+                <strong class="det-next-payment__date">{{ formatFullDate(stats().nextPaymentDate!) }}</strong>
+            </div>
+            <strong class="det-next-payment__amount">S/ {{ stats().installmentAmount | number:'1.2-2' }}</strong>
+        </div>
+        }
+    </mat-expansion-panel>
+
+    <!-- CTA -->
+    @if (canRegisterPayment()) {
+    <div class="det-credit-card__cta">
+        @if (paymentSuccessId() === credit().id) {
+        <div class="det-inline-success">
+            <i stp-icon name="check-circle" style="font-size: 1rem"></i>
+            Cuota {{ credit().paidInstallments }} registrada
+        </div>
+        } @else {
+        <stp-button variant="success" btnStyle="solid" size="sm" radius="md"
+            (click)="startPayment.emit(credit().id)">
+            <i stp-icon name="check-circle" style="font-size: 0.875rem"></i>
+            Registrar cuota {{ credit().paidInstallments + 1 }}
+        </stp-button>
+        }
+    </div>
+    }
+
+</article>

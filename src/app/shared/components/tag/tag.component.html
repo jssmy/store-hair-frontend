@@ -1,0 +1,20 @@
+<span [ngClass]="hostClasses()">
+  @if (icon()) {
+    <i stp-icon [name]="icon()!" class="stp-tag__icon" aria-hidden="true"></i>
+  }
+
+  <span class="stp-tag__label">
+    <ng-content />
+  </span>
+
+  @if (removable()) {
+    <button
+      type="button"
+      class="stp-tag__remove"
+      aria-label="Eliminar"
+      (click)="removed.emit()"
+    >
+      <i stp-icon name="x" aria-hidden="true"></i>
+    </button>
+  }
+</span>

@@ -1,0 +1,112 @@
+@use '../../styles/breakpoints' as bp;
+
+:host {
+    display: block;
+}
+
+.cart-drawer {
+    width: 100%;
+    min-width: 52rem;
+    margin-inline: auto;
+    max-height: 90dvh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+
+    @include bp.mobile-only {
+        max-width: 52rem;
+        min-width: unset;
+    }
+
+    &__handle {
+        width: 2.5rem;
+        height: 0.25rem;
+        border-radius: 9999px;
+        background: var(--color-border);
+        margin: 0.625rem auto 0;
+        flex-shrink: 0;
+    }
+
+    &__stepper {
+        display: flex;
+        align-items: center;
+        gap: var(--p-2);
+        padding: var(--p-3) var(--p-5) 0;
+        flex-shrink: 0;
+    }
+
+    &__dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--color-border);
+        flex-shrink: 0;
+        transition: background 0.3s ease, transform 0.3s ease;
+
+        &--active {
+            background: var(--color-primary);
+            transform: scale(1.4);
+        }
+    }
+
+    &__track {
+        flex: 1;
+        height: 2px;
+        background: var(--color-border);
+        border-radius: var(--radius-full);
+        overflow: hidden;
+    }
+
+    &__track-fill {
+        height: 100%;
+        background: var(--color-primary);
+        border-radius: var(--radius-full);
+        transform-origin: left;
+        transform: scaleX(0);
+        transition: transform 0.35s ease;
+
+        &--done {
+            transform: scaleX(1);
+        }
+    }
+
+    &__success {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 1rem;
+        padding: 2.5rem 2rem calc(2rem + env(safe-area-inset-bottom));
+        text-align: center;
+        animation: success-enter 0.3s ease;
+
+        stp-button {
+            margin-top: 0.5rem;
+            min-width: 8rem;
+        }
+    }
+
+    &__success-icon {
+        color: var(--color-success, #22c55e);
+        line-height: 1;
+    }
+
+    &__success-title {
+        margin: 0;
+        font-size: 1.25rem;
+        font-weight: 700;
+        color: var(--color-text-primary);
+    }
+
+    &__success-sub {
+        margin: 0;
+        font-size: 0.9rem;
+        color: var(--color-text-secondary);
+    }
+}
+
+@keyframes success-enter {
+    from { opacity: 0; transform: scale(0.92); }
+    to   { opacity: 1; transform: scale(1); }
+}

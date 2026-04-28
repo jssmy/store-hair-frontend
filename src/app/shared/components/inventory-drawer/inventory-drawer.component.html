@@ -1,0 +1,207 @@
+<div class="inv-drawer" role="dialog" aria-modal="true" aria-label="Actualizar inventario"
+    (click)="$event.stopPropagation()">
+
+    <div class="inv-drawer__handle" aria-hidden="true"></div>
+
+    <div class="inv-drawer__header">
+        <h2 class="inv-drawer__title">Actualizar inventario</h2>
+        <button class="inv-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
+            <i stp-icon name="x" style="font-size: 1.25rem"></i>
+        </button>
+    </div>
+
+    @if (invSuccess()) {
+    <div class="inv-drawer__success">
+        <div class="inv-drawer__success-icon">
+            <i stp-icon name="check-circle" style="font-size: 3.5rem"></i>
+        </div>
+        <p class="inv-drawer__success-text">Inventario actualizado</p>
+    </div>
+    } @else {
+
+    <div class="inv-drawer__body">
+
+        <!-- Product search/select -->
+        <div class="inv-field">
+            <label class="inv-field__label" for="inv-product">Producto *</label>
+            <div class="inv-field__search-wrap">
+                <i stp-icon name="magnifying-glass" class="inv-field__search-icon"
+                    style="font-size: 1rem"></i>
+                <input id="inv-product" class="inv-field__input inv-field__input--search"
+                    type="text" placeholder="Buscar producto existente..."
+                    [value]="invProductSearch()"
+                    (input)="onInvProductSearchInput($any($event.target).value)"
+                    autocomplete="off" />
+                @if (invProductSearch() && !invSelectedProduct()) {
+                <button class="inv-field__clear" type="button" (click)="clearInvProductSearch()">
+                    <i stp-icon name="x" style="font-size: 0.875rem"></i>
+                </button>
+                }
+            </div>
+
+            <!-- Search dropdown -->
+            @if (invProductSearch().trim() && !invSelectedProduct() && !invAddingNew()) {
+            <ul class="inv-dropdown" role="listbox">
+                @for (p of invFilteredProducts(); track p.id) {
+                <li class="inv-dropdown__item" role="option" (click)="selectInvProduct(p)">
+                    <div class="inv-dropdown__avatar inv-dropdown__avatar--{{ p.category }}">
+                        {{ productInitials(p.name) }}
+                    </div>
+                    <div class="inv-dropdown__info">
+                        <span class="inv-dropdown__name">{{ p.name }}</span>
+                        <span class="inv-dropdown__stock">{{ p.stock }} en stock · {{ p.unit }}</span>
+                    </div>
+                </li>
+                } @empty {
+                <li class="inv-dropdown__item inv-dropdown__item--empty">
+                    <span>No encontrado —</span>
+                    <button type="button" class="inv-dropdown__add-link"
+                        (click)="switchToNewProduct()">Agregar como nuevo</button>
+                </li>
+                }
+            </ul>
+            }
+
+            <!-- Selected product chip -->
+            @if (invSelectedProduct()) {
+            <div class="inv-selected">
+                <div class="inv-selected__avatar inv-selected__avatar--{{ invSelectedProduct()!.category }}">
+                    {{ productInitials(invSelectedProduct()!.name) }}
+                </div>
+                <div class="inv-selected__info">
+                    <span class="inv-selected__name">{{ invSelectedProduct()!.name }}</span>
+                    <span class="inv-selected__stock">Stock actual: {{ invSelectedProduct()!.stock }}</span>
+                </div>
+                <button class="inv-selected__remove" type="button" (click)="clearInvProductSearch()">
+                    <i stp-icon name="x" style="font-size: 0.875rem"></i>
+                </button>
+            </div>
+            }
+
+            <!-- New product indicator -->
+            @if (invAddingNew()) {
+            <div class="inv-new-badge">
+                <i stp-icon name="plus-circle" style="font-size: 0.875rem"></i>
+                Nuevo producto
+                <button type="button" class="inv-new-badge__clear" (click)="clearInvProductSearch()">
+                    <i stp-icon name="x" style="font-size: 0.75rem"></i>
+                </button>
+            </div>
+            }
+        </div>
+
+        <!-- New product fields -->
+        @if (invAddingNew()) {
+        <div class="inv-new-fields">
+            <stp-input
+                label="Nombre del producto *"
+                [value]="invNewProduct().name"
+                (valueChange)="patchInvNewProduct({ name: $event })" />
+
+            <div class="inv-field-row">
+                <div class="inv-field">
+                    <label class="inv-field__label" for="inv-new-cat">Categoría *</label>
+                    <select id="inv-new-cat" class="inv-field__input inv-field__input--select"
+                        [value]="invNewProduct().category"
+                        (change)="patchInvNewProduct({ category: $any($event.target).value })">
+                        @for (cat of categoryOptions; track cat) {
+                        <option [value]="cat">{{ categoryLabels[cat] }}</option>
+                        }
+                    </select>
+                </div>
+                <div class="inv-field">
+                    <label class="inv-field__label" for="inv-new-unit">Unidad *</label>
+                    <select id="inv-new-unit" class="inv-field__input inv-field__input--select"
+                        [value]="invNewProduct().unit"
+                        (change)="patchInvNewProduct({ unit: $any($event.target).value })">
+                        <option value="">Seleccionar...</option>
+                        @for (u of UNITS; track u) {
+                        <option [value]="u">{{ u }}</option>
+                        }
+                    </select>
+                </div>
+            </div>
+
+            <stp-input
+                label="Precio de venta S/ *"
+                type="number"
+                [value]="invNewProduct().price?.toString() ?? ''"
+                (valueChange)="patchInvNewProduct({ price: +$event || null })" />
+        </div>
+        }
+
+        <!-- Stock quantity -->
+        <stp-input
+            [label]="invSelectedProduct() ? 'Cantidad que ingresa * (actual: ' + invSelectedProduct()!.stock + ')' : 'Cantidad que ingresa *'"
+            type="number"
+            [value]="invStockAdd()?.toString() ?? ''"
+            (valueChange)="invStockAdd.set(+$event || null)" />
+
+        <!-- Supplier search -->
+        <div class="inv-field">
+            <label class="inv-field__label" for="inv-supplier">Proveedor *</label>
+            <div class="inv-field__search-wrap">
+                <i stp-icon name="magnifying-glass" class="inv-field__search-icon"
+                    style="font-size: 1rem"></i>
+                <input id="inv-supplier" class="inv-field__input inv-field__input--search"
+                    type="text" placeholder="Buscar proveedor..."
+                    [value]="invSupplierSearch()"
+                    (input)="onSupplierSearchInput($any($event.target).value)"
+                    autocomplete="off" />
+                @if (invSupplierSearch() && !invSelectedSupplier()) {
+                <button class="inv-field__clear" type="button" (click)="clearSupplierSearch()">
+                    <i stp-icon name="x" style="font-size: 0.875rem"></i>
+                </button>
+                }
+            </div>
+
+            @if (invSupplierSearch().trim() && !invSelectedSupplier()) {
+            <ul class="inv-dropdown" role="listbox">
+                @for (s of invFilteredSuppliers(); track s.id) {
+                <li class="inv-dropdown__item" role="option" (click)="selectSupplier(s)">
+                    <div class="inv-supplier-icon">{{ supplierIcon(s.category) }}</div>
+                    <div class="inv-dropdown__info">
+                        <span class="inv-dropdown__name">{{ s.name }}</span>
+                        <span class="inv-dropdown__stock">RUC {{ s.ruc }} · {{ s.phone }}</span>
+                    </div>
+                </li>
+                } @empty {
+                <li class="inv-dropdown__item inv-dropdown__item--empty">
+                    <span>No encontrado —</span>
+                    <button type="button" class="inv-dropdown__add-link"
+                        (click)="openAddSupplier()">Agregar proveedor</button>
+                </li>
+                }
+            </ul>
+            }
+
+            @if (invSelectedSupplier()) {
+            <div class="inv-selected">
+                <div class="inv-supplier-icon">{{ supplierIcon(invSelectedSupplier()!.category) }}</div>
+                <div class="inv-selected__info">
+                    <span class="inv-selected__name">{{ invSelectedSupplier()!.name }}</span>
+                    <span class="inv-selected__stock">RUC {{ invSelectedSupplier()!.ruc }}</span>
+                </div>
+                <button class="inv-selected__remove" type="button" (click)="clearSupplierSearch()">
+                    <i stp-icon name="x" style="font-size: 0.875rem"></i>
+                </button>
+            </div>
+            }
+        </div>
+
+    </div><!-- /body -->
+
+    <div class="inv-drawer__footer">
+        <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
+            Cancelar
+        </stp-button>
+        <stp-button variant="primary" btnStyle="solid" size="md"
+            [disabled]="!canSubmitInventory()"
+            [loading]="invSubmitting()"
+            (click)="submitInventory()">
+            Confirmar ingreso
+        </stp-button>
+    </div>
+
+    }<!-- /not success -->
+</div>

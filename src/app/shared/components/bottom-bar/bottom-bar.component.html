@@ -1,0 +1,33 @@
+<nav class="bottom-bar liquid-glass" aria-label="Navegación principal">
+  @for (item of navItems; track item.route) {
+    <a
+      [class]="item.fab ? 'bottom-bar__fab' : 'bottom-bar__item'"
+      [routerLink]="item.route"
+      [routerLinkActive]="item.fab ? 'bottom-bar__fab--active' : 'bottom-bar__item--active'"
+      [attr.aria-label]="item.label"
+    >
+      <span class="bottom-bar__icon" aria-hidden="true">
+        @switch (item.icon) {
+          @case ('notices') {
+            <i stp-icon name="bell" style="font-size: 1.375rem"></i>
+          }
+          @case ('products') {
+            <i stp-icon name="package" style="font-size: 1.375rem"></i>
+          }
+          @case ('caja') {
+            <i stp-icon name="credit-card" style="font-size: 1.375rem"></i>
+          }
+          @case ('dashboard') {
+            <i stp-icon name="squares-four" style="font-size: 1.375rem"></i>
+          }
+          @case ('camera') {
+            <i stp-icon name="shopping-cart" style="font-size: 1.625rem"></i>
+          }
+        }
+      </span>
+      @if (!item.fab) {
+        <span class="bottom-bar__label">{{ item.label }}</span>
+      }
+    </a>
+  }
+</nav>

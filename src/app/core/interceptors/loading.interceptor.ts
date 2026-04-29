@@ -14,9 +14,9 @@ import { LoadingService } from '../services/loading.service';
 export const loadingInterceptor: HttpInterceptorFn = (req, next) => {
   const loading = inject(LoadingService);
 
-  loading.start();
+  // loading.start();
 
   return next(req).pipe(
-    finalize(() => loading.finish()),
+    // finalize(() => loading.finish()),
   );
 };

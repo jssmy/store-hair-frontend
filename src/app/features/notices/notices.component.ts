@@ -1,7 +1,10 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { LowerCasePipe } from '@angular/common';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { AuthUserService } from '../../core/services/auth-user.service';
+import { from, of } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 
 export type ActivityFilter = 'todos' | 'ventas' | 'productos' | 'caja';
 
@@ -101,9 +104,12 @@ const MOCK_ACTIVITIES: ActivityItem[] = [
   styleUrl: './notices.component.scss',
 })
 export class NoticesComponent {
-  // TODO: replace with real auth user from AuthService
-  protected readonly currentUserName = 'Joset';
+  private readonly authUser = inject(AuthUserService);
+
+  protected readonly user = toSignal(from(this.authUser.user()));
+  protected readonly currentUserName = computed(() => this.user()?.name?.split(' ')[0] || '');
   protected readonly currentYear = new Date().getFullYear();
+
 
   protected readonly filters: ActivityFilter[] = ['todos', 'ventas', 'productos', 'caja'];
   protected readonly filterLabels = FILTER_LABELS;

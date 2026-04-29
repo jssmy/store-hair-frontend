@@ -1,13 +1,14 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { NavigationEnd, NavigationStart, Router } from '@angular/router';
 import { RouterOutlet } from '@angular/router';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { filter, map, startWith } from 'rxjs';
+import { filter, from, map, startWith } from 'rxjs';
 import { AppHeaderComponent } from '../../components/app-header/app-header.component';
 import { AppFooterComponent } from '../../components/app-footer/app-footer.component';
 import { BottomBarComponent } from '../../components/bottom-bar/bottom-bar.component';
 import { SidebarComponent } from '../../components/sidebar/sidebar.component';
 import { AppRoutes } from '../../../core/constants/app-routes';
+import { AuthUserService } from '../../../core/services/auth-user.service';
 
 const SIDEBAR_HIDDEN_ROUTES: string[] = [AppRoutes.profile];
 
@@ -18,12 +19,12 @@ const SIDEBAR_HIDDEN_ROUTES: string[] = [AppRoutes.profile];
   styleUrl: './main-layout.component.scss',
 })
 export class MainLayoutComponent {
-  // TODO: replace with real auth user from AuthService
-  protected readonly currentUserName = 'Joset';
-
-  protected readonly sidebarOpen = signal(false);
-
   private readonly router = inject(Router);
+  private readonly authUser = inject(AuthUserService);
+
+  protected readonly user = toSignal(from(this.authUser.user()));
+  protected readonly userName = computed(() => this.user()?.name?.split(' ')[0] || '');
+  protected readonly sidebarOpen = signal(false);
 
   protected readonly hideSidebar = toSignal(
     this.router.events.pipe(

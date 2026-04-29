@@ -6,7 +6,6 @@ import { InputComponent } from '../input/input.component';
 import {
   SupplierDrawerComponent,
   SupplierDrawerData,
-  SupplierDrawerResult,
 } from '../supplier-drawer/supplier-drawer.component';
 import {
   MOCK_SUPPLIERS,
@@ -177,12 +176,12 @@ export class InventoryDrawerComponent {
   protected openAddSupplier(): void {
     const data: SupplierDrawerData = { supplier: null };
     this.bottomSheet
-      .open<SupplierDrawerComponent, SupplierDrawerData, SupplierDrawerResult | null>(
+      .open<SupplierDrawerComponent, SupplierDrawerData, Supplier | null>(
         SupplierDrawerComponent,
         { data, panelClass: 'stp-supplier-panel' },
       )
       .afterDismissed()
-      .subscribe((result: SupplierDrawerResult | null | undefined) => {
+      .subscribe((result: Supplier | null | undefined) => {
         if (!result) return;
         const newSupplier: Supplier = {
           id: this.localSuppliers().length + 1,

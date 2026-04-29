@@ -4,6 +4,7 @@ import { ThemeService } from '../../../core/services/theme.service';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { Router, RouterLink } from '@angular/router';
+import { StorageService } from '../../../core/services/storage.service';
 
 @Component({
   selector: 'stp-app-header',
@@ -19,10 +20,10 @@ export class AppHeaderComponent {
   readonly logout = output<void>();
 
   protected readonly config = inject(AppConfigService);
+  protected readonly storageService = inject(StorageService);
   protected readonly themeService = inject(ThemeService);
   private readonly el = inject(ElementRef);
-  readonly router = inject(Router
-  );
+  readonly router = inject(Router);
 
   protected readonly dropdownOpen = signal(false);
 
@@ -45,6 +46,7 @@ export class AppHeaderComponent {
   }
 
   protected onLogout(): void {
+    this.storageService.clear();
     this.router.navigate(['/login']);
     this.logout.emit();
     this.dropdownOpen.set(false);

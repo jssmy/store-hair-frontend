@@ -66,6 +66,12 @@
 
     </div><!-- /body -->
 
+    @if (apiError()) {
+    <div class="sup-drawer__alert">
+        <stp-alert variant="error" [message]="apiError()!" />
+    </div>
+    }
+
     <div class="sup-drawer__footer">
         <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
             Cancelar

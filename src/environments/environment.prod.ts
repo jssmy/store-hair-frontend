@@ -7,7 +7,9 @@ export const environment = {
   endpoints: {
     auth: {
       login: `${API}/auth/login`,
+      register: `${API}/auth/register`,
     },
+    supplier: `${API}/supplier`,
   },
   whatsappUrl: 'https://wa.me/1234567890',
   websiteUrl: 'https://storepoint.app',

@@ -1,5 +1,6 @@
 <div class="layout">
-  <stp-app-header [userName]="currentUserName" (menuToggle)="toggleSidebar()" (profileSettings)="goToProfile()" />
+  <stp-app-header [userName]="userName()" (menuToggle)="toggleSidebar()" (profileSettings)="goToProfile()" />
+  
 
   <div class="layout__body">
     @if (sidebarOpen()) {

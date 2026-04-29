@@ -1,7 +1,8 @@
-import { Component, computed, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { InputComponent } from '../../shared/components/input/input.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { AuthUserService } from '../../core/services/auth-user.service';
 
 @Component({
   selector: 'stp-profile',
@@ -10,10 +11,20 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
   styleUrl: './profile.component.scss',
 })
 export class ProfileComponent {
-  // TODO: populate from AuthService when available
-  protected readonly name = signal('Joset');
+  private readonly authUser = inject(AuthUserService);
+
+  protected readonly name = signal('');
   protected readonly email = signal('');
   protected readonly phone = signal('');
+
+  constructor() {
+    this.authUser.user().then(user => {
+      if (user) {
+        this.name.set(user.name ?? '');
+        this.email.set(user.email);
+      }
+    });
+  }
   protected readonly avatarUrl = signal<string | null>(null);
 
   protected readonly currentPassword = signal('');

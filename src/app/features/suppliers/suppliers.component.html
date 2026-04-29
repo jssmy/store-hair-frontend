@@ -38,21 +38,7 @@
             </div>
         </section>
 
-        <section class="suppliers-categories" aria-label="Filtrar por categoría">
-            <div class="suppliers-categories__scroll" role="tablist">
-                @for (cat of categories; track cat) {
-                <stp-button class="suppliers-category-chip"
-                    [class.suppliers-category-chip--active]="activeCategory() === cat" role="tab" size="sm"
-                    radius="full" [variant]="activeCategory() === cat ? 'primary' : 'surface'"
-                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
-                    [attr.aria-selected]="activeCategory() === cat" [attr.aria-label]="categoryLabels[cat]"
-                    (click)="setCategory(cat)">
-                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
-                    {{ categoryLabels[cat] }}
-                </stp-button>
-                }
-            </div>
-        </section>
+        
 
     </div><!-- /suppliers-sticky-bar -->
 
@@ -69,7 +55,8 @@
 
         <ul class="suppliers-list" role="list">
             @for (supplier of filteredSuppliers(); track supplier.id) {
-            <stp-swipe-item [options]="swipeOptions(supplier.active)" (optionSelected)="swipeOptionSelected(supplier, $event)" >
+            <stp-swipe-item [options]="swipeOptions(supplier.active)"
+                (optionSelected)="swipeOptionSelected(supplier, $event)">
                 <li class="supplier-row bg-base" [class.supplier-row--inactive]="!supplier.active">
 
                     <!-- Avatar -->
@@ -86,7 +73,7 @@
                             }
                         </div>
                         <span class="supplier-row__meta">
-                            {{ categoryIcon(supplier.category) }} {{ categoryLabels[supplier.category] }}
+                            
                             <span class="supplier-row__ruc">· RUC {{ supplier.ruc }}</span>
                         </span>
                         <span class="supplier-row__contact">
@@ -116,10 +103,12 @@
                                 [style.color]="supplier.active ? 'var(--color-success, #16a34a)' : 'var(--color-text-disabled)'">
                             </i>
                         </button>
+                        @if (supplier.active) {
                         <button class="supplier-row__btn" type="button" aria-label="Editar proveedor"
                             (click)="openEditDrawer(supplier)">
                             <i stp-icon name="pencil-simple" style="font-size: 1rem"></i>
                         </button>
+                        }
                     </div>
 
                 </li>

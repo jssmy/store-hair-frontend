@@ -5,16 +5,16 @@ import { IconComponent } from '../../shared/components/icon/icon.component';
 import {
   SupplierDrawerComponent,
   SupplierDrawerData,
-  SupplierDrawerResult,
 } from '../../shared/components/supplier-drawer/supplier-drawer.component';
 import {
-  MOCK_SUPPLIERS,
   SUPPLIER_CATEGORY_ICONS,
   SUPPLIER_CATEGORY_LABELS,
   Supplier,
   SupplierCategory,
 } from './suppliers.data';
 import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-item/swipe-item.component';
+import { SupplierApiService } from './supplier-api.service';
+import { LoadingService } from '../../core/services/loading.service';
 
 @Component({
   selector: 'stp-suppliers',
@@ -25,14 +25,13 @@ import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-i
 export class SuppliersComponent implements AfterViewInit, OnDestroy {
   private readonly suppliersHeader = viewChild<ElementRef>('suppliersHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
+  private readonly supplierApi = inject(SupplierApiService);
+
   protected readonly isStuck = signal(false);
+  protected readonly loading = signal(false);
+
   private stickyObserver?: IntersectionObserver;
 
-  protected readonly categories: SupplierCategory[] = [
-    'todos', 'abarrotes', 'bebidas', 'lacteos',
-    'snacks', 'limpieza', 'higiene', 'panaderia', 'carnes', 'general',
-  ];
-  protected readonly categoryLabels = SUPPLIER_CATEGORY_LABELS;
 
   protected readonly swipeOptions = (state: boolean): SwipeOption[] => {
     if (state) {
@@ -43,14 +42,32 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
     }
     return [
       { label: 'Activar', icon: 'check', key: 'toggle', stpClass: 'bg-success-light' },
-    ]
-
-  }
+    ];
+  };
 
   // ── Main list state ──────────────────────────────────────────
-  protected readonly suppliers = signal<Supplier[]>([...MOCK_SUPPLIERS]);
+  protected readonly suppliers = signal<Supplier[]>([]);
   protected readonly searchQuery = signal('');
   protected readonly activeCategory = signal<SupplierCategory>('todos');
+
+  constructor() {
+    this.loadSuppliers();
+  }
+
+  private loadSuppliers(): void {
+    this.loading.set(true);
+    this.supplierApi.getAll().subscribe({
+      next: items => {
+        this.suppliers.set(items.map(i => this.supplierApi.toSupplier(i)));
+        this.loading.set(false);
+        
+      },
+      error: () => {
+        this.loading.set(false);
+        
+      },
+    });
+  }
 
   // ── Computed ─────────────────────────────────────────────────
   protected readonly filteredSuppliers = computed(() => {
@@ -87,32 +104,32 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
     const data: SupplierDrawerData = { supplier };
 
     this.bottomSheet
-      .open<SupplierDrawerComponent, SupplierDrawerData, SupplierDrawerResult | null>(
+      .open<SupplierDrawerComponent, SupplierDrawerData, Supplier | null>(
         SupplierDrawerComponent,
         { data, panelClass: 'stp-supplier-panel' },
       )
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-
-        if (supplier) {
-          this.suppliers.update(prev =>
-            prev.map(s => s.id === supplier.id ? { ...s, ...result } : s),
-          );
-        } else {
-          this.suppliers.update(prev => [
-            ...prev,
-            { id: prev.length + 1, active: true, ...result },
-          ]);
-        }
+        this.loadSuppliers();
       });
   }
 
   // ── Toggle active ─────────────────────────────────────────────
   protected toggleActive(supplier: Supplier): void {
-    this.suppliers.update(prev =>
-      prev.map(s => s.id === supplier.id ? { ...s, active: !s.active } : s),
-    );
+    if (supplier.active) {
+      this.supplierApi.remove(supplier.id).subscribe({
+        next: () => this.suppliers.update(prev =>
+          prev.map(s => s.id === supplier.id ? { ...s, active: false } : s),
+        ),
+      });
+    } else {
+      this.supplierApi.update(supplier.id, { active: true }).subscribe({
+        next: () => this.suppliers.update(prev =>
+          prev.map(s => s.id === supplier.id ? { ...s, active: true } : s),
+        ),
+      });
+    }
   }
 
   // ── Main search ──────────────────────────────────────────────

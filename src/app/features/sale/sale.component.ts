@@ -39,8 +39,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
 
   // ── Search & filter ──────────────────────────────────────
   protected readonly categories: ProductCategory[] = [
-    'todos', 'abarrotes', 'bebidas', 'lacteos',
-    'snacks', 'limpieza', 'higiene', 'panaderia', 'carnes',
+    'todos', 'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
   ];
 
   protected readonly categoryLabels = CATEGORY_LABELS;

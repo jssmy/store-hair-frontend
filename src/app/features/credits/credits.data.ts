@@ -1,4 +1,4 @@
-import type { CartItem } from '../products/products.data';
+import type { CartItem, ProductCategory } from '../products/products.data';
 
 export type PaymentFrequency = 'semanal' | 'quincenal' | 'mensual';
 export type CreditStatus = 'active' | 'completed' | 'overdue';
@@ -80,7 +80,7 @@ export function computeInstallmentRows(c: Credit, today: Date): InstallmentRow[]
   return rows;
 }
 
-const p = (id: number, name: string, price: number, cat: 'abarrotes' | 'bebidas' | 'lacteos' | 'snacks' | 'limpieza' | 'higiene' | 'panaderia' | 'carnes', unit: string) =>
+const p = (id: number, name: string, price: number, cat: Exclude<ProductCategory, 'todos'>, unit: string) =>
   ({ id, name, category: cat, price, stock: 20, unit } as const);
 
 export const MOCK_CREDITS: Credit[] = [
@@ -100,10 +100,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-10',
     status:           'active',
     items: [
-      { product: p(1, 'Arroz Costeño 5kg',  28.50, 'abarrotes', 'saco'   ), quantity: 4 },
-      { product: p(2, 'Aceite Primor 1L',    8.90, 'abarrotes', 'botella'), quantity: 6 },
-      { product: p(3, 'Azúcar rubia 1kg',    4.50, 'abarrotes', 'bolsa'  ), quantity: 8 },
-      { product: p(4, 'Fideo Lavaggi 500g',  3.20, 'abarrotes', 'bolsa'  ), quantity: 10},
+      { product: p(1, 'Coleta Lisa 30cm',     45.00, 'lisa',      'unidad'), quantity: 4 },
+      { product: p(2, 'Coleta Lisa 40cm',     58.00, 'lisa',      'unidad'), quantity: 6 },
+      { product: p(3, 'Coleta Ondulada 35cm', 55.00, 'ondulada',  'unidad'), quantity: 8 },
+      { product: p(4, 'Coleta Rizada 30cm',   50.00, 'rizada',    'unidad'), quantity: 10},
     ],
   },
   {
@@ -121,10 +121,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-04-10',
     status:           'active',
     items: [
-      { product: p(10, 'Detergente Ariel 1kg',   12.50, 'limpieza', 'bolsa'  ), quantity: 5 },
-      { product: p(11, 'Lejía Clorox 1L',          4.80, 'limpieza', 'botella'), quantity: 10},
-      { product: p(12, 'Jabón Bolivar x3',          6.90, 'higiene',  'pack'   ), quantity: 8 },
-      { product: p(13, 'Papel Higiénico Elite x6', 11.50, 'higiene',  'pack'   ), quantity: 4 },
+      { product: p(10, 'Extensión Lisa 60cm',  95.00, 'extensiones', 'unidad'), quantity: 5 },
+      { product: p(11, 'Extensión Clip 50cm',  85.00, 'extensiones', 'unidad'), quantity: 10},
+      { product: p(12, 'Peluca Natural Corta', 180.00,'peluca',      'unidad'), quantity: 2 },
+      { product: p(13, 'Coleta Cortina 25cm',  35.00, 'cortina',     'unidad'), quantity: 4 },
     ],
   },
   {
@@ -143,9 +143,9 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-20',
     status:           'completed',
     items: [
-      { product: p(20, 'Leche Gloria UHT 1L',   3.90, 'lacteos', 'caja'   ), quantity: 12},
-      { product: p(21, 'Yogurt Laive 1kg',        8.50, 'lacteos', 'pote'   ), quantity: 6 },
-      { product: p(22, 'Mantequilla Laive 200g',  7.20, 'lacteos', 'bloque' ), quantity: 4 },
+      { product: p(20, 'Coleta Lisa 50cm',     72.00, 'lisa',     'unidad'), quantity: 12},
+      { product: p(21, 'Coleta Ondulada 45cm', 68.00, 'ondulada', 'unidad'), quantity: 6 },
+      { product: p(22, 'Coleta Rizada 40cm',   65.00, 'rizada',   'unidad'), quantity: 4 },
     ],
   },
   {
@@ -164,10 +164,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-15',
     status:           'overdue',
     items: [
-      { product: p(30, 'Pan de molde Bimbo',        5.50, 'panaderia', 'bolsa' ), quantity: 6 },
-      { product: p(31, 'Galletas Oreo x6',           4.20, 'snacks',    'pack'  ), quantity: 8 },
-      { product: p(32, 'Coca-Cola 1.5L',             5.80, 'bebidas',   'botella'), quantity: 6},
-      { product: p(33, 'Inca Kola 500ml',            2.50, 'bebidas',   'botella'), quantity: 12},
+      { product: p(30, 'Peluca Natural Larga',  250.00, 'peluca',      'unidad'), quantity: 1 },
+      { product: p(31, 'Extensión Lisa 60cm',    95.00, 'extensiones', 'unidad'), quantity: 3 },
+      { product: p(32, 'Coleta Ondulada 35cm',   55.00, 'ondulada',    'unidad'), quantity: 4 },
+      { product: p(33, 'Coleta Cortina 25cm',    35.00, 'cortina',     'unidad'), quantity: 5 },
     ],
   },
   {
@@ -185,9 +185,9 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-01',
     status:           'active',
     items: [
-      { product: p(40, 'Pollo entero fresco',  12.50, 'carnes', 'kg'    ), quantity: 10},
-      { product: p(41, 'Carne molida res',     22.00, 'carnes', 'kg'    ), quantity: 8 },
-      { product: p(42, 'Chorizo tipo parrilla', 8.90, 'carnes', 'pack'  ), quantity: 6 },
+      { product: p(40, 'Coleta Lisa 30cm',     45.00, 'lisa',        'unidad'), quantity: 10},
+      { product: p(41, 'Coleta Rizada 30cm',   50.00, 'rizada',      'unidad'), quantity: 8 },
+      { product: p(42, 'Extensión Clip 50cm',  85.00, 'extensiones', 'unidad'), quantity: 6 },
     ],
   },
   {
@@ -206,8 +206,8 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-03-01',
     status:           'active',
     items: [
-      { product: p(60, 'Leche Gloria UHT 1L',  3.90, 'lacteos',   'caja'), quantity: 20 },
-      { product: p(61, 'Yogurt Laive 1kg',      8.50, 'lacteos',   'pote'), quantity: 10 },
+      { product: p(60, 'Coleta Lisa 40cm',     58.00, 'lisa',     'unidad'), quantity: 2 },
+      { product: p(61, 'Coleta Ondulada 45cm', 68.00, 'ondulada', 'unidad'), quantity: 2 },
     ],
   },
   {
@@ -225,10 +225,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-04-20',
     status:           'active',
     items: [
-      { product: p(50, 'Arroz Costeño 5kg',  28.50, 'abarrotes', 'saco'   ), quantity: 5 },
-      { product: p(51, 'Aceite Primor 1L',    8.90, 'abarrotes', 'botella'), quantity: 8 },
-      { product: p(52, 'Azúcar rubia 1kg',    4.50, 'abarrotes', 'bolsa'  ), quantity: 10},
-      { product: p(53, 'Fideo Lavaggi 500g',  3.20, 'abarrotes', 'bolsa'  ), quantity: 15},
+      { product: p(50, 'Coleta Lisa 30cm',     45.00, 'lisa',        'unidad'), quantity: 5 },
+      { product: p(51, 'Coleta Lisa 50cm',     72.00, 'lisa',        'unidad'), quantity: 3 },
+      { product: p(52, 'Extensión Lisa 60cm',  95.00, 'extensiones', 'unidad'), quantity: 2 },
+      { product: p(53, 'Coleta Rizada 40cm',   65.00, 'rizada',      'unidad'), quantity: 4 },
     ],
   },
 ];

@@ -1,23 +1,107 @@
+// ── Product categories (coletas de pelo) ─────────────────────────────
+
 export type ProductCategory =
   | 'todos'
-  | 'abarrotes'
-  | 'bebidas'
-  | 'lacteos'
-  | 'snacks'
-  | 'limpieza'
-  | 'higiene'
-  | 'panaderia'
-  | 'carnes';
+  | 'lisa'
+  | 'ondulada'
+  | 'rizada'
+  | 'cortina'
+  | 'extensiones'
+  | 'peluca';
+
+export const CATEGORY_LABELS: Record<ProductCategory, string> = {
+  todos:       'Todos',
+  lisa:        'Lisa',
+  ondulada:    'Ondulada',
+  rizada:      'Rizada',
+  cortina:     'Cortina',
+  extensiones: 'Extensiones',
+  peluca:      'Peluca',
+};
+
+export const CATEGORY_ICONS: Record<ProductCategory, string> = {
+  todos:       '💇',
+  lisa:        '📏',
+  ondulada:    '〰️',
+  rizada:      '🌀',
+  cortina:     '✂️',
+  extensiones: '💈',
+  peluca:      '👑',
+};
+
+// ── Hair colors ──────────────────────────────────────────────────────
+
+export type HairColor =
+  | 'negro'
+  | 'negro-azabache'
+  | 'marron-oscuro'
+  | 'marron-medio'
+  | 'marron-claro'
+  | 'castano'
+  | 'rubio-oscuro'
+  | 'rubio-medio'
+  | 'rubio-ceniza'
+  | 'borgona'
+  | 'rojo'
+  | 'cobre'
+  | 'gris'
+  | 'blanco';
+
+export const HAIR_COLORS: HairColor[] = [
+  'negro', 'negro-azabache', 'marron-oscuro', 'marron-medio', 'marron-claro',
+  'castano', 'rubio-oscuro', 'rubio-medio', 'rubio-ceniza', 'borgona', 'rojo',
+  'cobre', 'gris', 'blanco',
+];
+
+export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
+  'negro':          'Negro',
+  'negro-azabache': 'Negro Azabache',
+  'marron-oscuro':  'Marrón Oscuro',
+  'marron-medio':   'Marrón Medio',
+  'marron-claro':   'Marrón Claro',
+  'castano':        'Castaño',
+  'rubio-oscuro':   'Rubio Oscuro',
+  'rubio-medio':    'Rubio Medio',
+  'rubio-ceniza':   'Rubio Ceniza',
+  'borgona':        'Borgoña',
+  'rojo':           'Rojo',
+  'cobre':          'Cobre',
+  'gris':           'Gris/Plateado',
+  'blanco':         'Blanco/Platino',
+};
+
+export const HAIR_COLOR_HEX: Record<HairColor, string> = {
+  'negro':          '#1a1a1a',
+  'negro-azabache': '#050505',
+  'marron-oscuro':  '#3b1c0f',
+  'marron-medio':   '#6b3a2a',
+  'marron-claro':   '#a0522d',
+  'castano':        '#7b3f20',
+  'rubio-oscuro':   '#c19a6b',
+  'rubio-medio':    '#d4a853',
+  'rubio-ceniza':   '#c9b89a',
+  'borgona':        '#722f37',
+  'rojo':           '#8b0000',
+  'cobre':          '#b87333',
+  'gris':           '#9e9e9e',
+  'blanco':         '#f0e6d3',
+};
+
+// ── Product model ────────────────────────────────────────────────────
 
 export interface Product {
   id: number;
   name: string;
   category: Exclude<ProductCategory, 'todos'>;
   imageUrl?: string;
+  images?: string[];
   price: number;
   stock: number;
   unit: string;
   supplier?: string;
+  color?: HairColor;
+  weight?: number;    // grams
+  length?: number;    // cm
 }
 
 export interface CartItem {
@@ -25,61 +109,60 @@ export interface CartItem {
   quantity: number;
 }
 
-export const CATEGORY_LABELS: Record<ProductCategory, string> = {
-  todos: 'Todos',
-  abarrotes: 'Abarrotes',
-  bebidas: 'Bebidas',
-  lacteos: 'Lácteos',
-  snacks: 'Snacks',
-  limpieza: 'Limpieza',
-  higiene: 'Higiene',
-  panaderia: 'Panadería',
-  carnes: 'Carnes',
-};
+// ── Lote (batch) model ───────────────────────────────────────────────
 
-export const CATEGORY_ICONS: Record<ProductCategory, string> = {
-  todos:     '🏪',
-  abarrotes: '🌾',
-  bebidas:   '🥤',
-  lacteos:   '🥛',
-  snacks:    '🍿',
-  limpieza:  '🧹',
-  higiene:   '🧴',
-  panaderia: '🍞',
-  carnes:    '🥩',
-};
+export interface LoteProduct {
+  id: string;
+  name: string;
+  color: HairColor;
+  weight: number;
+  length: number;
+  price: number;
+  quantity: number;
+  category: Exclude<ProductCategory, 'todos'>;
+  images: string[];
+}
 
-const IMG = (keywords: string, id: number) =>
-  `https://loremflickr.com/320/240/${keywords}?lock=${id}`;
+export interface Lote {
+  id?: string;
+  purchaseOrderNumber: string;
+  registeredBy: string;
+  registeredAt: string;
+  supplierId: number;
+  supplierName: string;
+  products: LoteProduct[];
+}
+
+// ── Purchase Orders (mock data) ──────────────────────────────────────
+
+export interface PurchaseOrder {
+  number: string;
+  supplierName: string;
+  supplierId: number;
+  date: string;
+}
+
+export const MOCK_PURCHASE_ORDERS: PurchaseOrder[] = [
+  { number: 'OC-2025-001', supplierName: 'Distribuidora Norte SAC',      supplierId: 1, date: '2025-01-15' },
+  { number: 'OC-2025-002', supplierName: 'Multidistribuciones Perú SAC', supplierId: 9, date: '2025-02-10' },
+  { number: 'OC-2025-003', supplierName: 'Distribuidora Norte SAC',      supplierId: 1, date: '2025-03-05' },
+  { number: 'OC-2025-004', supplierName: 'Multidistribuciones Perú SAC', supplierId: 9, date: '2025-04-01' },
+  { number: 'OC-2025-005', supplierName: 'Distribuidora Norte SAC',      supplierId: 1, date: '2025-04-20' },
+];
+
+// ── Mock products ────────────────────────────────────────────────────
 
 export const MOCK_PRODUCTS: Product[] = [
-  { id: 1,  name: 'Arroz Costeño 5kg',      category: 'abarrotes', price: 28.50, stock: 42,  unit: 'saco',    supplier: 'Costeño S.A.',          imageUrl: IMG('rice,grain',           1) },
-  { id: 2,  name: 'Aceite Primor 1L',        category: 'abarrotes', price: 8.90,  stock: 30,  unit: 'botella', supplier: 'Alicorp S.A.A.',        imageUrl: IMG('cooking,oil,bottle',    2) },
-  { id: 3,  name: 'Azúcar rubia 1kg',        category: 'abarrotes', price: 4.50,  stock: 55,  unit: 'bolsa',   supplier: 'Dist. Central S.A.C.',  imageUrl: IMG('sugar,brown',           3) },
-  { id: 4,  name: 'Fideo Lavaggi 500g',      category: 'abarrotes', price: 3.20,  stock: 80,  unit: 'bolsa',   supplier: 'Alicorp S.A.A.',        imageUrl: IMG('pasta,noodles',         4) },
-  { id: 5,  name: 'Lentejas 500g',           category: 'abarrotes', price: 3.80,  stock: 25,  unit: 'bolsa',                                      imageUrl: IMG('lentils,legumes',       5) },
-  { id: 6,  name: 'Sal marina 1kg',          category: 'abarrotes', price: 1.50,  stock: 60,  unit: 'bolsa',                                      imageUrl: IMG('salt,sea',              6) },
-  { id: 7,  name: 'Coca-Cola 1.5L',          category: 'bebidas',   price: 5.50,  stock: 36,  unit: 'botella', supplier: 'Coca-Cola FEMSA',       imageUrl: IMG('cola,soda,bottle',      7) },
-  { id: 8,  name: 'Inca Kola 1.5L',          category: 'bebidas',   price: 5.50,  stock: 40,  unit: 'botella', supplier: 'Coca-Cola FEMSA',       imageUrl: IMG('soda,drink,bottle',     8) },
-  { id: 9,  name: 'Agua San Luis 600ml',     category: 'bebidas',   price: 1.80,  stock: 120, unit: 'botella', supplier: 'Nestlé Perú S.A.',      imageUrl: IMG('water,bottle',          9) },
-  { id: 10, name: 'Jugo Pulp Durazno 1L',    category: 'bebidas',   price: 6.00,  stock: 18,  unit: 'caja',                                       imageUrl: IMG('juice,peach,fruit',    10) },
-  { id: 11, name: 'Leche Gloria Tarro',      category: 'lacteos',   price: 7.90,  stock: 48,  unit: 'tarro',   supplier: 'Gloria S.A.',           imageUrl: IMG('milk,can',             11) },
-  { id: 12, name: 'Yogurt Gloria 1kg',       category: 'lacteos',   price: 9.50,  stock: 12,  unit: 'vaso',    supplier: 'Gloria S.A.',           imageUrl: IMG('yogurt,dairy',         12) },
-  { id: 13, name: 'Mantequilla Laive 200g',  category: 'lacteos',   price: 8.20,  stock: 3,   unit: 'paquete', supplier: 'Laive S.A.',            imageUrl: IMG('butter,dairy',         13) },
-  { id: 14, name: 'Queso Edam 250g',         category: 'lacteos',   price: 12.00, stock: 8,   unit: 'paquete', supplier: 'Laive S.A.',            imageUrl: IMG('cheese,edam',          14) },
-  { id: 15, name: 'Cheetos 100g',            category: 'snacks',    price: 4.00,  stock: 50,  unit: 'bolsa',   supplier: 'Frito-Lay Perú',        imageUrl: IMG('cheetos,snack,chips',  15) },
-  { id: 16, name: 'Doritos Nacho 150g',      category: 'snacks',    price: 5.50,  stock: 35,  unit: 'bolsa',   supplier: 'Frito-Lay Perú',        imageUrl: IMG('doritos,chips,nacho',  16) },
-  { id: 17, name: 'Galletas Oreo 119g',      category: 'snacks',    price: 3.50,  stock: 45,  unit: 'paquete',                                    imageUrl: IMG('oreo,cookie,biscuit',  17) },
-  { id: 18, name: 'Chocolate Sublime',       category: 'snacks',    price: 1.50,  stock: 90,  unit: 'unidad',  supplier: 'Nestlé Perú S.A.',      imageUrl: IMG('chocolate,bar',        18) },
-  { id: 19, name: 'Jabón Bolivar 360g',      category: 'limpieza',  price: 4.80,  stock: 24,  unit: 'barra',   supplier: 'Alicorp S.A.A.',        imageUrl: IMG('soap,bar,laundry',     19) },
-  { id: 20, name: 'Detergente Ariel 1kg',    category: 'limpieza',  price: 14.50, stock: 20,  unit: 'bolsa',   supplier: 'Procter & Gamble',      imageUrl: IMG('detergent,laundry',    20) },
-  { id: 21, name: 'Lejía Clorox 1L',         category: 'limpieza',  price: 5.00,  stock: 30,  unit: 'botella', supplier: 'Clorox Perú S.A.',      imageUrl: IMG('bleach,cleaning',      21) },
-  { id: 22, name: 'Esponja Limpiahogar',     category: 'limpieza',  price: 1.00,  stock: 0,   unit: 'unidad',                                     imageUrl: IMG('sponge,cleaning',      22) },
-  { id: 23, name: 'Shampoo Head&Shoulders',  category: 'higiene',   price: 18.00, stock: 15,  unit: 'botella', supplier: 'Procter & Gamble',      imageUrl: IMG('shampoo,hair,bottle',  23) },
-  { id: 24, name: 'Jabón Dove 90g',          category: 'higiene',   price: 3.50,  stock: 40,  unit: 'barra',   supplier: 'Unilever Perú S.A.',    imageUrl: IMG('soap,dove,body',       24) },
-  { id: 25, name: 'Papel Higiénico Elite',   category: 'higiene',   price: 12.00, stock: 28,  unit: 'paquete', supplier: 'CMPC Tissue S.A.',      imageUrl: IMG('toilet,paper,roll',    25) },
-  { id: 26, name: 'Pan de Molde Bimbo',      category: 'panaderia', price: 7.90,  stock: 6,   unit: 'bolsa',   supplier: 'Bimbo del Perú S.A.',   imageUrl: IMG('bread,sliced,loaf',    26) },
-  { id: 27, name: 'Galleta Soda San Jorge',  category: 'panaderia', price: 2.50,  stock: 30,  unit: 'paquete', supplier: 'Alicorp S.A.A.',        imageUrl: IMG('crackers,soda,biscuit',27) },
-  { id: 28, name: 'Pollo entero kg',         category: 'carnes',    price: 10.00, stock: 5,   unit: 'kg',      supplier: 'Avícola San Fernando',  imageUrl: IMG('chicken,meat,raw',     28) },
-  { id: 29, name: 'Huevos blancos x12',      category: 'carnes',    price: 10.50, stock: 20,  unit: 'cartón',  supplier: 'Avícola San Fernando',  imageUrl: IMG('eggs,white,dozen',     29) },
+  { id: 1,  name: 'Coleta Lisa 30cm',      category: 'lisa',        price: 45.00,  stock: 12, unit: 'unidad', color: 'negro',         weight: 80,  length: 30 },
+  { id: 2,  name: 'Coleta Lisa 40cm',      category: 'lisa',        price: 58.00,  stock: 8,  unit: 'unidad', color: 'marron-oscuro', weight: 100, length: 40 },
+  { id: 3,  name: 'Coleta Lisa 50cm',      category: 'lisa',        price: 72.00,  stock: 5,  unit: 'unidad', color: 'rubio-medio',   weight: 120, length: 50 },
+  { id: 4,  name: 'Coleta Ondulada 35cm',  category: 'ondulada',    price: 55.00,  stock: 10, unit: 'unidad', color: 'castano',       weight: 90,  length: 35 },
+  { id: 5,  name: 'Coleta Ondulada 45cm',  category: 'ondulada',    price: 68.00,  stock: 7,  unit: 'unidad', color: 'marron-medio',  weight: 110, length: 45 },
+  { id: 6,  name: 'Coleta Rizada 30cm',    category: 'rizada',      price: 50.00,  stock: 6,  unit: 'unidad', color: 'negro',         weight: 85,  length: 30 },
+  { id: 7,  name: 'Coleta Rizada 40cm',    category: 'rizada',      price: 65.00,  stock: 4,  unit: 'unidad', color: 'borgona',       weight: 105, length: 40 },
+  { id: 8,  name: 'Coleta Cortina 25cm',   category: 'cortina',     price: 35.00,  stock: 15, unit: 'unidad', color: 'negro-azabache',weight: 60,  length: 25 },
+  { id: 9,  name: 'Extensión Lisa 60cm',   category: 'extensiones', price: 95.00,  stock: 3,  unit: 'unidad', color: 'rubio-ceniza',  weight: 150, length: 60 },
+  { id: 10, name: 'Extensión Clip 50cm',   category: 'extensiones', price: 85.00,  stock: 5,  unit: 'unidad', color: 'marron-claro',  weight: 130, length: 50 },
+  { id: 11, name: 'Peluca Natural Corta',  category: 'peluca',      price: 180.00, stock: 2,  unit: 'unidad', color: 'negro',         weight: 200, length: 20 },
+  { id: 12, name: 'Peluca Natural Larga',  category: 'peluca',      price: 250.00, stock: 1,  unit: 'unidad', color: 'castano',       weight: 280, length: 50 },
 ];

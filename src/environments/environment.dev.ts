@@ -1,4 +1,4 @@
-const API = 'http://localhost:3000';
+const API = 'https://storehair.api.bugzilo.com';
 
 export const environment = {
   production: false,
@@ -12,6 +12,6 @@ export const environment = {
     supplier: `${API}/supplier`,
   },
   whatsappUrl: 'https://wa.me/1234567890',
-  websiteUrl: 'https://storepoint.app',
+  websiteUrl: 'https://storehair.bugzilo.com',
   logoUrl: null as string | null,
 };

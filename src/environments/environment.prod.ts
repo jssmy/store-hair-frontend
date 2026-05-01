@@ -1,4 +1,4 @@
-const API = 'https://api.storepoint.app';
+const API = 'https://storehair.api.bugzilo.com';
 
 export const environment = {
   production: true,

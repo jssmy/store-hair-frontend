@@ -10,6 +10,8 @@ import {
 import {
   CATEGORY_ICONS,
   CATEGORY_LABELS,
+  HAIR_COLOR_HEX,
+  HAIR_COLOR_LABELS,
   MOCK_PRODUCTS,
   Product,
   ProductCategory,
@@ -28,17 +30,18 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   private stickyObserver?: IntersectionObserver;
 
   protected readonly categories: ProductCategory[] = [
-    'todos', 'abarrotes', 'bebidas', 'lacteos',
-    'snacks', 'limpieza', 'higiene', 'panaderia', 'carnes',
+    'todos', 'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
   ];
   protected readonly categoryLabels = CATEGORY_LABELS;
+  protected readonly hairColorLabels = HAIR_COLOR_LABELS;
+  protected readonly hairColorHex = HAIR_COLOR_HEX;
 
-  // ── Main list state ──────────────────────────────────────────
+  // ── Main list state ──────────────────────────────────────────────
   protected readonly products = signal<Product[]>([...MOCK_PRODUCTS]);
   protected readonly searchQuery = signal('');
   protected readonly activeCategory = signal<ProductCategory>('todos');
 
-  // ── Computed ─────────────────────────────────────────────────
+  // ── Computed ─────────────────────────────────────────────────────
   protected readonly filteredProducts = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
     const category = this.activeCategory();
@@ -53,39 +56,51 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     this.searchQuery().trim().length > 0 || this.activeCategory() !== 'todos',
   );
 
-  // ── Inventory drawer ─────────────────────────────────────────
-  protected openInventoryDrawer(prefilledName = ''): void {
-    const data: InventoryDrawerData = { products: this.products(), prefilledName };
-    const ref = this.bottomSheet.open(InventoryDrawerComponent, { data });
+  // ── Inventory drawer ─────────────────────────────────────────────
+  protected openInventoryDrawer(): void {
+    const data: InventoryDrawerData = { products: this.products() };
+    const ref = this.bottomSheet.open(InventoryDrawerComponent, {
+      data,
+      panelClass: 'stp-supplier-panel',
+    });
 
     ref.afterDismissed().subscribe((result: InventoryDrawerResult | null | undefined) => {
       if (!result) return;
 
-      if (result.type === 'update') {
-        this.products.update(prev =>
-          prev.map(p => p.id === result.productId
-            ? { ...p, stock: p.stock + result.stockAdd, supplier: result.supplier }
-            : p,
-          ),
-        );
-      } else {
-        this.products.update(prev => [
-          ...prev,
-          {
-            id: prev.length + 1,
-            name: result.name,
-            category: result.category,
-            price: result.price,
-            stock: result.stockAdd,
-            unit: result.unit,
-            supplier: result.supplier,
-          },
-        ]);
-      }
+      this.products.update(prev => {
+        const updated = [...prev];
+        for (const lp of result.products) {
+          const existingIdx = updated.findIndex(
+            p => p.name.toLowerCase() === lp.name.toLowerCase() && p.color === lp.color,
+          );
+          if (existingIdx >= 0) {
+            updated[existingIdx] = {
+              ...updated[existingIdx],
+              stock: updated[existingIdx].stock + lp.quantity,
+              supplier: result.supplierName,
+            };
+          } else {
+            updated.push({
+              id: updated.length + 1,
+              name: lp.name,
+              category: lp.category,
+              price: lp.price,
+              stock: lp.quantity,
+              unit: 'unidad',
+              supplier: result.supplierName,
+              color: lp.color,
+              weight: lp.weight,
+              length: lp.length,
+              images: lp.images,
+            });
+          }
+        }
+        return updated;
+      });
     });
   }
 
-  // ── Main search ──────────────────────────────────────────────
+  // ── Main search ──────────────────────────────────────────────────
   protected onSearchInput(value: string): void {
     this.searchQuery.set(value);
   }
@@ -99,7 +114,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     this.activeCategory.set(category);
   }
 
-  // ── Sticky header ────────────────────────────────────────────
+  // ── Sticky header ────────────────────────────────────────────────
   ngAfterViewInit(): void {
     const el = this.productHeader()?.nativeElement;
     if (!el) return;
@@ -114,7 +129,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     this.stickyObserver?.disconnect();
   }
 
-  // ── Helpers ──────────────────────────────────────────────────
+  // ── Helpers ──────────────────────────────────────────────────────
   protected stockStatus(stock: number): 'ok' | 'low' | 'out' {
     if (stock === 0) return 'out';
     if (stock <= 5) return 'low';

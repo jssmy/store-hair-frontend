@@ -1,0 +1,8 @@
+services:
+  storepoint:
+    container_name: storepoint
+    build:
+      context: .
+    ports:
+      - "${PORT:-80}:80"
+    restart: unless-stopped

@@ -74,7 +74,7 @@
                         </span>
                         <div class="inv-dropdown__info">
                             <span class="inv-dropdown__name">{{ po.oc }}</span>
-                            <span class="inv-dropdown__stock">{{ po.supplier.name }} · {{ formatDate(po.createdAt.toISOString()) }}</span>
+                            <span class="inv-dropdown__stock">{{ po.supplier.name }} · {{ formatDate(po.createdAt) }}</span>
                         </div>
                     </li>
                     }
@@ -87,7 +87,7 @@
                     <i stp-icon name="link" class="icon--sm"></i>
                     <div class="inv-po-linked__info">
                         <span class="inv-po-linked__number">{{ loteSelectedPO()!.oc }}</span>
-                        <span class="inv-po-linked__meta">{{ formatDate(loteSelectedPO()!.createdAt.toISOString()) }}</span>
+                        <span class="inv-po-linked__meta">{{ formatDate(loteSelectedPO()!.createdAt) }}</span>
                     </div>
                     <button class="inv-selected__remove" type="button" (click)="clearPoSearch()">
                         <i stp-icon name="x" class="icon--xs"></i>

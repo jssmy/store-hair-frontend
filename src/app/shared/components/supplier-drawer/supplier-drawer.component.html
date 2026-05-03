@@ -30,26 +30,15 @@
 
         <div class="sup-field-row">
             <stp-input
-                label="RUC *"
-                [value]="form().ruc"
-                (valueChange)="patchForm({ ruc: $event })" />
+                label="DNI *"
+                [value]="form().dni"
+                (valueChange)="patchForm({ dni: $event })" />
             <stp-input
                 label="Teléfono *"
                 type="tel"
                 autocomplete="tel"
                 [value]="form().phone"
                 (valueChange)="patchForm({ phone: $event })" />
-        </div>
-
-        <div class="sup-field">
-            <label class="sup-field__label" for="sup-category">Categoría</label>
-            <select id="sup-category" class="sup-field__select"
-                [value]="form().category"
-                (change)="patchForm({ category: $any($event.target).value })">
-                @for (cat of categoryOptions; track cat) {
-                <option [value]="cat">{{ categoryIcon(cat) }} {{ categoryLabels[cat] }}</option>
-                }
-            </select>
         </div>
 
         <stp-input

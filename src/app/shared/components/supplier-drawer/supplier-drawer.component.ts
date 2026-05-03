@@ -6,20 +6,16 @@ import { IconComponent } from '../icon/icon.component';
 import { InputComponent } from '../input/input.component';
 import { AlertComponent } from '../alert/alert.component';
 import {
-  SUPPLIER_CATEGORY_ICONS,
-  SUPPLIER_CATEGORY_LABELS,
   Supplier,
-  SupplierCategory,
 } from '../../../features/suppliers/suppliers.data';
 import { CreateSupplierDto, SupplierApiService } from '../../../features/suppliers/supplier-api.service';
 
 interface SupplierForm {
   name: string;
-  ruc: string;
+  dni: string;
   phone: string;
   email: string;
   address: string;
-  category: Exclude<SupplierCategory, 'todos'>;
 }
 
 export interface SupplierDrawerData {
@@ -27,7 +23,7 @@ export interface SupplierDrawerData {
 }
 
 const EMPTY_FORM: SupplierForm = {
-  name: '', ruc: '', phone: '', email: '', address: '', category: 'general',
+  name: '', dni: '', phone: '', email: '', address: '',
 };
 
 @Component({
@@ -44,20 +40,14 @@ export class SupplierDrawerComponent {
 
   protected readonly editing: Supplier | null = this.data.supplier ?? null;
 
-  protected readonly categoryOptions: Exclude<SupplierCategory, 'todos'>[] = [
-    'abarrotes', 'bebidas', 'lacteos', 'snacks', 'limpieza', 'higiene', 'panaderia', 'carnes', 'general',
-  ];
-  protected readonly categoryLabels = SUPPLIER_CATEGORY_LABELS;
-
   protected readonly form = signal<SupplierForm>(
     this.editing
       ? {
           name:     this.editing.name,
-          ruc:      this.editing.ruc,
+          dni:      this.editing.dni,
           phone:    this.editing.phone,
-          email:    this.editing.email ?? '',
-          address:  this.editing.address ?? '',
-          category: this.editing.category,
+          email:    this.editing.email,
+          address:  this.editing.address,
         }
       : { ...EMPTY_FORM },
   );
@@ -70,7 +60,7 @@ export class SupplierDrawerComponent {
 
   protected readonly canSubmit = computed(() => {
     const f = this.form();
-    return !!(f.name.trim() && f.ruc.trim().length >= 8 && f.phone.trim());
+    return !!(f.name.trim() && f.dni.trim().length >= 8 && f.phone.trim());
   });
 
   protected patchForm(patch: Partial<SupplierForm>): void {
@@ -89,7 +79,7 @@ export class SupplierDrawerComponent {
 
     const request: CreateSupplierDto = {
       name: this.form().name.trim(),
-      dni: parseInt(this.form().ruc.trim(), 10),
+      dni: this.form().dni.trim(),
       phone: this.form().phone.trim(),
       email: this.form().email.trim(),
       address: this.form().address.trim(),
@@ -118,9 +108,5 @@ export class SupplierDrawerComponent {
     if (Array.isArray(msg)) return msg[0];
     if (typeof msg === 'string') return msg;
     return 'Error al guardar. Intenta de nuevo.';
-  }
-
-  protected categoryIcon(category: SupplierCategory): string {
-    return SUPPLIER_CATEGORY_ICONS[category];
   }
 }

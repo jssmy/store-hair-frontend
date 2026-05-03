@@ -1,4 +1,5 @@
 @use '../../shared/styles/breakpoints' as bp;
+@use '../../shared/styles/z-index' as z;
 
 /* =========================================================
    Suppliers — StorePoint
@@ -6,6 +7,10 @@
 
 :host {
   display: block;
+
+  cdk-virtual-scroll-viewport {
+    height: 70dvh;
+  }
 }
 
 .suppliers-page {
@@ -17,91 +22,129 @@
   padding: 1.5rem 1.25rem 6rem;
 }
 
-/* ── Header ───────────────────────────────────────────────── */
+/* ── Hero ───────────────────────────────────────────────────── */
 
-.suppliers-header {
-  padding: var(--p-5);
-  background-color: var(--color-primary);
-  border-radius: 1.25rem;
-  box-shadow: var(--shadow-md);
+.sup-hero {
+  position: relative;
+  padding: var(--p-6) var(--p-6) var(--p-5);
+  background: linear-gradient(
+    135deg,
+    var(--color-primary) 0%,
+    color-mix(in srgb, var(--color-primary) 72%, #7c3aed) 100%
+  );
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  color: var(--color-primary-fg);
 
-  &__row {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 1rem;
-  }
-
-  &__title {
-    margin: 0 0 0.25rem;
-    font-size: 1.5rem;
-    font-weight: 800;
-    color: var(--color-primary-fg);
-    letter-spacing: -0.02em;
-    line-height: 1.2;
-  }
-
-  &__subtitle {
-    margin: 0;
-    font-size: 0.875rem;
-    color: color-mix(in srgb, var(--color-primary-fg) 72%, transparent);
-  }
-}
-
-/* ── Sticky bar (search + categories) ────────────────────── */
-
-.suppliers-search {
-  &__field {
-    position: relative;
-    display: flex;
-    align-items: center;
-  }
-
-  &__icon {
+  &__blob {
     position: absolute;
-    left: 0.875rem;
-    color: var(--color-text-disabled);
-    display: flex;
+    border-radius: 50%;
     pointer-events: none;
-  }
 
-  &__input {
-    width: 100%;
-    padding: 0.75rem 2.75rem;
-    border: 1.5px solid var(--color-border);
-    border-radius: 0.875rem;
-    background-color: var(--color-surface);
-    color: var(--color-text-primary);
-    font-size: 1rem;
-    outline: none;
-    transition: border-color 150ms ease, box-shadow 150ms ease;
-    appearance: textfield;
+    &--1 {
+      width: 220px;
+      height: 220px;
+      top: -70px;
+      right: -50px;
+      background: color-mix(in srgb, white 10%, transparent);
+    }
 
-    &::placeholder { color: var(--color-text-disabled); }
-    &::-webkit-search-cancel-button { display: none; }
-
-    &:focus {
-      border-color: var(--color-primary);
-      box-shadow: 0 0 0 3px var(--color-primary-light);
+    &--2 {
+      width: 110px;
+      height: 110px;
+      bottom: -25px;
+      right: 28%;
+      background: color-mix(in srgb, white 7%, transparent);
     }
   }
 
-  &__clear {
-    position: absolute;
-    right: 0.75rem;
+  &__main {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: var(--gap-2);
+    margin-bottom: var(--p-5);
+  }
+
+  &__eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    margin: 0 0 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: color-mix(in srgb, var(--color-primary-fg) 60%, transparent);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+  }
+
+  &__title {
+    margin: 0;
+    font-size: var(--text-4xl);
+    font-weight: var(--font-bold);
+    letter-spacing: -0.025em;
+    line-height: var(--leading-tight);
+  }
+
+  &__stats {
+    position: relative;
     display: flex;
     align-items: center;
-    justify-content: center;
-    width: 1.75rem;
-    height: 1.75rem;
-    border: none;
-    border-radius: 50%;
-    background: var(--color-surface-alt, #ebebeb);
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: background 150ms ease;
+    gap: var(--gap-3);
+    padding-top: var(--p-4);
+    border-top: 1px solid color-mix(in srgb, var(--color-primary-fg) 18%, transparent);
+  }
+}
 
-    &:hover { background: var(--color-border); }
+.sup-stat {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+
+  &__num {
+    font-size: var(--text-2xl);
+    font-weight: var(--font-bold);
+    line-height: 1;
+    color: var(--color-primary-fg);
+
+    &--ok    { color: #86efac; }
+    &--muted { color: color-mix(in srgb, var(--color-primary-fg) 50%, transparent); }
+  }
+
+  &__label {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: color-mix(in srgb, var(--color-primary-fg) 58%, transparent);
+    white-space: nowrap;
+  }
+
+  &__sep {
+    width: 1px;
+    height: 2.25rem;
+    background: color-mix(in srgb, var(--color-primary-fg) 18%, transparent);
+    flex-shrink: 0;
+  }
+}
+
+/* ── Sticky search ──────────────────────────────────────────── */
+
+.sup-sticky {
+  position: sticky;
+  top: 0;
+  z-index: z.$sticky;
+  padding: var(--p-4);
+  transition:
+    background var(--duration-slow) var(--ease-out),
+    box-shadow var(--duration-slow) var(--ease-out);
+
+  &.sticky-bar--stuck {
+    background: color-mix(in srgb, var(--color-bg) 88%, transparent);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    box-shadow: 0 1px 0 var(--color-border);
+    padding: var(--p-4);
   }
 }
 
@@ -160,6 +203,21 @@
   border-radius: var(--radius-md);
   overflow: hidden;
   
+}
+
+.suppliers-list__state {
+  list-style: none;
+  text-align: center;
+  padding: var(--p-3) var(--p-2);
+}
+
+.suppliers-list__end-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-1);
+  padding: var(--p-4) 0;
+  list-style: none;
 }
 
 .supplier-row {

@@ -1,46 +1,55 @@
 <div class="suppliers-page">
 
-    <!-- ── Header ────────────────────────────────────────────── -->
-    <header #suppliersHeader class="suppliers-header">
-        <div class="suppliers-header__row">
-            <div>
-                <h1 class="suppliers-header__title">Proveedores</h1>
-                <p class="suppliers-header__subtitle">
-                    {{ activeCount() }} activo{{ activeCount() !== 1 ? 's' : '' }}
-                    de {{ suppliers().length }} registrados
+    <!-- ── Hero header ─────────────────────────────────────────── -->
+    <header #suppliersHeader class="sup-hero">
+        <span class="sup-hero__blob sup-hero__blob--1" aria-hidden="true"></span>
+        <span class="sup-hero__blob sup-hero__blob--2" aria-hidden="true"></span>
+
+        <div class="sup-hero__main">
+            <div class="sup-hero__text">
+                <p class="sup-hero__eyebrow">
+                    <i stp-icon name="truck" class="icon--xs"></i>
+                    Gestión de proveedores
                 </p>
+                <h1 class="sup-hero__title">Proveedores</h1>
             </div>
-            <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
-                <i stp-icon name="plus" style="font-size: 1rem"></i>
-                Nuevo proveedor
+            <stp-button variant="surface" btnStyle="outlined" size="md" radius="full" (click)="openNewDrawer()">
+                <i stp-icon name="plus" class="icon--sm"></i>
+                Nuevo
             </stp-button>
+        </div>
+
+        <div class="sup-hero__stats">
+            <div class="sup-stat">
+                <span class="sup-stat__num">{{ suppliers().length }}</span>
+                <span class="sup-stat__label">Total</span>
+            </div>
+            <span class="sup-stat__sep"></span>
+            <div class="sup-stat">
+                <span class="sup-stat__num sup-stat__num--ok">{{ activeCount() }}</span>
+                <span class="sup-stat__label">Activos</span>
+            </div>
+            <span class="sup-stat__sep"></span>
+            <div class="sup-stat">
+                <span class="sup-stat__num sup-stat__num--muted">
+                    {{ suppliers().length - activeCount() }}
+                </span>
+                <span class="sup-stat__label">Inactivos</span>
+            </div>
         </div>
     </header>
 
-    <!-- ── Search + category sticky bar ────────────────────── -->
-    <div class="suppliers-sticky-bar sticky-bar" [class.suppliers-sticky-bar--stuck]="isStuck()"
-        [class.sticky-bar--stuck]="isStuck()">
-
-        <section class="suppliers-search" aria-label="Buscar proveedores">
-            <div class="suppliers-search__field">
-                <span class="suppliers-search__icon" aria-hidden="true">
-                    <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
-                </span>
-                <input class="suppliers-search__input" type="search" placeholder="Buscar por nombre, RUC o teléfono..."
-                    autocomplete="off" aria-label="Buscar proveedores" [value]="searchQuery()"
-                    (input)="onSearchInput($any($event.target).value)" />
-                @if (searchQuery()) {
-                <button class="suppliers-search__clear" type="button" aria-label="Limpiar búsqueda"
-                    (click)="clearSearch()">
-                    <i stp-icon name="x" style="font-size: 1rem"></i>
-                </button>
-                }
-            </div>
-        </section>
-
-        
-
-    </div><!-- /suppliers-sticky-bar -->
+    <!-- ── Sticky search ──────────────────────────────────────── -->
+    <div class="sup-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
+        <stp-search
+            placeholder="Buscar por nombre, DNI o teléfono..."
+            size="md"
+            [value]="searchQuery()"
+            (valueChange)="onSearchInput($event)"
+            (cleared)="clearSearch()"
+            aria-label="Buscar proveedores">
+        </stp-search>
+    </div>
 
     <!-- ── Suppliers list ───────────────────────────────────── -->
     @if (filteredSuppliers().length > 0) {
@@ -53,14 +62,14 @@
             }
         </p>
 
-        <ul class="suppliers-list" role="list">
-            @for (supplier of filteredSuppliers(); track supplier.id) {
-            <stp-swipe-item [options]="swipeOptions(supplier.active)"
-                (optionSelected)="swipeOptionSelected(supplier, $event)">
-                <li class="supplier-row bg-base" [class.supplier-row--inactive]="!supplier.active">
+        <cdk-virtual-scroll-viewport [itemSize]="80" (scrolledIndexChange)="onScroll($event)">
+            <ul class="suppliers-list" role="list">
+                <stp-swipe-item *cdkVirtualFor="let supplier of filteredSuppliers(); trackBy: trackBySupplierId"
+                    [options]="swipeOptions(supplier.active)" (optionSelected)="swipeOptionSelected(supplier, $event)">
+                    <li class="supplier-row bg-base" [class.supplier-row--inactive]="!supplier.active">
 
                     <!-- Avatar -->
-                    <div class="supplier-row__avatar supplier-row__avatar--{{ supplier.category }}" aria-hidden="true">
+                    <div class="supplier-row__avatar supplier-row__avatar--general" aria-hidden="true">
                         <span>{{ supplierInitials(supplier.name) }}</span>
                     </div>
 
@@ -74,7 +83,7 @@
                         </div>
                         <span class="supplier-row__meta">
                             
-                            <span class="supplier-row__ruc">· RUC {{ supplier.ruc }}</span>
+                            <span class="supplier-row__ruc">· DNI {{ supplier.dni }}</span>
                         </span>
                         <span class="supplier-row__contact">
                             <i stp-icon name="phone" style="font-size: 0.75rem"></i>
@@ -111,10 +120,23 @@
                         }
                     </div>
 
+                    </li>
+                </stp-swipe-item>
+
+                @if (isLoadingMore()) {
+                <li class="suppliers-list__state text-sm text-secondary">Cargando más proveedores...</li>
+                }
+
+                @if (filteredSuppliers().length === resource()?.meta?.total) {
+                <li class="suppliers-list__end-state">
+                    <span class="icon-badge icon-badge--success icon-badge--sm">
+                        <i stp-icon name="check" class="icon--sm"></i>
+                    </span>
+                    <span class="text-sm text-secondary">Has llegado al límite de registros</span>
                 </li>
-            </stp-swipe-item>
-            }
-        </ul>
+                }
+            </ul>
+        </cdk-virtual-scroll-viewport>
     </section>
     }
 

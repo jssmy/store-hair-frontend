@@ -2,23 +2,17 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { Supplier, SupplierCategory } from './suppliers.data';
+import { Supplier } from './suppliers.data';
+import { PaginatedResponse } from '../../core/models/pagination.model';
 
-export interface ApiSupplier {
-  id: number;
-  name: string;
-  dni: number;
-  phone: string;
-  email: string;
-  address: string;
-  active: boolean;
-  createdAt: string;
-  updatedAt: string;
+export interface SupplierQueryParams {
+  page: number;
+  limit: number;
 }
 
 export interface CreateSupplierDto {
   name: string;
-  dni: number;
+  dni: string;
   phone: string;
   email: string;
   address: string;
@@ -33,32 +27,24 @@ export class SupplierApiService {
 
   constructor(private readonly http: HttpClient) {}
 
-  getAll(): Observable<ApiSupplier[]> {
-    return this.http.get<ApiSupplier[]>(this.url);
+  getAll(params: SupplierQueryParams = { page: 1, limit: 10 }): Observable<PaginatedResponse<Supplier>> {
+    return this.http.get<PaginatedResponse<Supplier>>(this.url, {
+      params: {
+        page: params.page,
+        limit: params.limit,
+      },
+    });
   }
 
-  create(dto: CreateSupplierDto): Observable<ApiSupplier> {
-    return this.http.post<ApiSupplier>(this.url, dto);
+  create(dto: CreateSupplierDto): Observable<Supplier> {
+    return this.http.post<Supplier>(this.url, dto);
   }
 
-  update(id: number, dto: UpdateSupplierDto): Observable<ApiSupplier> {
-    return this.http.patch<ApiSupplier>(`${this.url}/${id}`, dto);
+  update(id: number, dto: UpdateSupplierDto): Observable<Supplier> {
+    return this.http.patch<Supplier>(`${this.url}/${id}`, dto);
   }
 
   remove(id: number): Observable<void> {
     return this.http.delete<void>(`${this.url}/${id}`);
-  }
-
-  toSupplier(api: ApiSupplier, category: SupplierCategory = 'general'): Supplier {
-    return {
-      id: api.id,
-      name: api.name,
-      ruc: api.dni.toString(),
-      phone: api.phone,
-      email: api.email,
-      address: api.address,
-      category: category === 'todos' ? 'general' : category,
-      active: api.active,
-    };
   }
 }

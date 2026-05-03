@@ -2,23 +2,30 @@ import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, sign
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { SearchComponent } from '../../shared/components/search/search.component';
 import {
   SupplierDrawerComponent,
   SupplierDrawerData,
 } from '../../shared/components/supplier-drawer/supplier-drawer.component';
 import {
-  SUPPLIER_CATEGORY_ICONS,
-  SUPPLIER_CATEGORY_LABELS,
   Supplier,
-  SupplierCategory,
 } from './suppliers.data';
 import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-item/swipe-item.component';
 import { SupplierApiService } from './supplier-api.service';
-import { LoadingService } from '../../core/services/loading.service';
+import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
+import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.model';
 
 @Component({
   selector: 'stp-suppliers',
-  imports: [ButtonComponent, IconComponent, SwipeItemComponent],
+  imports: [
+    ButtonComponent,
+    IconComponent,
+    SearchComponent,
+    SwipeItemComponent,
+    CdkVirtualScrollViewport,
+    CdkVirtualForOf,
+    ScrollingModule,
+  ],
   templateUrl: './suppliers.component.html',
   styleUrl: './suppliers.component.scss',
 })
@@ -29,6 +36,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
 
   protected readonly isStuck = signal(false);
   protected readonly loading = signal(false);
+  protected readonly isLoadingMore = signal(false);
 
   private stickyObserver?: IntersectionObserver;
 
@@ -46,50 +54,92 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   };
 
   // ── Main list state ──────────────────────────────────────────
-  protected readonly suppliers = signal<Supplier[]>([]);
+  protected readonly resource = signal<PaginatedResponse<Supplier> | null>(null);
+  protected readonly suppliers = computed(() => this.resource()?.data ?? []);
   protected readonly searchQuery = signal('');
-  protected readonly activeCategory = signal<SupplierCategory>('todos');
 
   constructor() {
-    this.loadSuppliers();
+    this.loadSuppliers(1, false);
   }
 
-  private loadSuppliers(): void {
-    this.loading.set(true);
-    this.supplierApi.getAll().subscribe({
-      next: items => {
-        this.suppliers.set(items.map(i => this.supplierApi.toSupplier(i)));
-        this.loading.set(false);
-        
+  private loadSuppliers(page: number, append: boolean): void {
+    if (append) {
+      this.isLoadingMore.set(true);
+    } else {
+      this.loading.set(true);
+    }
+
+    this.supplierApi.getAll({ page, limit: 10 }).subscribe({
+      next: resource => {
+        if (append) {
+          this.resource.update(prev => {
+            if (!prev) {
+              return {
+                data: resource.data,
+                meta: resource.meta,
+              };
+            }
+            return {
+              data: [...prev.data, ...resource.data],
+              meta: resource.meta,
+            };
+          });
+        } else {
+          this.resource.set({
+            data: resource.data,
+            meta: resource.meta,
+          });
+        }
       },
       error: () => {
-        this.loading.set(false);
-        
+        if (!append) {
+          this.resource.set({
+            data: [],
+            meta: PaginatedMeta.empty(10),
+          });
+        }
       },
+    }).add(() => {
+      this.loading.set(false);
+      this.isLoadingMore.set(false);
     });
   }
 
   // ── Computed ─────────────────────────────────────────────────
   protected readonly filteredSuppliers = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
-    const category = this.activeCategory();
     return this.suppliers().filter(s => {
-      const matchesCategory = category === 'todos' || s.category === category;
       const matchesQuery = !query ||
         s.name.toLowerCase().includes(query) ||
-        s.ruc.includes(query) ||
+        s.dni.includes(query) ||
         s.phone.includes(query);
-      return matchesCategory && matchesQuery;
+      return matchesQuery;
     });
   });
 
   protected readonly isFiltered = computed(() =>
-    this.searchQuery().trim().length > 0 || this.activeCategory() !== 'todos',
+    this.searchQuery().trim().length > 0,
   );
 
   protected readonly activeCount = computed(() =>
     this.suppliers().filter(s => s.active).length,
   );
+
+  protected onScroll(index: number): void {
+    if (this.isLoadingMore() || this.loading()) return;
+
+    const maxTotal = this.resource()?.meta.total ?? 0;
+    const totalItems = this.filteredSuppliers().length;
+    const threshold = 7;
+
+    if (totalItems >= maxTotal) return;
+
+    if (index + threshold >= totalItems) {
+      const currentPage = this.resource()?.meta.page ?? 1;
+      const nextPage = currentPage + 1;
+      this.loadSuppliers(nextPage, true);
+    }
+  }
 
   // ── Drawer ────────────────────────────────────────────────────
   protected openNewDrawer(): void {
@@ -111,7 +161,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-        this.loadSuppliers();
+        this.loadSuppliers(1, false);
       });
   }
 
@@ -119,15 +169,23 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   protected toggleActive(supplier: Supplier): void {
     if (supplier.active) {
       this.supplierApi.remove(supplier.id).subscribe({
-        next: () => this.suppliers.update(prev =>
-          prev.map(s => s.id === supplier.id ? { ...s, active: false } : s),
-        ),
+        next: () => this.resource.update(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            data: prev.data.map(s => s.id === supplier.id ? { ...s, active: false } : s),
+          };
+        }),
       });
     } else {
       this.supplierApi.update(supplier.id, { active: true }).subscribe({
-        next: () => this.suppliers.update(prev =>
-          prev.map(s => s.id === supplier.id ? { ...s, active: true } : s),
-        ),
+        next: () => this.resource.update(prev => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            data: prev.data.map(s => s.id === supplier.id ? { ...s, active: true } : s),
+          };
+        }),
       });
     }
   }
@@ -139,11 +197,6 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
 
   protected clearSearch(): void {
     this.searchQuery.set('');
-    this.activeCategory.set('todos');
-  }
-
-  protected setCategory(category: SupplierCategory): void {
-    this.activeCategory.set(category);
   }
 
   // ── Sticky header ────────────────────────────────────────────
@@ -162,12 +215,12 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────
-  protected categoryIcon(category: SupplierCategory): string {
-    return SUPPLIER_CATEGORY_ICONS[category];
-  }
-
   protected supplierInitials(name: string): string {
     return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  }
+
+  protected trackBySupplierId(_index: number, supplier: Supplier): number {
+    return supplier.id;
   }
 
 

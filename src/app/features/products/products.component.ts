@@ -1,103 +1,86 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
-import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { SearchComponent } from '../../shared/components/search/search.component';
 import {
-  InventoryDrawerComponent,
-  InventoryDrawerData,
-  InventoryDrawerResult,
-} from '../../shared/components/inventory-drawer/inventory-drawer.component';
-import {
-  CATEGORY_ICONS,
-  CATEGORY_LABELS,
   HAIR_COLOR_HEX,
   HAIR_COLOR_LABELS,
-  MOCK_PRODUCTS,
-  Product,
-  ProductCategory,
+  Inventory,
+  InventoryProduct,
 } from './products.data';
+import { PaginatedResponse } from '../../core/models/pagination.model';
+
+import { InventoryService } from '../../core/services/inventory.service';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { InventoryDrawerComponent } from '../../shared/components/inventory-drawer/inventory-drawer.component';
+import { environment } from '../../../environments/environment';
+import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
+import { ScrollingVisibility } from '@angular/cdk/overlay';
+
 
 @Component({
   selector: 'stp-products',
-  imports: [ButtonComponent, IconComponent],
+  imports: [
+    BadgeComponent,
+    ButtonComponent,
+    IconComponent,
+    SearchComponent,
+    CdkVirtualScrollViewport,
+    CdkVirtualForOf,
+    ScrollingModule
+
+  ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss',
 })
 export class ProductsComponent implements AfterViewInit, OnDestroy {
-  private readonly productHeader = viewChild<ElementRef>('productHeader');
+
+  private readonly inventoryService = inject(InventoryService);
   private readonly bottomSheet = inject(MatBottomSheet);
+
+  private readonly productHeader = viewChild<ElementRef>('productHeader');
   protected readonly isStuck = signal(false);
   private stickyObserver?: IntersectionObserver;
 
-  protected readonly categories: ProductCategory[] = [
-    'todos', 'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
-  ];
-  protected readonly categoryLabels = CATEGORY_LABELS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
+  protected readonly assets = environment.assets;
 
   // ── Main list state ──────────────────────────────────────────────
-  protected readonly products = signal<Product[]>([...MOCK_PRODUCTS]);
+  
+  protected readonly resource = signal<PaginatedResponse<Inventory> | null>(null);
+  protected readonly inventories = computed(() => this.resource()?.data ?? []);
   protected readonly searchQuery = signal('');
-  protected readonly activeCategory = signal<ProductCategory>('todos');
+  protected readonly selectedInventoryId = signal<string | null>(null);
+  protected readonly isLoadingMore = signal(false);
 
   // ── Computed ─────────────────────────────────────────────────────
-  protected readonly filteredProducts = computed(() => {
+  protected readonly filteredInventories = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
-    const category = this.activeCategory();
-    return this.products().filter(p => {
-      const matchesCategory = category === 'todos' || p.category === category;
-      const matchesQuery = !query || p.name.toLowerCase().includes(query);
-      return matchesCategory && matchesQuery;
+    return this.inventories()?.filter(inv => {
+      const matchesId = inv.id.toLowerCase().includes(query);
+      const matchesStatus = inv.status.toLowerCase().includes(query);
+      const matchesProduct = inv.products.some(product =>
+        product.name.toLowerCase().includes(query),
+      );
+      return !query || matchesId || matchesStatus || matchesProduct;
     });
   });
 
-  protected readonly isFiltered = computed(() =>
-    this.searchQuery().trim().length > 0 || this.activeCategory() !== 'todos',
+  protected readonly selectedInventory = computed(() =>
+    this.filteredInventories()?.find(inv => inv.id === this.selectedInventoryId()) ?? null,
   );
 
-  // ── Inventory drawer ─────────────────────────────────────────────
-  protected openInventoryDrawer(): void {
-    const data: InventoryDrawerData = { products: this.products() };
-    const ref = this.bottomSheet.open(InventoryDrawerComponent, {
-      data,
-      panelClass: 'stp-supplier-panel',
-    });
+  constructor() {
+    this.loadAll();
+  }
 
-    ref.afterDismissed().subscribe((result: InventoryDrawerResult | null | undefined) => {
-      if (!result) return;
-
-      this.products.update(prev => {
-        const updated = [...prev];
-        for (const lp of result.products) {
-          const existingIdx = updated.findIndex(
-            p => p.name.toLowerCase() === lp.name.toLowerCase() && p.color === lp.color,
-          );
-          if (existingIdx >= 0) {
-            updated[existingIdx] = {
-              ...updated[existingIdx],
-              stock: updated[existingIdx].stock + lp.quantity,
-              supplier: result.supplierName,
-            };
-          } else {
-            updated.push({
-              id: updated.length + 1,
-              name: lp.name,
-              category: lp.category,
-              price: lp.price,
-              stock: lp.quantity,
-              unit: 'unidad',
-              supplier: result.supplierName,
-              color: lp.color,
-              weight: lp.weight,
-              length: lp.length,
-              images: lp.images,
-            });
-          }
-        }
-        return updated;
-      });
-    });
+  // ── Data loading ─────────────────────────────────────────────────
+  private loadAll(): void {
+    this.inventoryService.getAll({ page: 1, limit: 8 }).subscribe(
+      (resource) => this.resource.set(resource),
+    );
   }
 
   // ── Main search ──────────────────────────────────────────────────
@@ -107,11 +90,63 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
 
   protected clearSearch(): void {
     this.searchQuery.set('');
-    this.activeCategory.set('todos');
   }
 
-  protected setCategory(category: ProductCategory): void {
-    this.activeCategory.set(category);
+  protected selectInventory(inventoryId: string): void {
+    this.selectedInventoryId.update(current =>
+      current === inventoryId ? null : inventoryId,
+    );
+  }
+
+  protected statusLabel(status: Inventory['status']): string {
+    if (status === 'pending') return 'Pendiente';
+    if (status === 'completed') return 'Completado';
+    return 'Cancelado';
+  }
+
+  protected statusClass(status: Inventory['status']): string {
+    if (status === 'pending') return 'product-row__stock--low';
+    if (status === 'completed') return 'product-row__stock--ok';
+    return 'product-row__stock--out';
+  }
+
+  protected statusBadgeVariant(status: Inventory['status']): 'success' | 'warning' | 'error' {
+    if (status === 'completed') return 'success';
+    if (status === 'pending') return 'warning';
+    return 'error';
+  }
+
+  protected inventoryDateLabel(isoDate: string): string {
+    return new Date(isoDate).toLocaleString('es-PE', {
+      dateStyle: 'short',
+      timeStyle: 'short',
+    });
+  }
+
+  protected onScroll(index: number): void {
+
+    if (this.isLoadingMore()) return;
+
+    const maxTotal = this.resource()?.meta.total ?? 0;
+    const totalItems = this.filteredInventories()?.length ?? 0;
+    const threshold = 7;
+
+    if (totalItems >= maxTotal) return;
+
+    if (index + threshold >= totalItems) {
+      const currentPage = this.resource()?.meta.page ?? 1;
+      const nextPage = currentPage + 1;
+      this.isLoadingMore.set(true);
+      this.inventoryService.getAll({ page: nextPage, limit: 8 }).subscribe(
+        (resource) => this.resource.update((prev) => {
+          if (!prev) return resource;
+          return {
+            data: [...prev.data, ...resource.data],
+            meta: resource.meta,
+          };
+        }),
+      ).add(() => this.isLoadingMore.set(false));
+    }
   }
 
   // ── Sticky header ────────────────────────────────────────────────
@@ -130,17 +165,27 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────
-  protected stockStatus(stock: number): 'ok' | 'low' | 'out' {
-    if (stock === 0) return 'out';
-    if (stock <= 5) return 'low';
-    return 'ok';
+  protected productInitials(product: InventoryProduct): string {
+    return product.name.split(' ').slice(0, 2).map(word => word[0]).join('').toUpperCase();
   }
 
-  protected categoryIcon(category: ProductCategory): string {
-    return CATEGORY_ICONS[category];
+  protected openEditDrawer(inventory: Inventory): void {
+    this.bottomSheet
+      .open(InventoryDrawerComponent, {
+        data: { inventory },
+        panelClass: 'stp-inventory-drawer-panel',
+      })
+      .afterDismissed()
+      .subscribe(() => this.loadAll());
   }
 
-  protected productInitials(name: string): string {
-    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  protected createNewBatch(): void {
+    this.bottomSheet
+      .open(InventoryDrawerComponent, {
+        data: { products: [] },
+        panelClass: 'stp-inventory-drawer-panel',
+      })
+      .afterDismissed()
+      .subscribe(() => this.loadAll());
   }
 }

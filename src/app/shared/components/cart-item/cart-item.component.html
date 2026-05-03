@@ -1,8 +1,6 @@
 <div class="cart-item__header cart-item__header--mobile">
     @if (item().product.imageUrl) {
     <img class="cart-item__img" [src]="item().product.imageUrl" [alt]="item().product.name" />
-    } @else {
-    <span class="cart-item__icon" aria-hidden="true">{{ categoryIcon(item().product.category) }}</span>
     }
 </div>
 <div class="cart-item__info cart-item__info--mobile">
@@ -22,8 +20,6 @@
         <p class="cart-item__unit-price">S/ {{ item().product.price | number:'1.2-2' }} c/u</p>
     </div>
 </div>
-<stp-input-numeric class="cart-item__quantity cart-item__quantity--desktop" [value]="item().quantity" [min]="1" [max]="item().product.stock"
-    size="sm" radius="full" (valueChange)="quantityChange.emit($event)" />
 <div class="cart-item__subtotal cart-item__subtotal--desktop">
     <p class="cart-item__subtotal-value">S/ {{ subtotal() | number:'1.2-2' }}</p>
     <stp-button variant="danger" btnStyle="ghost" size="sm" radius="md" aria-label="Eliminar"

@@ -56,7 +56,7 @@
                         </span>
                         <div class="po-dropdown__info">
                             <span class="po-dropdown__name">{{ s.name }}</span>
-                            <span class="po-dropdown__sub">RUC {{ s.ruc }}</span>
+                            <span class="po-dropdown__sub">RUC {{ s.dni }}</span>
                         </div>
                     </li>
                     }
@@ -68,7 +68,7 @@
                     <i stp-icon name="buildings" class="icon--sm"></i>
                     <div class="po-supplier-linked__info">
                         <span class="po-supplier-linked__name">{{ selectedSupplier()!.name }}</span>
-                        <span class="po-supplier-linked__meta">RUC {{ selectedSupplier()!.ruc }}</span>
+                        <span class="po-supplier-linked__meta">RUC {{ selectedSupplier()!.dni }}</span>
                     </div>
                     <button class="po-field__clear-chip" type="button" (click)="clearSupplier()">
                         <i stp-icon name="x" class="icon--xs"></i>

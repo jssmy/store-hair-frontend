@@ -1,141 +1,181 @@
-<div class="products-page">
+<div class="inv-page">
 
-    <!-- ── Header ────────────────────────────────────────────── -->
-    <header #productHeader class="products-header">
-        <div class="products-header__row">
-            <div>
-                <h1 class="products-header__title">Inventario</h1>
-                <p class="products-header__subtitle">{{ products().length }} productos registrados</p>
+    <!-- ── Hero header ─────────────────────────────────────────── -->
+    <header #productHeader class="inv-hero">
+        <span class="inv-hero__blob inv-hero__blob--1" aria-hidden="true"></span>
+        <span class="inv-hero__blob inv-hero__blob--2" aria-hidden="true"></span>
+
+        <div class="inv-hero__main">
+            <div class="inv-hero__text">
+                <p class="inv-hero__eyebrow">
+                    <i stp-icon name="stack" class="icon--xs"></i>
+                    Gestión de stock
+                </p>
+                <h1 class="inv-hero__title">Inventario</h1>
             </div>
-            <stp-button variant="primary" btnStyle="solid" size="md" radius="md"
-                (click)="openInventoryDrawer()">
-                <i stp-icon name="package" style="font-size: 1rem"></i>
-                Actualizar inventario
+            <stp-button (click)="createNewBatch()" variant="surface" btnStyle="outlined" size="md" radius="full">
+                <i stp-icon name="plus" class="icon--sm"></i>
+                Nuevo lote
             </stp-button>
+        </div>
+
+        <div class="inv-hero__stats">
+            <div class="inv-stat">
+                <span class="inv-stat__num">{{ inventories().length }}</span>
+                <span class="inv-stat__label">Total lotes</span>
+            </div>
+            <span class="inv-stat__sep"></span>
+            <div class="inv-stat">
+                <span class="inv-stat__num inv-stat__num--ok">
+                    {{ inventories().filter(i => i.status === 'completed').length }}
+                </span>
+                <span class="inv-stat__label">Completados</span>
+            </div>
+            <span class="inv-stat__sep"></span>
+            <div class="inv-stat">
+                <span class="inv-stat__num inv-stat__num--warn">
+                    {{ inventories().filter(i => i.status === 'pending').length }}
+                </span>
+                <span class="inv-stat__label">Pendientes</span>
+            </div>
         </div>
     </header>
 
-    <!-- ── Search + categories sticky bar ──────────────────── -->
-    <div class="products-sticky-bar sticky-bar" [class.products-sticky-bar--stuck]="isStuck()"
-        [class.sticky-bar--stuck]="isStuck()">
+    <!-- ── Sticky search ──────────────────────────────────────── -->
+    <div class="inv-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
+        <stp-search placeholder="Buscar por ID, estado o producto..." size="md" [value]="searchQuery()"
+            (valueChange)="onSearchInput($event)" (cleared)="clearSearch()">
+        </stp-search>
+    </div>
 
-        <section class="products-search" aria-label="Buscar productos">
-            <div class="products-search__field">
-                <span class="products-search__icon" aria-hidden="true">
-                    <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
-                </span>
-                <input class="products-search__input" type="search" placeholder="Buscar producto..."
-                    autocomplete="off" aria-label="Buscar productos" [value]="searchQuery()"
-                    (input)="onSearchInput($any($event.target).value)" />
-                @if (searchQuery()) {
-                <button class="products-search__clear" type="button" aria-label="Limpiar búsqueda"
-                    (click)="clearSearch()">
-                    <i stp-icon name="x" style="font-size: 1rem"></i>
-                </button>
-                }
-            </div>
-        </section>
-
-        <section class="products-categories" aria-label="Filtrar por categoría">
-            <div class="products-categories__scroll" role="tablist">
-                @for (cat of categories; track cat) {
-                <stp-button class="products-category-chip"
-                    [class.products-category-chip--active]="activeCategory() === cat"
-                    role="tab" size="sm" radius="full"
-                    [variant]="activeCategory() === cat ? 'primary' : 'surface'"
-                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
-                    [attr.aria-selected]="activeCategory() === cat"
-                    [attr.aria-label]="categoryLabels[cat]"
-                    (click)="setCategory(cat)">
-                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
-                    {{ categoryLabels[cat] }}
-                </stp-button>
-                }
-            </div>
-        </section>
-
-    </div><!-- /products-sticky-bar -->
-
-    <!-- ── Product list ──────────────────────────────────────── -->
-    @if (filteredProducts().length > 0) {
-    <section class="products-results" aria-label="Lista de productos" aria-live="polite">
-        <p class="products-results__count">
-            @if (isFiltered()) {
-            {{ filteredProducts().length }} resultado{{ filteredProducts().length !== 1 ? 's' : '' }}
+    <!-- ── Results list ───────────────────────────────────────── -->
+    @if (filteredInventories().length > 0) {
+    <div class="inv-bar">
+        <span class="inv-bar__label">
+            @if (searchQuery()) {
+            <i stp-icon name="funnel" class="icon--xs"></i>
+            {{ filteredInventories().length }} resultado{{ filteredInventories().length !== 1 ? 's' : '' }}
             } @else {
-            Todos los productos
+            Todos los lotes
             }
-        </p>
+        </span>
+        <span class="inv-bar__count">
+            {{ filteredInventories().reduce((s, i) => s + i.products.length, 0) }} productos en total
+        </span>
+    </div>
 
-        <ul class="products-list" role="list">
-            @for (product of filteredProducts(); track product.id) {
-            <li class="product-row">
+    <cdk-virtual-scroll-viewport [itemSize]="60" (scrolledIndexChange)="onScroll($event)">
+        <ul class="inv-list" role="list">
+            <li *cdkVirtualFor="let inventory of filteredInventories();" class="inv-card" [class.inv-card--open]="selectedInventoryId() === inventory.id">
 
-                <!-- Avatar -->
-                <div class="product-row__avatar product-row__avatar--{{ product.category }}"
-                    aria-hidden="true">
-                    @if (product.imageUrl) {
-                    <img [src]="product.imageUrl" [alt]="product.name" loading="lazy" />
-                    } @else {
-                    <span>{{ productInitials(product.name) }}</span>
-                    }
-                </div>
+                <button class="inv-card__head" type="button" (click)="selectInventory(inventory.id)"
+                    [attr.aria-expanded]="selectedInventoryId() === inventory.id">
 
-                <!-- Info -->
-                <div class="product-row__info">
-                    <span class="product-row__name">{{ product.name }}</span>
-                    <span class="product-row__meta">
-                        {{ categoryIcon(product.category) }} {{ categoryLabels[product.category] }}
-                        <span class="product-row__unit">· {{ product.unit }}</span>
+                    <span class="inv-card__strip" [class.inv-card__strip--ok]="inventory.status === 'completed'"
+                        [class.inv-card__strip--warn]="inventory.status === 'pending'"
+                        [class.inv-card__strip--out]="inventory.status === 'cancelled'">
                     </span>
-                    @if (product.supplier) {
-                    <span class="product-row__supplier">
-                        <i stp-icon name="truck" style="font-size: 0.75rem"></i>
-                        {{ product.supplier }}
-                    </span>
-                    }
-                </div>
 
-                <!-- Price + Stock -->
-                <div class="product-row__aside">
-                    <span class="product-row__price">S/ {{ product.price.toFixed(2) }}</span>
-                    <span class="product-row__stock product-row__stock--{{ stockStatus(product.stock) }}">
-                        @if (product.stock === 0) {
-                        <i stp-icon name="x-circle" style="font-size: 0.75rem"></i>
-                        Agotado
-                        } @else if (product.stock <= 5) {
-                        <i stp-icon name="warning-circle" style="font-size: 0.75rem"></i>
-                        {{ product.stock }} bajo
-                        } @else {
-                        <i stp-icon name="check-circle" style="font-size: 0.75rem"></i>
-                        {{ product.stock }}
+                    <span class="inv-card__icon" aria-hidden="true">
+                        <i stp-icon name="package" class="icon--sm"></i>
+                    </span>
+
+                    <span class="inv-card__info">
+                        <span class="inv-card__id">{{ inventory.id.slice(0, 8).toUpperCase() }}</span>
+                        <span class="inv-card__meta">
+                            {{ inventory.products.length }} producto{{ inventory.products.length !== 1 ? 's' : '' }}
+                            &nbsp;·&nbsp;{{ inventoryDateLabel(inventory.createdAt) }}
+                        </span>
+                    </span>
+
+                    <span class="inv-card__aside">
+                        <stp-badge [variant]="statusBadgeVariant(inventory.status)" badgeStyle="light" size="sm">
+                            {{ statusLabel(inventory.status) }}
+                        </stp-badge>
+                        <i stp-icon name="caret-down" class="inv-card__chevron icon--sm"></i>
+                    </span>
+
+                </button>
+
+                @if (selectedInventoryId() === inventory.id) {
+                <div class="inv-card__body">
+                    <p class="inv-card__body-label">
+                        <i stp-icon name="list-bullets" class="icon--xs"></i>
+                        Detalle de productos
+                    </p>
+
+                    <ul class="inv-prods" role="list">
+                        @for (product of inventory.products; track product.id) {
+                        <li class="inv-prod">
+
+                            <span class="inv-prod__swatch" [style.background-color]="hairColorHex[product.color]"
+                                [title]="hairColorLabels[product.color]">
+                            </span>
+
+                            <span class="inv-prod__avatar" aria-hidden="true">
+                                @if (product.imageUrls.length > 0) {
+                                <img [src]="assets + '/' + product.imageUrls[0]" [alt]="product.name" loading="lazy" />
+                                } @else {
+                                {{ productInitials(product) }}
+                                }
+                            </span>
+
+                            <span class="inv-prod__info">
+                                <span class="inv-prod__name">{{ product.name }}</span>
+                                <span class="inv-prod__meta">
+                                    {{ hairColorLabels[product.color] }}&nbsp;·&nbsp;{{ product.length
+                                    }}cm&nbsp;·&nbsp;{{
+                                    product.weight }}g
+                                </span>
+                            </span>
+
+                            <span class="inv-prod__price">S/&nbsp;{{ product.price }}</span>
+
+                        </li>
                         }
-                    </span>
+                    </ul>
+
+                    @if (inventory.status === 'pending') {
+                    <div class="inv-card__edit-bar">
+                        <stp-button variant="primary" btnStyle="ghost" size="sm" radius="md"
+                            (click)="openEditDrawer(inventory)">
+                            <i stp-icon name="pencil-simple" class="icon--sm"></i>
+                            Editar lote
+                        </stp-button>
+                    </div>
+                    }
+
                 </div>
+                }
 
             </li>
+            @if (filteredInventories().length === resource()?.meta?.total) {
+                <li class="inv-list__end-state">
+                    <span class="icon-badge icon-badge--success icon-badge--sm">
+                        <i stp-icon name="check" class="icon--sm"></i>
+                    </span>
+                    <span class="text-sm text-secondary">Has llegado al límite de registros</span>
+                </li>
             }
         </ul>
-    </section>
+    </cdk-virtual-scroll-viewport>
     }
 
-    <!-- ── No results + add CTA ──────────────────────────────── -->
-    @if (filteredProducts().length === 0 && isFiltered()) {
-    <div class="products-empty-state" aria-live="polite">
-        <div class="products-empty-state__icon" aria-hidden="true">
-            <i stp-icon name="package" style="font-size: 3.5rem"></i>
-        </div>
-        <h2 class="products-empty-state__title">Sin resultados</h2>
-        <p class="products-empty-state__text">
-            No se encontró "<strong>{{ searchQuery() }}</strong>" en tu inventario.
+    <!-- ── Empty state ────────────────────────────────────────── -->
+    @if ((filteredInventories().length === 0) && searchQuery()) {
+    <div class="inv-empty" aria-live="polite">
+        <span class="inv-empty__icon" aria-hidden="true">
+            <i stp-icon name="magnifying-glass" class="icon--2xl"></i>
+        </span>
+        <h2 class="inv-empty__title">Sin resultados</h2>
+        <p class="inv-empty__text">
+            No se encontró <strong>"{{ searchQuery() }}"</strong> en la lista de inventarios.
         </p>
-        <stp-button variant="primary" btnStyle="solid" size="md" radius="md"
-            (click)="openInventoryDrawer()">
-            <i stp-icon name="plus" style="font-size: 1rem"></i>
-            Agregar "{{ searchQuery() }}"
+        <stp-button variant="primary" btnStyle="ghost" size="md" radius="full" (click)="clearSearch()">
+            <i stp-icon name="arrow-counter-clockwise" class="icon--sm"></i>
+            Limpiar filtros
         </stp-button>
     </div>
     }
-
 
 </div>

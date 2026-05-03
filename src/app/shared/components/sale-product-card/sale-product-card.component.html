@@ -19,19 +19,13 @@
 <div class="product-card__body">
     <p class="product-card__name">{{ product().name }}</p>
     <p class="product-card__price">S/ {{ product().price | number:'1.2-2' }}</p>
-    <p class="product-card__stock" [class.product-card__stock--low]="product().stock > 0 && product().stock <= 5"
-        [class.product-card__stock--out]="product().stock === 0">
-        @if (product().stock === 0) { Sin stock } @else { {{ product().stock }} {{ product().unit }}(s) }
-    </p>
+    
 </div>
 
 <!-- Quantity + Add -->
 <div class="product-card__actions">
-    <stp-input-numeric [value]="quantity()" [min]="1" [max]="product().stock > 0 ? product().stock : null" size="md"
-        radius="full" (valueChange)="quantity.set($event ?? 1)" />
-
     <stp-button class="product-card__add-btn" size="md" variant="primary" btnStyle="solid" radius="md"
-        [disabled]="product().stock === 0" (click)="add()">
+         (click)="add()">
         Agregar
     </stp-button>
 </div>

@@ -1,10 +1,9 @@
-<div class="inv-drawer" role="dialog" aria-modal="true" aria-label="Registrar lote"
-    (click)="$event.stopPropagation()">
+<div class="inv-drawer" role="dialog" aria-modal="true" aria-label="Registrar lote" (click)="$event.stopPropagation()">
 
     <div class="inv-drawer__handle" aria-hidden="true"></div>
 
     <div class="inv-drawer__header">
-        <h2 class="inv-drawer__title">Registrar Lote</h2>
+        <h2 class="inv-drawer__title">{{ isEditMode ? 'Editar Lote' : 'Registrar Lote' }}</h2>
         <button class="inv-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
             <i stp-icon name="x" class="icon--sm"></i>
         </button>
@@ -15,14 +14,35 @@
         <span class="icon-badge icon-badge--success icon-badge--xl">
             <i stp-icon name="check-circle" class="icon--xl"></i>
         </span>
-        <p class="inv-drawer__success-text">Lote registrado</p>
+        <p class="inv-drawer__success-text">{{ isEditMode ? 'Lote actualizado' : 'Lote registrado' }}</p>
         <p class="inv-drawer__success-sub">El inventario fue actualizado correctamente</p>
     </div>
     } @else {
 
     <div class="inv-drawer__body">
 
+        <!-- ── Sección: Inventario (edit mode) ── -->
+        @if (isEditMode) {
+        <div class="inv-section">
+            <div class="inv-section__label">
+                <i stp-icon name="pencil-simple" class="icon--sm"></i>
+                Editando lote
+            </div>
+            <div class="inv-po-linked">
+                <i stp-icon name="package" class="icon--sm"></i>
+                <div class="inv-po-linked__info">
+                    <span class="inv-po-linked__number">{{ editInventory!.id.slice(0, 8).toUpperCase() }}</span>
+                    <span class="inv-po-linked__meta">
+                        {{ editInventory!.products.length }} producto{{ editInventory!.products.length !== 1 ? 's' : '' }}
+                        · {{ formatDate(editInventory!.createdAt) }}
+                    </span>
+                </div>
+            </div>
+        </div>
+        }
+
         <!-- ── Sección: Orden de Compra ── -->
+        @if (!isEditMode) {
         <div class="inv-section">
             <div class="inv-section__label">
                 <i stp-icon name="receipt" class="icon--sm"></i>
@@ -33,11 +53,9 @@
                 <label class="inv-field__label" for="inv-po">N° OC *</label>
                 <div class="inv-field__search-wrap">
                     <i stp-icon name="magnifying-glass" class="inv-field__search-icon icon--sm"></i>
-                    <input id="inv-po" class="inv-field__input inv-field__input--search"
-                        type="text" placeholder="Buscar o ingresar número de OC..."
-                        [value]="lotePoSearch()"
-                        (input)="onPoSearchInput($any($event.target).value)"
-                        autocomplete="off" />
+                    <input id="inv-po" class="inv-field__input inv-field__input--search" type="text"
+                        placeholder="Buscar o ingresar número de OC..." [value]="lotePoSearch()"
+                        (input)="onPoSearchInput($any($event.target).value)" autocomplete="off" />
                     @if (lotePoSearch()) {
                     <button class="inv-field__clear" type="button" (click)="clearPoSearch()">
                         <i stp-icon name="x" class="icon--xs"></i>
@@ -49,7 +67,8 @@
                 @if (filteredPOs().length && !loteSelectedPO()) {
                 <ul class="inv-dropdown" role="listbox">
                     @for (po of filteredPOs(); track po.number) {
-                    <li class="inv-dropdown__item" role="option" aria-selected="false" tabindex="0" (click)="selectPO(po)" (keydown.enter)="selectPO(po)">
+                    <li class="inv-dropdown__item" role="option" aria-selected="false" tabindex="0"
+                        (click)="selectPO(po)" (keydown.enter)="selectPO(po)">
                         <span class="icon-badge icon-badge--primary" style="--size:2rem;font-size:.75rem">
                             <i stp-icon name="receipt" class="icon--xs"></i>
                         </span>
@@ -89,6 +108,7 @@
                 }
             </div>
         </div>
+        }<!-- /!isEditMode -->
 
         <!-- ── Sección: Productos del Lote ── -->
         <div class="inv-section inv-section--products">
@@ -120,32 +140,20 @@
                 <div class="inv-product-card__header">
                     <span class="inv-product-card__num">Producto {{ idx + 1 }}</span>
                     <button type="button" class="inv-product-card__remove icon-btn icon-btn--danger"
-                        aria-label="Eliminar producto"
-                        (click)="removeProduct(product.id)">
+                        aria-label="Eliminar producto" (click)="removeProduct(product.id)">
                         <i stp-icon name="trash" class="icon--sm"></i>
                     </button>
                 </div>
 
-                <!-- Name + Category row -->
-                <div class="inv-field-row">
-                    <div style="flex:2 1 0">
-                        <stp-input
-                            label="Nombre *"
-                            [value]="product.name"
-                            (valueChange)="updateProduct(product.id, { name: $event })" />
-                    </div>
-                    <div class="inv-field" style="flex:1 1 0">
-                        <label class="inv-field__label" [for]="'inv-cat-' + product.id">Tipo *</label>
-                        <select [id]="'inv-cat-' + product.id"
-                            class="inv-field__input inv-field__input--select"
-                            [value]="product.category"
-                            (change)="updateProduct(product.id, { category: $any($event.target).value })">
-                            @for (cat of categoryOptions; track cat) {
-                            <option [value]="cat">{{ categoryLabels[cat] }}</option>
-                            }
-                        </select>
-                    </div>
+                <div class="inv-field">
+                    <stp-select
+                        label="Tipo *"
+                        [options]="hairTypeOptions"
+                        [value]="product.type"
+                        (valueChange)="updateProduct(product.id, { type: $any($event) })">
+                    </stp-select>
                 </div>
+
 
                 <!-- Color -->
                 <div class="inv-field">
@@ -157,12 +165,9 @@
                     </label>
                     <div class="inv-color-row">
                         @for (color of hairColors; track color) {
-                        <button
-                            type="button"
-                            class="inv-color-swatch"
+                        <button type="button" class="inv-color-swatch"
                             [class.inv-color-swatch--selected]="product.color === color"
-                            [style.background]="hairColorHex[color]"
-                            [title]="hairColorLabels[color]"
+                            [style.background]="hairColorHex[color]" [title]="hairColorLabels[color]"
                             [attr.aria-label]="hairColorLabels[color]"
                             (click)="updateProduct(product.id, { color: color })">
                         </button>
@@ -173,58 +178,17 @@
                 <!-- Measurements: Peso | Largo | Precio -->
                 <div class="inv-field-row inv-field-row--3">
                     <div class="inv-field">
-                        <label class="inv-field__label" [for]="'inv-weight-' + product.id">Peso (g) *</label>
-                        <div class="inv-field__prefix-wrap">
-                            <span class="inv-field__prefix">g</span>
-                            <input [id]="'inv-weight-' + product.id"
-                                class="inv-field__input inv-field__input--prefixed"
-                                type="number" min="1" placeholder="0"
-                                [value]="product.weight ?? ''"
-                                (input)="updateProduct(product.id, { weight: +$any($event.target).value || null })" />
-                        </div>
+                        <stp-input label="Peso (kg) *" type="number" [value]="product.weight?.toString() ?? ''"
+                            (valueChange)="updateProduct(product.id, { weight: +$event })" />
                     </div>
                     <div class="inv-field">
-                        <label class="inv-field__label" [for]="'inv-length-' + product.id">Largo (cm) *</label>
-                        <div class="inv-field__prefix-wrap">
-                            <span class="inv-field__prefix">cm</span>
-                            <input [id]="'inv-length-' + product.id"
-                                class="inv-field__input inv-field__input--prefixed"
-                                type="number" min="1" placeholder="0"
-                                [value]="product.length ?? ''"
-                                (input)="updateProduct(product.id, { length: +$any($event.target).value || null })" />
-                        </div>
+                        <stp-input label="Precio (S/) *" type="number"
+                            [value]="product.price !== null ? '' + product.price : ''"
+                            (valueChange)="updateProduct(product.id, { price: +$event || null })" />
                     </div>
                     <div class="inv-field">
-                        <label class="inv-field__label" [for]="'inv-price-' + product.id">Precio *</label>
-                        <div class="inv-field__prefix-wrap">
-                            <span class="inv-field__prefix">S/</span>
-                            <input [id]="'inv-price-' + product.id"
-                                class="inv-field__input inv-field__input--prefixed"
-                                type="number" min="0.01" step="0.01" placeholder="0.00"
-                                [value]="product.price ?? ''"
-                                (input)="updateProduct(product.id, { price: +$any($event.target).value || null })" />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Quantity -->
-                <div class="inv-field">
-                    <label class="inv-field__label" [for]="'inv-qty-' + product.id">Cantidad *</label>
-                    <div class="inv-qty-row">
-                        <button type="button" class="inv-qty-btn"
-                            [disabled]="product.quantity <= 1"
-                            (click)="updateProduct(product.id, { quantity: product.quantity - 1 })">
-                            <i stp-icon name="minus" class="icon--xs"></i>
-                        </button>
-                        <input [id]="'inv-qty-' + product.id"
-                            class="inv-qty-input"
-                            type="number" min="1"
-                            [value]="product.quantity"
-                            (input)="updateProduct(product.id, { quantity: +$any($event.target).value || 1 })" />
-                        <button type="button" class="inv-qty-btn"
-                            (click)="updateProduct(product.id, { quantity: product.quantity + 1 })">
-                            <i stp-icon name="plus" class="icon--xs"></i>
-                        </button>
+                        <stp-input label="Largo (cm) *" type="number" [value]="product.length?.toString() ?? ''"
+                            (valueChange)="updateProduct(product.id, { length: +$event })" />
                     </div>
                 </div>
 
@@ -239,8 +203,7 @@
                         <div class="inv-image-thumb">
                             <img [src]="img.dataUrl" [alt]="'Imagen ' + (i + 1)" />
                             <button type="button" class="inv-image-thumb__remove"
-                                [attr.aria-label]="'Eliminar imagen ' + (i + 1)"
-                                (click)="removeImage(product.id, i)">
+                                [attr.aria-label]="'Eliminar imagen ' + (i + 1)" (click)="removeImage(product.id, i)">
                                 <i stp-icon name="x" class="icon--xs"></i>
                             </button>
                         </div>
@@ -264,11 +227,9 @@
         <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
             Cancelar
         </stp-button>
-        <stp-button variant="primary" btnStyle="solid" size="md"
-            [disabled]="!canSubmitLote()"
-            [loading]="invSubmitting()"
-            (click)="submitLote()">
-            Confirmar lote
+        <stp-button variant="primary" btnStyle="solid" size="md" [disabled]="!canSubmitLote()"
+            [loading]="invSubmitting()" (click)="submitLote()">
+            {{ isEditMode ? 'Guardar cambios' : 'Confirmar lote' }}
         </stp-button>
     </div>
 

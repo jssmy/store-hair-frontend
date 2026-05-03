@@ -6,7 +6,7 @@ export type AvatarVariant = 'primary' | 'success' | 'warning' | 'error' | 'info'
 
 @Component({
   selector: 'stp-avatar',
-  imports: [NgClass, NgStyle],
+  imports: [NgClass],
   templateUrl: './avatar.component.html',
   styleUrl: './avatar.component.scss',
 })

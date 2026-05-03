@@ -56,6 +56,11 @@ export const routes: Routes = [
                     import('./features/credits/credits.component').then(m => m.CreditsComponent),
             },
             {
+                path: AppRoutes.purchaseOrder,
+                loadComponent: () =>
+                    import('./features/purchase-order/purchase-order.component').then(m => m.PurchaseOrderComponent),
+            },
+            {
                 path: AppRoutes.demo,
                 loadComponent: () =>
                     import('./features/demo/demo.component').then(m => m.DemoComponent),

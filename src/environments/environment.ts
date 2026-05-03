@@ -8,9 +8,13 @@ export const environment = {
     auth: {
       login: `${API}/auth/login`,
       register: `${API}/auth/register`,
+      refresh: `${API}/auth/refresh`,
     },
     supplier: `${API}/supplier`,
+    product: `${API}/product`,
+    lote: `${API}/lote`,
   },
+  assets: 'http://localhost:3000',
   whatsappUrl: 'https://wa.me/1234567890',
   websiteUrl: 'https://storepoint.app',
   logoUrl: null as string | null,

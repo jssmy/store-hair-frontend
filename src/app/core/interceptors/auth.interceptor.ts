@@ -1,15 +1,23 @@
-import { HttpErrorResponse, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
+import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { from } from 'rxjs';
-import { catchError, switchMap, tap } from 'rxjs/operators';
-import { throwError } from 'rxjs';
+import { from, throwError } from 'rxjs';
+import { catchError, switchMap } from 'rxjs/operators';
 import { StorageService } from '../services/storage.service';
 import { AppRoutes } from '../constants/app-routes';
+import { AuthApiService } from '../../features/auth/auth-api.service';
+import { environment } from '../../../environments/environment';
+
+const ignoredUrls = [environment.endpoints.auth.refresh, environment.endpoints.auth.login];
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storage = inject(StorageService);
   const router = inject(Router);
+  const authService = inject(AuthApiService);
+
+  if (ignoredUrls.some(url => req.url.includes(url))) {
+    return next(req);
+  }
 
   return from(
     Promise.all([
@@ -18,32 +26,50 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
     ]),
   ).pipe(
     switchMap(([accessToken, refreshToken]) => {
-      if (!accessToken) return next(req);
+      const authReq = accessToken
+        ? req.clone({ setHeaders: { Authorization: `Bearer ${accessToken}` } })
+        : req;
 
-      const headers: Record<string, string> = {
-        Authorization: `Bearer ${accessToken}`,
-      };
-      if (refreshToken) {
-        headers['x-refresh-token'] = refreshToken;
-      }
-
-      return next(req.clone({ setHeaders: headers })).pipe(
-        tap(event => {
-          if (event instanceof HttpResponse) {
-            const newAccess = event.headers.get('x-access-token');
-            const newRefresh = event.headers.get('x-refresh-token');
-            if (newAccess) void storage.set('access_token', newAccess);
-            if (newRefresh) void storage.set('refresh_token', newRefresh);
-          }
-        }),
+      return next(authReq).pipe(
         catchError((err: HttpErrorResponse) => {
-          if (err.status === 401) {
-            void Promise.all([
-              storage.remove('access_token'),
-              storage.remove('refresh_token'),
-            ]).then(() => void router.navigate([AppRoutes.login]));
+          if (err.status !== 401) {
+            return throwError(() => err);
           }
-          return throwError(() => err);
+
+          if (!refreshToken) {
+            return from(storage.clear()).pipe(
+              switchMap(() => {
+                router.navigate([AppRoutes.login]);
+                return throwError(() => err);
+              }),
+            );
+          }
+
+          return authService.refresh(refreshToken).pipe(
+            switchMap(tokens =>
+              from(
+                Promise.all([
+                  storage.set('access_token', tokens.access_token),
+                  storage.set('refresh_token', tokens.refresh_token),
+                ]),
+              ).pipe(
+                switchMap(() => {
+                  const retryReq = req.clone({
+                    setHeaders: { Authorization: `Bearer ${tokens.access_token}` },
+                  });
+                  return next(retryReq);
+                }),
+              ),
+            ),
+            catchError((refreshErr: HttpErrorResponse) =>
+              from(storage.clear()).pipe(
+                switchMap(() => {
+                  router.navigate([AppRoutes.login]);
+                  return throwError(() => refreshErr);
+                }),
+              ),
+            ),
+          );
         }),
       );
     }),

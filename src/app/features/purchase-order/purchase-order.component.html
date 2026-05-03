@@ -1,0 +1,198 @@
+<div class="po-page">
+
+    <!-- ── Header ────────────────────────────────────────────── -->
+    <header #pageHeader class="po-header">
+        <div class="po-header__row">
+            <div>
+                <h1 class="po-header__title">Órdenes de Compra</h1>
+                <p class="po-header__subtitle">
+                    {{ orders().length }} orden{{ orders().length !== 1 ? 'es' : '' }}
+                    registrada{{ orders().length !== 1 ? 's' : '' }}
+                </p>
+            </div>
+            <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+                <i stp-icon name="plus" style="font-size:1rem"></i>
+                Nueva OC
+            </stp-button>
+        </div>
+    </header>
+
+    <!-- ── Sticky bar (búsqueda + filtros de estado) ──────────── -->
+    <div class="po-sticky-bar sticky-bar"
+        [class.po-sticky-bar--stuck]="isStuck()"
+        [class.sticky-bar--stuck]="isStuck()">
+
+        <section class="po-search" aria-label="Buscar órdenes">
+            <div class="po-search__field">
+                <span class="po-search__icon" aria-hidden="true">
+                    <i stp-icon name="magnifying-glass" style="font-size:1.125rem"></i>
+                </span>
+                <input class="po-search__input" type="search"
+                    placeholder="Buscar por número, proveedor o responsable..."
+                    autocomplete="off" aria-label="Buscar órdenes de compra"
+                    [value]="searchQuery()"
+                    (input)="onSearchInput($any($event.target).value)" />
+                @if (searchQuery()) {
+                <button class="po-search__clear" type="button" aria-label="Limpiar búsqueda"
+                    (click)="clearSearch()">
+                    <i stp-icon name="x" style="font-size:1rem"></i>
+                </button>
+                }
+            </div>
+        </section>
+
+        <section class="po-status-bar" aria-label="Filtrar por estado">
+            <div class="po-status-bar__scroll">
+                @for (s of statusFilterOptions; track s) {
+                <button class="po-status-chip"
+                    [class.po-status-chip--active]="activeStatus() === s"
+                    [attr.data-status]="s"
+                    (click)="setStatus(s)">
+                    {{ statusFilterLabel(s) }}
+                </button>
+                }
+            </div>
+        </section>
+
+    </div><!-- /sticky bar -->
+
+    <!-- ── Lista de órdenes ───────────────────────────────────── -->
+    @if (filteredOrders().length > 0) {
+    <section class="po-results" aria-label="Lista de órdenes de compra" aria-live="polite">
+        <p class="po-results__count">
+            @if (isFiltered()) {
+            {{ filteredOrders().length }} resultado{{ filteredOrders().length !== 1 ? 's' : '' }}
+            } @else {
+            Todas las órdenes
+            }
+        </p>
+
+        <ul class="po-list" role="list">
+            @for (order of filteredOrders(); track order.id) {
+            <stp-swipe-item [options]="swipeOptions" (optionSelected)="swipeOptionSelected(order, $event)">
+                <li class="po-row bg-base">
+
+                    <!-- Fila resumen (clicable para expandir) -->
+                    <div class="po-row__summary" (click)="toggleExpand(order.id)"
+                        role="button" tabindex="0"
+                        [attr.aria-expanded]="expandedId() === order.id"
+                        (keydown.enter)="toggleExpand(order.id)">
+
+                        <div class="po-row__main">
+                            <div class="po-row__number-row">
+                                <span class="po-row__number">{{ order.number }}</span>
+                                <span class="po-row__status po-row__status--{{ order.status }}">
+                                    {{ statusLabels[order.status] }}
+                                </span>
+                            </div>
+                            <span class="po-row__supplier icon-row">
+                                <i stp-icon name="buildings" class="icon--xs"></i>
+                                {{ order.supplierName }}
+                            </span>
+                            <div class="po-row__meta">
+                                <span class="icon-row">
+                                    <i stp-icon name="user" class="icon--xs"></i>
+                                    {{ order.registeredBy }}
+                                </span>
+                                <span class="po-row__sep">·</span>
+                                <span class="icon-row">
+                                    <i stp-icon name="calendar" class="icon--xs"></i>
+                                    {{ formatDate(order.createdAt) }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <div class="po-row__aside">
+                            <span class="po-row__price">S/ {{ totalPrice(order).toFixed(2) }}</span>
+                            <span class="po-row__kilo">{{ totalKilo(order).toFixed(1) }} kg</span>
+                            <span class="po-row__det-count">
+                                {{ order.details.length }}
+                                detalle{{ order.details.length !== 1 ? 's' : '' }}
+                            </span>
+                            <i stp-icon
+                                [name]="expandedId() === order.id ? 'caret-up' : 'caret-down'"
+                                class="icon--sm po-row__chevron">
+                            </i>
+                        </div>
+
+                    </div><!-- /summary -->
+
+                    <!-- Detalles expandidos -->
+                    @if (expandedId() === order.id) {
+                    <div class="po-row__details">
+
+                        <!-- Cabecera tabla -->
+                        <div class="po-details-head">
+                            <span>Color</span>
+                            <span>Tipo</span>
+                            <span>Largo</span>
+                            <span>Kilo</span>
+                            <span>Precio</span>
+                        </div>
+
+                        <!-- Filas de detalle -->
+                        @for (d of order.details; track d.id) {
+                        <div class="po-detail-row">
+                            <span class="po-detail-row__color">
+                                <span class="po-detail-row__swatch"
+                                    [style.background]="hairColorHex[d.color]"
+                                    [title]="hairColorLabels[d.color]">
+                                </span>
+                                <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
+                            </span>
+                            <span>{{ categoryLabels[d.type] }}</span>
+                            <span>{{ d.length }} cm</span>
+                            <span>{{ d.kilo }} kg</span>
+                            <span class="po-detail-row__price">S/ {{ d.totalPrice.toFixed(2) }}</span>
+                        </div>
+                        }
+
+                        <!-- Footer con fechas y totales -->
+                        <div class="po-details-foot">
+                            <span class="po-details-foot__modified icon-row">
+                                <i stp-icon name="pencil-simple" class="icon--xs"></i>
+                                Modificado {{ formatDate(order.updatedAt) }}
+                            </span>
+                            <span class="po-details-foot__total">
+                                Total:
+                                <strong>S/ {{ totalPrice(order).toFixed(2) }}</strong>
+                                · {{ totalKilo(order).toFixed(1) }} kg
+                            </span>
+                        </div>
+
+                    </div><!-- /details -->
+                    }
+
+                </li>
+            </stp-swipe-item>
+            }
+        </ul>
+    </section>
+    }
+
+    <!-- ── Estado vacío ───────────────────────────────────────── -->
+    @if (filteredOrders().length === 0) {
+    <div class="po-empty" aria-live="polite">
+        <div class="po-empty__icon" aria-hidden="true">
+            <i stp-icon name="package" style="font-size:3.5rem"></i>
+        </div>
+        @if (isFiltered()) {
+        <h2 class="po-empty__title">Sin resultados</h2>
+        <p class="po-empty__text">
+            No hay órdenes que coincidan con tu búsqueda.
+        </p>
+        <stp-button variant="primary" btnStyle="ghost" size="md" radius="md" (click)="clearSearch()">
+            Limpiar filtros
+        </stp-button>
+        } @else {
+        <h2 class="po-empty__title">Sin órdenes de compra</h2>
+        <p class="po-empty__text">Crea tu primera orden de compra para empezar.</p>
+        <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
+            <i stp-icon name="plus" style="font-size:1rem"></i>
+            Nueva OC
+        </stp-button>
+        }
+    </div>
+    }
+
+</div>

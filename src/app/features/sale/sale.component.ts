@@ -63,9 +63,9 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
     const category = this.activeCategory();
 
     return MOCK_PRODUCTS.filter(product => {
-      const matchesCategory = category === 'todos' || product.category === category;
+      
       const matchesQuery = !query || product.name.toLowerCase().includes(query);
-      return matchesCategory && matchesQuery;
+      return matchesQuery;
     });
   });
 

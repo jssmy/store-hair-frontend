@@ -9,6 +9,7 @@
     "test": "ng test",
     "lint": "ng lint",
     "build:prod": "ng build --configuration production",
+    "build:dev": "ng build --configuration development",
     "cap:sync": "npm run build:prod && npx cap sync",
     "cap:ios": "npm run build:prod && npx cap sync ios && npx cap open ios",
     "cap:android": "npm run build:prod && npx cap sync android && npx cap open android"

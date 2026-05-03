@@ -1,0 +1,236 @@
+<div class="po-drawer" role="dialog" aria-modal="true" aria-label="Orden de Compra"
+    (click)="$event.stopPropagation()">
+
+    <div class="po-drawer__handle" aria-hidden="true"></div>
+
+    <div class="po-drawer__header">
+        <h2 class="po-drawer__title">{{ isEdit ? 'Editar' : 'Nueva' }} Orden de Compra</h2>
+        <button class="po-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
+            <i stp-icon name="x" class="icon--sm"></i>
+        </button>
+    </div>
+
+    @if (success()) {
+    <div class="po-drawer__success">
+        <span class="icon-badge icon-badge--success icon-badge--xl">
+            <i stp-icon name="check-circle" class="icon--xl"></i>
+        </span>
+        <p class="po-drawer__success-text">Orden {{ isEdit ? 'actualizada' : 'registrada' }}</p>
+        <p class="po-drawer__success-sub">La orden de compra fue guardada correctamente</p>
+    </div>
+    } @else {
+
+    <div class="po-drawer__body">
+
+        <!-- ── Proveedor ── -->
+        <div class="po-section">
+            <div class="po-section__label">
+                <i stp-icon name="truck" class="icon--sm"></i>
+                Proveedor
+            </div>
+
+            <div class="po-field">
+                <label class="po-field__label" for="po-supplier">Proveedor *</label>
+                <div class="po-field__search-wrap">
+                    <i stp-icon name="magnifying-glass" class="po-field__search-icon icon--sm"></i>
+                    <input id="po-supplier" class="po-field__input po-field__input--search"
+                        type="text" placeholder="Buscar proveedor..."
+                        [value]="supplierSearch()"
+                        (input)="onSupplierSearch($any($event.target).value)"
+                        autocomplete="off" />
+                    @if (supplierSearch()) {
+                    <button class="po-field__clear" type="button" (click)="clearSupplier()">
+                        <i stp-icon name="x" class="icon--xs"></i>
+                    </button>
+                    }
+                </div>
+
+                @if (filteredSuppliers().length && !selectedSupplierId()) {
+                <ul class="po-dropdown" role="listbox">
+                    @for (s of filteredSuppliers(); track s.id) {
+                    <li class="po-dropdown__item" role="option" tabindex="0"
+                        (click)="selectSupplier(s.id, s.name)"
+                        (keydown.enter)="selectSupplier(s.id, s.name)">
+                        <span class="icon-badge icon-badge--primary" style="--size:2rem;font-size:.75rem">
+                            <i stp-icon name="buildings" class="icon--xs"></i>
+                        </span>
+                        <div class="po-dropdown__info">
+                            <span class="po-dropdown__name">{{ s.name }}</span>
+                            <span class="po-dropdown__sub">RUC {{ s.ruc }}</span>
+                        </div>
+                    </li>
+                    }
+                </ul>
+                }
+
+                @if (selectedSupplier()) {
+                <div class="po-supplier-linked">
+                    <i stp-icon name="buildings" class="icon--sm"></i>
+                    <div class="po-supplier-linked__info">
+                        <span class="po-supplier-linked__name">{{ selectedSupplier()!.name }}</span>
+                        <span class="po-supplier-linked__meta">RUC {{ selectedSupplier()!.ruc }}</span>
+                    </div>
+                    <button class="po-field__clear-chip" type="button" (click)="clearSupplier()">
+                        <i stp-icon name="x" class="icon--xs"></i>
+                    </button>
+                </div>
+                } @else if (supplierSearch().trim() && !filteredSuppliers().length) {
+                <div class="po-not-found">
+                    <i stp-icon name="warning" class="icon--sm"></i>
+                    Proveedor no encontrado. Escribe para buscar.
+                </div>
+                }
+            </div>
+        </div>
+
+
+        <!-- ── Detalles del lote ── -->
+        <div class="po-section po-section--details">
+            <div class="po-section__header">
+                <div class="po-section__label">
+                    <i stp-icon name="list-bullets" class="icon--sm"></i>
+                    Detalles (kilo/lote)
+                    @if (details().length) {
+                    <span class="po-section__count">{{ details().length }}</span>
+                    }
+                </div>
+                <button type="button" class="po-add-btn" (click)="addDetail()">
+                    <i stp-icon name="plus" class="icon--xs"></i>
+                    Agregar
+                </button>
+            </div>
+
+            @if (details().length === 0) {
+            <div class="po-details-empty">
+                <i stp-icon name="list-bullets" class="icon--2xl" style="opacity:.2"></i>
+                <p>Sin detalles. Presiona «Agregar» para añadir.</p>
+            </div>
+            }
+
+            @for (detail of details(); track detail.id; let idx = $index) {
+            <div class="po-detail-card" [class.po-detail-card--error]="detail.duplicateError">
+
+                <div class="po-detail-card__header">
+                    <span class="po-detail-card__num">Detalle {{ idx + 1 }}</span>
+                    @if (detail.duplicateError) {
+                    <span class="po-detail-card__dup-error">
+                        <i stp-icon name="warning" class="icon--xs"></i>
+                        Color + Tipo + Largo duplicado
+                    </span>
+                    }
+                    <button type="button" class="icon-btn icon-btn--danger"
+                        aria-label="Eliminar detalle"
+                        (click)="removeDetail(detail.id)">
+                        <i stp-icon name="trash" class="icon--sm"></i>
+                    </button>
+                </div>
+
+                <!-- Color -->
+                <div class="po-field">
+                    <label class="po-field__label">
+                        Color *
+                        @if (detail.color) {
+                        <span class="po-color-label">{{ hairColorLabels[detail.color] }}</span>
+                        }
+                    </label>
+                    <div class="po-color-row">
+                        @for (color of hairColors; track color) {
+                        <button
+                            type="button"
+                            class="po-color-swatch"
+                            [class.po-color-swatch--selected]="detail.color === color"
+                            [style.background]="hairColorHex[color]"
+                            [title]="hairColorLabels[color]"
+                            [attr.aria-label]="hairColorLabels[color]"
+                            (click)="updateDetail(detail.id, { color: color })">
+                        </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tipo + Largo -->
+                <div class="po-field-row">
+                    <div class="po-field">
+                        <label class="po-field__label" [for]="'po-type-' + detail.id">Tipo *</label>
+                        <select [id]="'po-type-' + detail.id"
+                            class="po-field__input po-field__input--select"
+                            [value]="detail.type"
+                            (change)="updateDetail(detail.id, { type: $any($event.target).value })">
+                            @for (cat of categoryOptions; track cat) {
+                            <option [value]="cat">{{ categoryLabels[cat] }}</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="po-field">
+                        <label class="po-field__label" [for]="'po-length-' + detail.id">Largo (cm) *</label>
+                        <div class="po-field__prefix-wrap">
+                            <span class="po-field__prefix">cm</span>
+                            <input [id]="'po-length-' + detail.id"
+                                class="po-field__input po-field__input--prefixed"
+                                type="number" min="1" placeholder="0"
+                                [value]="detail.length ?? ''"
+                                (input)="updateDetail(detail.id, { length: +$any($event.target).value || null })" />
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kilo + Precio Total -->
+                <div class="po-field-row">
+                    <div class="po-field">
+                        <label class="po-field__label" [for]="'po-kilo-' + detail.id">Kilo (kg) *</label>
+                        <div class="po-field__prefix-wrap">
+                            <span class="po-field__prefix">kg</span>
+                            <input [id]="'po-kilo-' + detail.id"
+                                class="po-field__input po-field__input--prefixed"
+                                type="number" min="0.1" step="0.1" placeholder="0.0"
+                                [value]="detail.kilo ?? ''"
+                                (input)="updateDetail(detail.id, { kilo: +$any($event.target).value || null })" />
+                        </div>
+                    </div>
+                    <div class="po-field">
+                        <label class="po-field__label" [for]="'po-price-' + detail.id">Precio Total *</label>
+                        <div class="po-field__prefix-wrap">
+                            <span class="po-field__prefix">S/</span>
+                            <input [id]="'po-price-' + detail.id"
+                                class="po-field__input po-field__input--prefixed"
+                                type="number" min="0.01" step="0.01" placeholder="0.00"
+                                [value]="detail.totalPrice ?? ''"
+                                (input)="updateDetail(detail.id, { totalPrice: +$any($event.target).value || null })" />
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+            }<!-- /detail cards -->
+
+            <!-- Totales -->
+            @if (details().length > 0) {
+            <div class="po-totals">
+                <span class="po-totals__item">
+                    <i stp-icon name="scales" class="icon--xs"></i>
+                    {{ totalKilo().toFixed(1) }} kg total
+                </span>
+                <span class="po-totals__sep">·</span>
+                <span class="po-totals__item po-totals__item--price">
+                    S/ {{ totalPrice().toFixed(2) }} total
+                </span>
+            </div>
+            }
+        </div>
+
+    </div><!-- /body -->
+
+    <div class="po-drawer__footer">
+        <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
+            Cancelar
+        </stp-button>
+        <stp-button variant="primary" btnStyle="solid" size="md"
+            [disabled]="!canSubmit()"
+            [loading]="submitting()"
+            (click)="submit()">
+            {{ isEdit ? 'Guardar cambios' : 'Crear orden' }}
+        </stp-button>
+    </div>
+
+    }<!-- /not success -->
+</div>

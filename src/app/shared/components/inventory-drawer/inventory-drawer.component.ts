@@ -3,12 +3,14 @@ import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bott
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { InputComponent } from '../input/input.component';
+import { SelectComponent, SelectOption } from '../select/select.component';
 import {
   CATEGORY_LABELS,
   HAIR_COLOR_HEX,
   HAIR_COLOR_LABELS,
   HAIR_COLORS,
   HairColor,
+  Inventory,
   Lote,
   LoteProduct,
   MOCK_PURCHASE_ORDERS,
@@ -16,23 +18,25 @@ import {
   ProductCategory,
   PurchaseOrder,
 } from '../../../features/products/products.data';
+import { InventoryService } from '../../../core/services/inventory.service';
+import { CreateProductDto } from '../../../features/products/products.data';
+import { environment } from '../../../../environments/environment';
 
 // ── Types ────────────────────────────────────────────────────────────
 
 interface LoteProductForm {
   id: string;
   name: string;
+  type: string;
   color: HairColor | null;
   weight: number | null;
   length: number | null;
   price: number | null;
-  quantity: number;
-  category: Exclude<ProductCategory, 'todos'>;
-  images: { file: File; dataUrl: string }[];
+  images: { file: File | null; dataUrl: string }[];
 }
 
 export interface InventoryDrawerData {
-  products: Product[];
+  inventory?: Inventory;
   prefilledPoNumber?: string;
 }
 
@@ -44,11 +48,19 @@ const CATEGORY_OPTIONS: Exclude<ProductCategory, 'todos'>[] = [
   'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
 ];
 
+const HAIR_TYPE_OPTIONS: SelectOption[] = [
+  { value: 'lizo', label: 'Lizo' },
+  { value: 'lasio', label: 'Lasio' },
+  { value: 'ondulado', label: 'Ondulado' },
+  { value: 'rizado', label: 'Rizado' },
+  { value: 'otros', label: 'Otros' },
+];
+
 // ── Component ────────────────────────────────────────────────────────
 
 @Component({
   selector: 'stp-inventory-drawer',
-  imports: [ButtonComponent, IconComponent, InputComponent],
+  imports: [ButtonComponent, IconComponent, InputComponent, SelectComponent],
   templateUrl: './inventory-drawer.component.html',
   styleUrl: './inventory-drawer.component.scss',
 })
@@ -57,18 +69,44 @@ export class InventoryDrawerComponent {
     inject<MatBottomSheetRef<InventoryDrawerComponent, InventoryDrawerResult | null>>(MatBottomSheetRef);
   private readonly data = inject<InventoryDrawerData>(MAT_BOTTOM_SHEET_DATA);
 
+  private readonly inventoryService = inject(InventoryService);
+
   protected readonly categoryOptions = CATEGORY_OPTIONS;
   protected readonly categoryLabels = CATEGORY_LABELS;
+  protected readonly categorySelectOptions: SelectOption[] = CATEGORY_OPTIONS.map(cat => ({
+    value: cat,
+    label: CATEGORY_LABELS[cat],
+  }));
+  protected readonly hairTypeOptions = HAIR_TYPE_OPTIONS;
   protected readonly hairColors = HAIR_COLORS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
+
+  // ── Edit mode ────────────────────────────────────────────────────
+  protected readonly isEditMode = !!this.data.inventory;
+  protected readonly editInventory = this.data.inventory ?? null;
 
   // ── PO search state ──────────────────────────────────────────────
   protected readonly lotePoSearch = signal(this.data.prefilledPoNumber ?? '');
   protected readonly loteSelectedPO = signal<PurchaseOrder | null>(null);
 
-  // ── Products state ───────────────────────────────────────────────
-  protected readonly loteProducts = signal<LoteProductForm[]>([]);
+  private readonly assets = environment.assets;
+
+  // ── Products state (pre-filled when editing) ─────────────────────
+  protected readonly loteProducts = signal<LoteProductForm[]>(
+    this.data.inventory
+      ? this.data.inventory.products.map(p => ({
+          id: p.id,
+          name: p.name,
+          type: p.type,
+          color: p.color,
+          weight: p.weight,
+          length: p.length,
+          price: p.price,
+          images: p.imageUrls.map(url => ({ file: null, dataUrl: this.assets + '/' + url })),
+        }))
+      : [],
+  );
 
   // ── Submit state ─────────────────────────────────────────────────
   protected readonly invSubmitting = signal(false);
@@ -89,21 +127,32 @@ export class InventoryDrawerComponent {
   );
 
   protected readonly canSubmitLote = computed(() => {
-    if (!this.loteSelectedPO()) return false;
     const products = this.loteProducts();
+
+
     if (products.length === 0) return false;
-    return products.every(p =>
-      p.name.trim() &&
+    const allValid = products.every(p =>
+      p.type.trim().length > 0 &&
       p.color !== null &&
       p.weight !== null && p.weight > 0 &&
       p.length !== null && p.length > 0 &&
-      p.price !== null && p.price > 0 &&
-      p.quantity > 0,
+      p.price !== null && p.price > 0,
     );
+    if (this.isEditMode) return allValid;
+
+    console.log('Selected PO:', this.loteSelectedPO());
+    console.log('PO Number:', this.lotePoNumber());
+    console.log('All products valid:', allValid);
+
+    return allValid && !!this.loteSelectedPO();
   });
 
   protected close(): void {
     this.sheetRef.dismiss(null);
+  }
+
+  protected formatDate(iso: string): string {
+    return new Date(iso).toLocaleDateString('es-PE', { dateStyle: 'short' });
   }
 
   // ── PO search actions ────────────────────────────────────────────
@@ -129,12 +178,11 @@ export class InventoryDrawerComponent {
     const newProduct: LoteProductForm = {
       id: crypto.randomUUID(),
       name: '',
+      type: '',
       color: null,
       weight: null,
       length: null,
       price: null,
-      quantity: 1,
-      category: 'lisa',
       images: [],
     };
     this.loteProducts.update(prev => [...prev, newProduct]);
@@ -182,32 +230,55 @@ export class InventoryDrawerComponent {
     if (!this.canSubmitLote()) return;
     this.invSubmitting.set(true);
 
-    setTimeout(() => {
-      const po = this.loteSelectedPO()!;
-      const loteProductsMapped: LoteProduct[] = this.loteProducts().map(p => ({
-        id: p.id,
-        name: p.name.trim(),
-        color: p.color!,
-        weight: p.weight!,
-        length: p.length!,
-        price: p.price!,
-        quantity: p.quantity,
-        category: p.category,
-        images: p.images.map(img => img.dataUrl),
-      }));
+    const products: CreateProductDto[] = this.loteProducts().map(p => ({
+      type: p.type,
+      color: p.color!,
+      price: Number(p.price!),
+      length: Number(p.length!),
+      weight: Number(p.weight!),
+      images: p.images.map(img => img.dataUrl),
+    }));
 
-      const result: Lote = {
-        purchaseOrderNumber: po.number,
-        registeredBy: 'Usuario Actual',
-        registeredAt: new Date().toISOString(),
-        supplierId: po.supplierId,
-        supplierName: po.supplierName,
-        products: loteProductsMapped,
-      };
+    if (this.isEditMode) {
+      this.inventoryService.update(this.editInventory!.id, products).subscribe({
+        next: () => {
+          this.invSubmitting.set(false);
+          this.invSuccess.set(true);
+          setTimeout(() => this.sheetRef.dismiss(null), 1200);
+        },
+        error: () => { this.invSubmitting.set(false); },
+      });
+      return;
+    }
 
-      this.invSubmitting.set(false);
-      this.invSuccess.set(true);
-      setTimeout(() => this.sheetRef.dismiss(result), 1200);
-    }, 600);
+    const po = this.loteSelectedPO()!;
+    const loteProductsMapped: LoteProduct[] = this.loteProducts().map(p => ({
+      id: p.id,
+      name: p.name.trim(),
+      type: p.type,
+      color: p.color!,
+      weight: Number(p.weight!),
+      length: Number(p.length!),
+      price: Number(p.price!),
+      images: p.images.map(img => img.dataUrl),
+    }));
+
+    const result: Lote = {
+      purchaseOrderNumber: po.number,
+      registeredBy: 'Usuario Actual',
+      registeredAt: new Date().toISOString(),
+      supplierId: po.supplierId,
+      supplierName: po.supplierName,
+      products: loteProductsMapped,
+    };
+
+    this.inventoryService.create({ products }).subscribe({
+      next: () => {
+        this.invSubmitting.set(false);
+        this.invSuccess.set(true);
+        setTimeout(() => this.sheetRef.dismiss(result), 1200);
+      },
+      error: () => { this.invSubmitting.set(false); },
+    });
   }
 }

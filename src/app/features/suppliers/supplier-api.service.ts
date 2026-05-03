@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { map, Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { Supplier } from './suppliers.data';
 import { PaginatedResponse } from '../../core/models/pagination.model';
@@ -34,6 +34,17 @@ export class SupplierApiService {
         limit: params.limit,
       },
     });
+  }
+
+  getActiveAll(params: SupplierQueryParams) {
+    return this.getAll(params).pipe(
+      map(response => {
+        return new PaginatedResponse(
+          response.data.filter(supplier => supplier.active),
+          response.meta,
+        );
+      }),
+    );
   }
 
   create(dto: CreateSupplierDto): Observable<Supplier> {

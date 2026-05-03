@@ -2,8 +2,8 @@ import { DecimalPipe } from '@angular/common';
 import { Component, computed, input, output } from '@angular/core';
 import {
     CartItem,
-    CATEGORY_ICONS,
-    ProductCategory,
+    HAIR_TYPE_ICONS,
+    HairType,
 } from '../../../features/products/products.data';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
@@ -26,7 +26,7 @@ export class CartItemComponent {
         () => this.item().product.price * this.item().quantity,
     );
 
-    protected categoryIcon(cat: ProductCategory): string {
-        return CATEGORY_ICONS[cat];
+    protected hairTypeIcon(hairType: HairType): string {
+        return HAIR_TYPE_ICONS[hairType];
     }
 }

@@ -1,4 +1,4 @@
-import type { CartItem, ProductCategory } from '../products/products.data';
+import type { CartItem, HairType } from '../products/products.data';
 
 export type PaymentFrequency = 'semanal' | 'quincenal' | 'mensual';
 export type CreditStatus = 'active' | 'completed' | 'overdue';
@@ -80,7 +80,7 @@ export function computeInstallmentRows(c: Credit, today: Date): InstallmentRow[]
   return rows;
 }
 
-const p = (id: number, name: string, price: number, cat: Exclude<ProductCategory, 'todos'>, unit: string) =>
+const p = (id: number, name: string, price: number, cat: Exclude<HairType, 'todos'>, unit: string) =>
   ({ id, name, category: cat, price, stock: 20, unit } as const);
 
 export const MOCK_CREDITS: Credit[] = [

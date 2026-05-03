@@ -80,19 +80,19 @@
 
                         <div class="po-row__main">
                             <div class="po-row__number-row">
-                                <span class="po-row__number">{{ order.number }}</span>
+                                <span class="po-row__number">{{ order.oc }}</span>
                                 <span class="po-row__status po-row__status--{{ order.status }}">
                                     {{ statusLabels[order.status] }}
                                 </span>
                             </div>
                             <span class="po-row__supplier icon-row">
                                 <i stp-icon name="buildings" class="icon--xs"></i>
-                                {{ order.supplierName }}
+                                {{ order.supplier.name }}
                             </span>
                             <div class="po-row__meta">
                                 <span class="icon-row">
                                     <i stp-icon name="user" class="icon--xs"></i>
-                                    {{ order.registeredBy }}
+                                    {{ order.user.name }}
                                 </span>
                                 <span class="po-row__sep">·</span>
                                 <span class="icon-row">
@@ -103,8 +103,8 @@
                         </div>
 
                         <div class="po-row__aside">
-                            <span class="po-row__price">S/ {{ totalPrice(order).toFixed(2) }}</span>
-                            <span class="po-row__kilo">{{ totalKilo(order).toFixed(1) }} kg</span>
+                            <span class="po-row__price">S/ {{ totalPrice(order) }}</span>
+                            <span class="po-row__kilo">{{ totalKilo(order) }} kg</span>
                             <span class="po-row__det-count">
                                 {{ order.details.length }}
                                 detalle{{ order.details.length !== 1 ? 's' : '' }}
@@ -140,10 +140,10 @@
                                 </span>
                                 <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
                             </span>
-                            <span>{{ categoryLabels[d.type] }}</span>
+                            <span>{{ hairTypeLabel(d.type) }}</span>
                             <span>{{ d.length }} cm</span>
-                            <span>{{ d.kilo }} kg</span>
-                            <span class="po-detail-row__price">S/ {{ d.totalPrice.toFixed(2) }}</span>
+                            <span>{{ d.weight }} kg</span>
+                            <span class="po-detail-row__price">S/ {{ d.price }}</span>
                         </div>
                         }
 
@@ -155,8 +155,8 @@
                             </span>
                             <span class="po-details-foot__total">
                                 Total:
-                                <strong>S/ {{ totalPrice(order).toFixed(2) }}</strong>
-                                · {{ totalKilo(order).toFixed(1) }} kg
+                                <strong>S/ {{ totalPrice(order) }}</strong>
+                                · {{ totalKilo(order) }} kg
                             </span>
                         </div>
 

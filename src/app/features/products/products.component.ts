@@ -1,5 +1,4 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
-import { BadgeComponent } from '../../shared/components/badge/badge.component';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
@@ -16,13 +15,11 @@ import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { InventoryDrawerComponent } from '../../shared/components/inventory-drawer/inventory-drawer.component';
 import { environment } from '../../../environments/environment';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
-import { ScrollingVisibility } from '@angular/cdk/overlay';
 
 
 @Component({
   selector: 'stp-products',
   imports: [
-    BadgeComponent,
     ButtonComponent,
     IconComponent,
     SearchComponent,
@@ -60,11 +57,10 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     const query = this.searchQuery().trim().toLowerCase();
     return this.inventories()?.filter(inv => {
       const matchesId = inv.id.toLowerCase().includes(query);
-      const matchesStatus = inv.status.toLowerCase().includes(query);
       const matchesProduct = inv.products.some(product =>
         product.name.toLowerCase().includes(query),
       );
-      return !query || matchesId || matchesStatus || matchesProduct;
+      return !query || matchesId || matchesProduct;
     });
   });
 

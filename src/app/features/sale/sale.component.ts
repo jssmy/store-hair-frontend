@@ -16,11 +16,11 @@ import { SaleProductCardComponent } from '../../shared/components/sale-product-c
 import { CartDrawerComponent, CartBottomSheetData, CartDismissResult } from '../../shared/components/cart-drawer/cart-drawer.component';
 import {
   CartItem,
-  CATEGORY_ICONS,
-  CATEGORY_LABELS,
+  HAIR_TYPE_ICONS,
+  HAIR_TYPE_LABELS,
   MOCK_PRODUCTS,
   Product,
-  ProductCategory,
+  HairType,
 } from '../products/products.data';
 import { ShimmerComponent } from '../../shared/components/shimmer/shimmer.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -38,14 +38,14 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
   private stickyObserver?: IntersectionObserver;
 
   // ── Search & filter ──────────────────────────────────────
-  protected readonly categories: ProductCategory[] = [
+  protected readonly hairTypes: HairType[] = [
     'todos', 'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
   ];
 
-  protected readonly categoryLabels = CATEGORY_LABELS;
+  protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
 
   protected readonly searchQuery = signal('');
-  protected readonly activeCategory = signal<ProductCategory>('todos');
+  protected readonly activeHairType = signal<HairType>('todos');
   protected readonly hasSearched = signal(false);
 
   // ── Quantity per product (before adding to cart) ─────────
@@ -60,10 +60,10 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
   // ── Derived ──────────────────────────────────────────────
   protected readonly filteredProducts = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
-    const category = this.activeCategory();
+    const hairType = this.activeHairType();
 
     return MOCK_PRODUCTS.filter(product => {
-      
+      void hairType;
       const matchesQuery = !query || product.name.toLowerCase().includes(query);
       return matchesQuery;
     });
@@ -88,14 +88,14 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
     this.hasSearched.set(false);
   }
 
-  protected setCategory(category: ProductCategory): void {
-    this.activeCategory.set(category);
+  protected setHairType(hairType: HairType): void {
+    this.activeHairType.set(hairType);
     if (!this.hasSearched()) this.hasSearched.set(true);
   }
 
-  // ── Category icon helper ─────────────────────────────────
-  protected categoryIcon(cat: ProductCategory): string {
-    return CATEGORY_ICONS[cat];
+  // ── Hair type icon helper ────────────────────────────────
+  protected hairTypeIcon(hairType: HairType): string {
+    return HAIR_TYPE_ICONS[hairType];
   }
 
   // ── Quantity helpers ─────────────────────────────────────

@@ -3,34 +3,40 @@ import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bott
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import {
-  CATEGORY_LABELS,
+  HAIR_TYPE_LABELS,
   HAIR_COLOR_HEX,
   HAIR_COLOR_LABELS,
   HAIR_COLORS,
   HairColor,
-  ProductCategory,
+  HairType,
 } from '../../../features/products/products.data';
-import { MOCK_SUPPLIERS } from '../../../features/suppliers/suppliers.data';
 import {
   PO_STATUS_LABELS,
-  POStatus,
   PurchaseOrderDrawerData,
   PurchaseOrderDrawerResult,
-  PurchaseOrderFull,
+  PurchaseOrderStatus,
 } from '../../../features/purchase-order/purchase-order.data';
+import { PurchaseOrderService } from '../../../core/services/purchase-order.service';
+import { SupplierApiService } from '../../../features/suppliers/supplier-api.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 // ── Constants ─────────────────────────────────────────────────────────
 
-const CATEGORY_OPTIONS: Exclude<ProductCategory, 'todos'>[] = [
+const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
   'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
 ];
+
+const isHairColor = (value: string): value is HairColor => value in HAIR_COLOR_HEX;
+const isHairTypeOption = (value: string): value is Exclude<HairType, 'todos'> =>
+  HAIR_TYPE_OPTIONS.includes(value as Exclude<HairType, 'todos'>);
 
 // ── Types ─────────────────────────────────────────────────────────────
 
 interface DetailForm {
-  id: string;
+  id: number;
   color: HairColor | null;
-  type: Exclude<ProductCategory, 'todos'>;
+  type: Exclude<HairType, 'todos'>;
   length: number | null;   // cm
   kilo: number | null;     // kg
   totalPrice: number | null;
@@ -49,30 +55,31 @@ export class PurchaseOrderDrawerComponent {
   private readonly sheetRef =
     inject<MatBottomSheetRef<PurchaseOrderDrawerComponent, PurchaseOrderDrawerResult | null>>(MatBottomSheetRef);
   private readonly data = inject<PurchaseOrderDrawerData>(MAT_BOTTOM_SHEET_DATA);
+  private readonly purchaseOrderService = inject(PurchaseOrderService);
+  private readonly supplierService = inject(SupplierApiService);
 
-  protected readonly suppliers = MOCK_SUPPLIERS.filter(s => s.active);
-  protected readonly categoryOptions = CATEGORY_OPTIONS;
-  protected readonly categoryLabels = CATEGORY_LABELS;
+  protected readonly suppliers = toSignal(this.supplierService.getActiveAll({ page: 1, limit: 100 }).pipe(map(res => res.data)), { initialValue: [] });
+  protected readonly hairTypeOptions = HAIR_TYPE_OPTIONS;
+  protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
   protected readonly hairColors = HAIR_COLORS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
-  protected readonly statusOptions: POStatus[] = ['pendiente', 'recibida', 'cancelada'];
+  protected readonly statusOptions = [PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED];
   protected readonly statusLabels = PO_STATUS_LABELS;
   protected readonly isEdit = !!this.data.purchaseOrder;
 
   // ── Form state ────────────────────────────────────────────────
-  protected readonly supplierSearch = signal(this.data.purchaseOrder?.supplierName ?? '');
-  protected readonly selectedSupplierId = signal<number | null>(this.data.purchaseOrder?.supplierId ?? null);
-  protected readonly status = signal<POStatus>(this.data.purchaseOrder?.status ?? 'pendiente');
-  protected readonly registeredBy = signal(this.data.purchaseOrder?.registeredBy ?? '');
+  protected readonly supplierSearch = signal(this.data.purchaseOrder?.supplier.name ?? '');
+  protected readonly selectedSupplierId = signal<number | null>(this.data.purchaseOrder?.supplier.id ?? null);
+  protected readonly status = signal<PurchaseOrderStatus>(this.data.purchaseOrder?.status ?? PurchaseOrderStatus.PENDING);
   protected readonly details = signal<DetailForm[]>(
     (this.data.purchaseOrder?.details ?? []).map(d => ({
       id: d.id,
-      color: d.color,
-      type: d.type,
+      color: isHairColor(d.color) ? d.color : null,
+      type: isHairTypeOption(d.type) ? d.type : 'lisa',
       length: d.length,
-      kilo: d.kilo,
-      totalPrice: d.totalPrice,
+      kilo: d.weight,
+      totalPrice: d.price,
       duplicateError: false,
     })),
   );
@@ -86,11 +93,11 @@ export class PurchaseOrderDrawerComponent {
   protected readonly filteredSuppliers = computed(() => {
     const q = this.supplierSearch().trim().toLowerCase();
     if (!q || this.selectedSupplierId() !== null) return [];
-    return this.suppliers.filter(s => s.name.toLowerCase().includes(q)).slice(0, 5);
+    return this.suppliers().filter(s => s.name.toLowerCase().includes(q) || s.dni.toLowerCase().includes(q)).slice(0, 5);
   });
 
   protected readonly selectedSupplier = computed(() =>
-    this.suppliers.find(s => s.id === this.selectedSupplierId()) ?? null,
+    this.suppliers().find(s => s.id === this.selectedSupplierId()) ?? null,
   );
 
   protected readonly totalKilo = computed(() =>
@@ -103,7 +110,7 @@ export class PurchaseOrderDrawerComponent {
 
   protected readonly canSubmit = computed(() => {
     if (!this.selectedSupplierId()) return false;
-    if (!this.registeredBy().trim()) return false;
+
     const dets = this.details();
     if (dets.length === 0) return false;
     if (dets.some(d => d.duplicateError)) return false;
@@ -138,7 +145,7 @@ export class PurchaseOrderDrawerComponent {
 
   protected addDetail(): void {
     this.details.update(prev => [...prev, {
-      id: crypto.randomUUID(),
+      id: 0,
       color: null,
       type: 'lisa',
       length: null,
@@ -148,13 +155,13 @@ export class PurchaseOrderDrawerComponent {
     }]);
   }
 
-  protected removeDetail(id: string): void {
+  protected removeDetail(id: number): void {
     this.details.update(prev =>
       this.revalidateDuplicates(prev.filter(d => d.id !== id)),
     );
   }
 
-  protected updateDetail(id: string, patch: Partial<DetailForm>): void {
+  protected updateDetail(id: number, patch: Partial<DetailForm>): void {
     this.details.update(prev =>
       this.revalidateDuplicates(prev.map(d => d.id === id ? { ...d, ...patch } : d)),
     );
@@ -178,39 +185,45 @@ export class PurchaseOrderDrawerComponent {
     if (!this.canSubmit()) return;
     this.submitting.set(true);
 
-    setTimeout(() => {
-      const supplier = this.selectedSupplier()!;
-      const now = new Date().toISOString();
-      const existing = this.data.purchaseOrder;
+    const dto = {
+      supplierId: this.selectedSupplierId()!,
+      details: this.details().map(d => ({
+        color:  d.color!,
+        type:   d.type,
+        length: d.length!,
+        weight: d.kilo!,
+        price:  d.totalPrice!,
+      })),
+    };
 
-      const result: PurchaseOrderFull = {
-        id:            existing?.id ?? crypto.randomUUID(),
-        number:        existing?.number ?? this.generateNumber(),
-        supplierId:    supplier.id,
-        supplierName:  supplier.name,
-        registeredBy:  this.registeredBy().trim(),
-        createdAt:     existing?.createdAt ?? now,
-        updatedAt:     now,
-        status:        this.status(),
-        details:       this.details().map(d => ({
-          id:         d.id,
-          color:      d.color!,
-          type:       d.type,
-          length:     d.length!,
-          kilo:       d.kilo!,
-          totalPrice: d.totalPrice!,
-        })),
-      };
-
-      this.submitting.set(false);
-      this.success.set(true);
-      setTimeout(() => this.sheetRef.dismiss(result), 1200);
-    }, 600);
-  }
-
-  private generateNumber(): string {
-    const year = new Date().getFullYear();
-    const seq = String(Math.floor(Math.random() * 900) + 100).padStart(3, '0');
-    return `OC-${year}-${seq}`;
+    this.purchaseOrderService.create(dto).subscribe({
+      next: (order) => {
+        // const supplier = this.selectedSupplier()!;
+        // const result: PurchaseOrderFull = {
+        //   id:           String(order.id),
+        //   number:       order.oc,
+        //   supplierId:   supplier.id,
+        //   supplierName: supplier.name,
+        //   registeredBy: this.registeredBy().trim(),
+        //   createdAt:    order.createdAt.toString(),
+        //   updatedAt:    order.updatedAt.toString(),
+        //   status:       'pendiente',
+        //   details:      this.details().map(d => ({
+        //     id:         d.id,
+        //     color:      d.color!,
+        //     type:       d.type,
+        //     length:     d.length!,
+        //     kilo:       d.kilo!,
+        //     totalPrice: d.totalPrice!,
+        //   })),
+        // };
+        this.submitting.set(false);
+        this.success.set(true);
+        // setTimeout(() => this.sheetRef.dismiss(result), 1200);
+      },
+      error: () => {
+        this.submitting.set(false);
+      },
+    });
   }
 }

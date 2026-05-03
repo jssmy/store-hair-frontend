@@ -88,12 +88,7 @@
                         </span>
                     </span>
 
-                    <span class="inv-card__aside">
-                        <stp-badge [variant]="statusBadgeVariant(inventory.status)" badgeStyle="light" size="sm">
-                            {{ statusLabel(inventory.status) }}
-                        </stp-badge>
-                        <i stp-icon name="caret-down" class="inv-card__chevron icon--sm"></i>
-                    </span>
+                    
 
                 </button>
 
@@ -135,7 +130,6 @@
                         }
                     </ul>
 
-                    @if (inventory.status === 'pending') {
                     <div class="inv-card__edit-bar">
                         <stp-button variant="primary" btnStyle="ghost" size="sm" radius="md"
                             (click)="openEditDrawer(inventory)">
@@ -143,7 +137,6 @@
                             Editar lote
                         </stp-button>
                     </div>
-                    }
 
                 </div>
                 }

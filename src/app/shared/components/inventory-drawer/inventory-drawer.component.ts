@@ -5,7 +5,7 @@ import { IconComponent } from '../icon/icon.component';
 import { InputComponent } from '../input/input.component';
 import { SelectComponent, SelectOption } from '../select/select.component';
 import {
-  CATEGORY_LABELS,
+  HAIR_TYPE_LABELS,
   HAIR_COLOR_HEX,
   HAIR_COLOR_LABELS,
   HAIR_COLORS,
@@ -13,14 +13,15 @@ import {
   Inventory,
   Lote,
   LoteProduct,
-  MOCK_PURCHASE_ORDERS,
-  Product,
-  ProductCategory,
-  PurchaseOrder,
+  HairType,
 } from '../../../features/products/products.data';
 import { InventoryService } from '../../../core/services/inventory.service';
 import { CreateProductDto } from '../../../features/products/products.data';
 import { environment } from '../../../../environments/environment';
+import { PurchaseOrder } from '../../../core/models/purchase-order.model';
+import { PurchaseOrderService } from '../../../core/services/purchase-order.service';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { map } from 'rxjs';
 
 // ── Types ────────────────────────────────────────────────────────────
 
@@ -44,7 +45,7 @@ export type InventoryDrawerResult = Lote;
 
 // ── Constants ────────────────────────────────────────────────────────
 
-const CATEGORY_OPTIONS: Exclude<ProductCategory, 'todos'>[] = [
+const PRODUCT_HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
   'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
 ];
 
@@ -70,13 +71,17 @@ export class InventoryDrawerComponent {
   private readonly data = inject<InventoryDrawerData>(MAT_BOTTOM_SHEET_DATA);
 
   private readonly inventoryService = inject(InventoryService);
+  private readonly purchaseOrderService = inject(PurchaseOrderService);
 
-  protected readonly categoryOptions = CATEGORY_OPTIONS;
-  protected readonly categoryLabels = CATEGORY_LABELS;
-  protected readonly categorySelectOptions: SelectOption[] = CATEGORY_OPTIONS.map(cat => ({
-    value: cat,
-    label: CATEGORY_LABELS[cat],
+
+  private readonly purchaseOrders = toSignal(this.purchaseOrderService.getAllAproved({ page: 1, limit: 100 }).pipe(map(res => res.data)), { initialValue: [] });
+  protected readonly productHairTypeOptions = PRODUCT_HAIR_TYPE_OPTIONS;
+  protected readonly productHairTypeLabels = HAIR_TYPE_LABELS;
+  protected readonly productHairTypeSelectOptions: SelectOption[] = PRODUCT_HAIR_TYPE_OPTIONS.map(hairType => ({
+    value: hairType,
+    label: HAIR_TYPE_LABELS[hairType],
   }));
+
   protected readonly hairTypeOptions = HAIR_TYPE_OPTIONS;
   protected readonly hairColors = HAIR_COLORS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
@@ -117,13 +122,13 @@ export class InventoryDrawerComponent {
   protected readonly filteredPOs = computed(() => {
     const q = this.lotePoSearch().trim().toLowerCase();
     if (!q || this.loteSelectedPO()) return [];
-    return MOCK_PURCHASE_ORDERS.filter(po =>
-      po.number.toLowerCase().includes(q),
+    return this.purchaseOrders().filter(po =>
+      po.oc.toLowerCase().includes(q),
     ).slice(0, 6);
   });
 
   protected readonly lotePoNumber = computed(() =>
-    this.loteSelectedPO()?.number ?? this.lotePoSearch().trim(),
+    this.loteSelectedPO()?.oc ?? this.lotePoSearch().trim(),
   );
 
   protected readonly canSubmitLote = computed(() => {
@@ -169,7 +174,7 @@ export class InventoryDrawerComponent {
 
   protected selectPO(po: PurchaseOrder): void {
     this.loteSelectedPO.set(po);
-    this.lotePoSearch.set(po.number);
+    this.lotePoSearch.set(po.oc);
   }
 
   // ── Products actions ─────────────────────────────────────────────
@@ -264,11 +269,11 @@ export class InventoryDrawerComponent {
     }));
 
     const result: Lote = {
-      purchaseOrderNumber: po.number,
+      purchaseOrderNumber: po.oc,
       registeredBy: 'Usuario Actual',
       registeredAt: new Date().toISOString(),
-      supplierId: po.supplierId,
-      supplierName: po.supplierName,
+      supplierId: po.supplier.id,
+      supplierName: po.supplier.name,
       products: loteProductsMapped,
     };
 

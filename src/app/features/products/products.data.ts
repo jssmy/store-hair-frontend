@@ -1,6 +1,7 @@
 // ── Product categories (coletas de pelo) ─────────────────────────────
 
-export type ProductCategory =
+
+export type HairType =
   | 'todos'
   | 'lisa'
   | 'ondulada'
@@ -9,7 +10,7 @@ export type ProductCategory =
   | 'extensiones'
   | 'peluca';
 
-export const CATEGORY_LABELS: Record<ProductCategory, string> = {
+export const HAIR_TYPE_LABELS: Record<HairType, string> = {
   todos: 'Todos',
   lisa: 'Lisa',
   ondulada: 'Ondulada',
@@ -19,7 +20,7 @@ export const CATEGORY_LABELS: Record<ProductCategory, string> = {
   peluca: 'Peluca',
 };
 
-export const CATEGORY_ICONS: Record<ProductCategory, string> = {
+export const HAIR_TYPE_ICONS: Record<HairType, string> = {
   todos: '💇',
   lisa: '📏',
   ondulada: '〰️',
@@ -31,27 +32,26 @@ export const CATEGORY_ICONS: Record<ProductCategory, string> = {
 
 // ── Hair colors ──────────────────────────────────────────────────────
 
-export type HairColor =
-  | 'negro'
-  | 'negro-azabache'
-  | 'marron-oscuro'
-  | 'marron-medio'
-  | 'marron-claro'
-  | 'castano'
-  | 'rubio-oscuro'
-  | 'rubio-medio'
-  | 'rubio-ceniza'
-  | 'borgona'
-  | 'rojo'
-  | 'cobre'
-  | 'gris'
-  | 'blanco';
+export const HAIR_COLOR_HEX = {
+  'negro': '#1a1a1a',
+  'negro-azabache': '#050505',
+  'marron-oscuro': '#3b1c0f',
+  'marron-medio': '#6b3a2a',
+  'marron-claro': '#a0522d',
+  'castano': '#7b3f20',
+  'rubio-oscuro': '#c19a6b',
+  'rubio-medio': '#d4a853',
+  'rubio-ceniza': '#c9b89a',
+  'borgona': '#722f37',
+  'rojo': '#8b0000',
+  'cobre': '#b87333',
+  'gris': '#9e9e9e',
+  'blanco': '#f0e6d3',
+} as const;
 
-export const HAIR_COLORS: HairColor[] = [
-  'negro', 'negro-azabache', 'marron-oscuro', 'marron-medio', 'marron-claro',
-  'castano', 'rubio-oscuro', 'rubio-medio', 'rubio-ceniza', 'borgona', 'rojo',
-  'cobre', 'gris', 'blanco',
-];
+export type HairColor = keyof typeof HAIR_COLOR_HEX;
+
+export const HAIR_COLORS: HairColor[] = Object.keys(HAIR_COLOR_HEX) as HairColor[];
 
 export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
   'negro': 'Negro',
@@ -68,23 +68,6 @@ export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
   'cobre': 'Cobre',
   'gris': 'Gris/Plateado',
   'blanco': 'Blanco/Platino',
-};
-
-export const HAIR_COLOR_HEX: Record<HairColor, string> = {
-  'negro': '#1a1a1a',
-  'negro-azabache': '#050505',
-  'marron-oscuro': '#3b1c0f',
-  'marron-medio': '#6b3a2a',
-  'marron-claro': '#a0522d',
-  'castano': '#7b3f20',
-  'rubio-oscuro': '#c19a6b',
-  'rubio-medio': '#d4a853',
-  'rubio-ceniza': '#c9b89a',
-  'borgona': '#722f37',
-  'rojo': '#8b0000',
-  'cobre': '#b87333',
-  'gris': '#9e9e9e',
-  'blanco': '#f0e6d3',
 };
 
 // ── Product model ────────────────────────────────────────────────────
@@ -174,23 +157,6 @@ export interface Lote {
   supplierName: string;
   products: LoteProduct[];
 }
-
-
-// ── Purchase Orders (mock data) ──────────────────────────────────────
-export interface PurchaseOrder {
-  number: string;
-  supplierName: string;
-  supplierId: number;
-  date: string;
-}
-
-export const MOCK_PURCHASE_ORDERS: PurchaseOrder[] = [
-  { number: 'OC-2025-001', supplierName: 'Distribuidora Norte SAC', supplierId: 1, date: '2025-01-15' },
-  { number: 'OC-2025-002', supplierName: 'Multidistribuciones Perú SAC', supplierId: 9, date: '2025-02-10' },
-  { number: 'OC-2025-003', supplierName: 'Distribuidora Norte SAC', supplierId: 1, date: '2025-03-05' },
-  { number: 'OC-2025-004', supplierName: 'Multidistribuciones Perú SAC', supplierId: 9, date: '2025-04-01' },
-  { number: 'OC-2025-005', supplierName: 'Distribuidora Norte SAC', supplierId: 1, date: '2025-04-20' },
-];
 
 // ── Mock products ────────────────────────────────────────────────────
 

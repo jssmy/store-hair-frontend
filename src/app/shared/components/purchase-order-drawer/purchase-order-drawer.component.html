@@ -156,8 +156,8 @@
                             class="po-field__input po-field__input--select"
                             [value]="detail.type"
                             (change)="updateDetail(detail.id, { type: $any($event.target).value })">
-                            @for (cat of categoryOptions; track cat) {
-                            <option [value]="cat">{{ categoryLabels[cat] }}</option>
+                            @for (hairType of hairTypeOptions; track hairType) {
+                            <option [value]="hairType">{{ hairTypeLabels[hairType] }}</option>
                             }
                         </select>
                     </div>

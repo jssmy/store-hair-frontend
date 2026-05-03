@@ -28,15 +28,15 @@
 
         <section class="sale-categories" aria-label="Filtrar por categoría">
             <div class="sale-categories__scroll" role="tablist">
-                @for (cat of categories; track cat) {
+                @for (hairType of hairTypes; track hairType) {
                 <stp-button class="sale-category-chip"
-                    [class.sale-category-chip--active]="activeCategory() === cat" role="tab" size="sm" radius="full"
-                    [variant]="activeCategory() === cat ? 'primary' : 'surface'"
-                    [btnStyle]="activeCategory() === cat ? 'solid' : 'outlined'"
-                    [attr.aria-selected]="activeCategory() === cat" [attr.aria-label]="categoryLabels[cat]"
-                    (click)="setCategory(cat)">
-                    <span aria-hidden="true">{{ categoryIcon(cat) }}</span>
-                    {{ categoryLabels[cat] }}
+                    [class.sale-category-chip--active]="activeHairType() === hairType" role="tab" size="sm" radius="full"
+                    [variant]="activeHairType() === hairType ? 'primary' : 'surface'"
+                    [btnStyle]="activeHairType() === hairType ? 'solid' : 'outlined'"
+                    [attr.aria-selected]="activeHairType() === hairType" [attr.aria-label]="hairTypeLabels[hairType]"
+                    (click)="setHairType(hairType)">
+                    <span aria-hidden="true">{{ hairTypeIcon(hairType) }}</span>
+                    {{ hairTypeLabels[hairType] }}
                 </stp-button>
                 }
             </div>

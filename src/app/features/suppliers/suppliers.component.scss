@@ -134,7 +134,7 @@
   position: sticky;
   top: 0;
   z-index: z.$sticky;
-  padding: var(--p-4);
+  padding: 0 var(--p-4) var(--p-4) var(--p-4);
   transition:
     background var(--duration-slow) var(--ease-out),
     box-shadow var(--duration-slow) var(--ease-out);
@@ -144,7 +144,8 @@
     backdrop-filter: blur(16px);
     -webkit-backdrop-filter: blur(16px);
     box-shadow: 0 1px 0 var(--color-border);
-    padding: var(--p-4);
+    padding: 0 var(--p-4) var(--p-4) var(--p-4);
+      
   }
 }
 

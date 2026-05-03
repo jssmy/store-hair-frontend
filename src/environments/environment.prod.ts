@@ -13,6 +13,7 @@ export const environment = {
     supplier: `${API}/supplier`,
     product: `${API}/product`,
     lote: `${API}/lote`,
+    purchaseOrder: `${API}/purchase-order`,
   },
   assets: 'https://storehair.api.bugzilo.com',
   whatsappUrl: 'https://wa.me/1234567890',

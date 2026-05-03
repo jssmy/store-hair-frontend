@@ -1,17 +1,19 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-item/swipe-item.component';
 import { PurchaseOrderDrawerComponent } from '../../shared/components/purchase-order-drawer/purchase-order-drawer.component';
-import { CATEGORY_LABELS, HAIR_COLOR_HEX, HAIR_COLOR_LABELS } from '../products/products.data';
+import { HAIR_TYPE_LABELS, HAIR_COLOR_HEX, HAIR_COLOR_LABELS } from '../products/products.data';
 import {
-  MOCK_PURCHASE_ORDERS_FULL,
   PO_STATUS_LABELS,
-  POStatus,
   PurchaseOrderDrawerData,
-  PurchaseOrderFull,
+  PurchaseOrderStatus,
 } from './purchase-order.data';
+import { toSignal } from '@angular/core/rxjs-interop';
+import { PurchaseOrderService } from '../../core/services/purchase-order.service';
+import { map } from 'rxjs';
+import { PurchaseOrder } from '../../core/models/purchase-order.model';
 
 @Component({
   selector: 'stp-purchase-order',
@@ -22,17 +24,18 @@ import {
 export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   private readonly pageHeader = viewChild<ElementRef>('pageHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
+  private readonly purchaseOrderService = inject(PurchaseOrderService);
 
   protected readonly hairColorHex = HAIR_COLOR_HEX;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
-  protected readonly categoryLabels = CATEGORY_LABELS;
+  protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
   protected readonly statusLabels = PO_STATUS_LABELS;
 
   protected readonly isStuck = signal(false);
   protected readonly searchQuery = signal('');
-  protected readonly activeStatus = signal<POStatus | 'todos'>('todos');
-  protected readonly expandedId = signal<string | null>(null);
-  protected readonly orders = signal<PurchaseOrderFull[]>([...MOCK_PURCHASE_ORDERS_FULL]);
+  protected readonly activeStatus = signal<PurchaseOrderStatus | 'todos'>('todos');
+  protected readonly expandedId = signal<number | null>(null);
+  protected readonly orders = toSignal(this.purchaseOrderService.getAll({ page: 1, limit: 100 }).pipe(map(res => res.data)), { initialValue: [] });
 
   private stickyObserver?: IntersectionObserver;
 
@@ -43,9 +46,9 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     return this.orders().filter(o => {
       const matchesStatus = status === 'todos' || o.status === status;
       const matchesQuery = !q ||
-        o.number.toLowerCase().includes(q) ||
-        o.supplierName.toLowerCase().includes(q) ||
-        o.registeredBy.toLowerCase().includes(q);
+        o.oc.toLowerCase().includes(q)
+        // o.supplierName.toLowerCase().includes(q) ||
+        // o.registeredBy.toLowerCase().includes(q);
       return matchesStatus && matchesQuery;
     });
   });
@@ -54,9 +57,14 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.searchQuery().trim().length > 0 || this.activeStatus() !== 'todos',
   );
 
-  protected readonly statusFilterOptions: (POStatus | 'todos')[] = [
-    'todos', 'pendiente', 'recibida', 'cancelada',
+  protected readonly statusFilterOptions: (PurchaseOrderStatus | 'todos')[] = [
+    'todos', PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED,
   ];
+
+
+  protected hairTypeLabel(type: string): string {
+    return this.hairTypeLabels[type as keyof typeof this.hairTypeLabels] ?? type;
+  }
 
   protected readonly swipeOptions: SwipeOption[] = [
     { label: 'Editar', icon: 'pencil', key: 'edit', stpClass: 'bg-primary-light' },
@@ -72,11 +80,11 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.activeStatus.set('todos');
   }
 
-  protected setStatus(status: POStatus | 'todos'): void {
+  protected setStatus(status: PurchaseOrderStatus | 'todos'): void {
     this.activeStatus.set(status);
   }
 
-  protected toggleExpand(id: string): void {
+  protected toggleExpand(id: number): void {
     this.expandedId.update(prev => prev === id ? null : id);
   }
 
@@ -84,39 +92,39 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.openDrawer(null);
   }
 
-  protected swipeOptionSelected(order: PurchaseOrderFull, option: SwipeOption): void {
+  protected swipeOptionSelected(order: PurchaseOrder, option: SwipeOption): void {
     if (option.key === 'edit') this.openDrawer(order);
   }
 
-  private openDrawer(order: PurchaseOrderFull | null): void {
+  private openDrawer(order: PurchaseOrder | null): void {
     const data: PurchaseOrderDrawerData = { purchaseOrder: order ?? undefined };
     this.bottomSheet
-      .open<PurchaseOrderDrawerComponent, PurchaseOrderDrawerData, PurchaseOrderFull | null>(
+      .open<PurchaseOrderDrawerComponent, PurchaseOrderDrawerData, PurchaseOrder | null>(
         PurchaseOrderDrawerComponent,
         { data, panelClass: 'stp-po-panel' },
       )
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-        this.orders.update(prev => {
-          const idx = prev.findIndex(o => o.id === result.id);
-          return idx >= 0
-            ? prev.map(o => o.id === result.id ? result : o)
-            : [result, ...prev];
-        });
+        // this.orders.update(prev => {
+        //   const idx = prev.findIndex(o => o.id === result.id);
+        //   return idx >= 0
+        //     ? prev.map(o => o.id === result.id ? result : o)
+        //     : [result, ...prev];
+        // });
       });
   }
 
   // ── Helpers ───────────────────────────────────────────────────
-  protected totalKilo(order: PurchaseOrderFull): number {
-    return order.details.reduce((s, d) => s + d.kilo, 0);
+  protected totalKilo(order: PurchaseOrder): number {
+    return order.details.reduce((s, d) => s + d.weight, 0);
   }
 
-  protected totalPrice(order: PurchaseOrderFull): number {
-    return order.details.reduce((s, d) => s + d.totalPrice, 0);
+  protected totalPrice(order: PurchaseOrder): number {
+    return order.details.reduce((s, d) => s + d.price, 0);
   }
 
-  protected statusFilterLabel(s: POStatus | 'todos'): string {
+  protected statusFilterLabel(s: PurchaseOrderStatus | 'todos'): string {
     return s === 'todos' ? 'Todas' : this.statusLabels[s];
   }
 

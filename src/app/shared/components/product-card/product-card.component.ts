@@ -1,14 +1,13 @@
 import { Component, input } from '@angular/core';
 import { IconComponent } from '../icon/icon.component';
 import {
-  CATEGORY_ICONS,
+  HAIR_TYPE_ICONS,
   Product,
-  ProductCategory,
+  HairType,
 } from '../../../features/products/products.data';
 
 @Component({
   selector: 'li[stp-product-card]',
-  imports: [IconComponent],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss',
   host: { 'class': 'product-card' },
@@ -32,8 +31,8 @@ export class ProductCardComponent {
     return `S/ ${price.toFixed(2)}`;
   }
 
-  protected categoryIcon(category: ProductCategory): string {
-    return CATEGORY_ICONS[category];
+  protected hairTypeIcon(hairType: HairType): string {
+    return HAIR_TYPE_ICONS[hairType];
   }
 
   protected productInitials(name: string): string {

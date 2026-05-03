@@ -66,15 +66,15 @@
                 <!-- PO dropdown -->
                 @if (filteredPOs().length && !loteSelectedPO()) {
                 <ul class="inv-dropdown" role="listbox">
-                    @for (po of filteredPOs(); track po.number) {
+                    @for (po of filteredPOs(); track po.oc) {
                     <li class="inv-dropdown__item" role="option" aria-selected="false" tabindex="0"
                         (click)="selectPO(po)" (keydown.enter)="selectPO(po)">
                         <span class="icon-badge icon-badge--primary" style="--size:2rem;font-size:.75rem">
                             <i stp-icon name="receipt" class="icon--xs"></i>
                         </span>
                         <div class="inv-dropdown__info">
-                            <span class="inv-dropdown__name">{{ po.number }}</span>
-                            <span class="inv-dropdown__stock">{{ po.supplierName }} · {{ po.date }}</span>
+                            <span class="inv-dropdown__name">{{ po.oc }}</span>
+                            <span class="inv-dropdown__stock">{{ po.supplier.name }} · {{ formatDate(po.createdAt.toISOString()) }}</span>
                         </div>
                     </li>
                     }
@@ -86,8 +86,8 @@
                 <div class="inv-po-linked">
                     <i stp-icon name="link" class="icon--sm"></i>
                     <div class="inv-po-linked__info">
-                        <span class="inv-po-linked__number">{{ loteSelectedPO()!.number }}</span>
-                        <span class="inv-po-linked__meta">{{ loteSelectedPO()!.date }}</span>
+                        <span class="inv-po-linked__number">{{ loteSelectedPO()!.oc }}</span>
+                        <span class="inv-po-linked__meta">{{ formatDate(loteSelectedPO()!.createdAt.toISOString()) }}</span>
                     </div>
                     <button class="inv-selected__remove" type="button" (click)="clearPoSearch()">
                         <i stp-icon name="x" class="icon--xs"></i>
@@ -96,7 +96,7 @@
                 <div class="inv-supplier-linked">
                     <i stp-icon name="truck" class="icon--sm"></i>
                     <div class="inv-supplier-linked__info">
-                        <span class="inv-supplier-linked__name">{{ loteSelectedPO()!.supplierName }}</span>
+                        <span class="inv-supplier-linked__name">{{ loteSelectedPO()!.supplier.name }}</span>
                         <span class="inv-supplier-linked__meta">Proveedor vinculado a esta OC</span>
                     </div>
                 </div>

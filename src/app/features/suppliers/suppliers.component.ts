@@ -1,17 +1,22 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
+import { combineLatest, skip } from 'rxjs';
+import { toObservable } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
+import { TabItem, TabsComponent } from '../../shared/components/tabs/tabs.component';
 import {
   SupplierDrawerComponent,
   SupplierDrawerData,
 } from '../../shared/components/supplier-drawer/supplier-drawer.component';
 import {
   Supplier,
+  SupplierType,
 } from './suppliers.data';
 import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-item/swipe-item.component';
-import { SupplierApiService } from './supplier-api.service';
+import { SupplierApiService, SupplierQueryParams } from './supplier-api.service';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.model';
 
@@ -21,6 +26,7 @@ import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.m
     ButtonComponent,
     IconComponent,
     SearchComponent,
+    TabsComponent,
     SwipeItemComponent,
     CdkVirtualScrollViewport,
     CdkVirtualForOf,
@@ -37,6 +43,21 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   protected readonly isStuck = signal(false);
   protected readonly loading = signal(false);
   protected readonly isLoadingMore = signal(false);
+
+  protected readonly statusFilter = signal<string>('all');
+  protected readonly typeFilter = signal<string>('all');
+
+  protected readonly statusTabs: TabItem[] = [
+    { value: 'all',      label: 'Todos' },
+    { value: 'active',   label: 'Activos' },
+    { value: 'inactive', label: 'Inactivos' },
+  ];
+
+  protected readonly typeTabs: TabItem[] = [
+    { value: 'all',                   label: 'Todos' },
+    { value: SupplierType.NATURAL,    label: 'Persona natural' },
+    { value: SupplierType.JURIDICA,   label: 'Persona jurídica' },
+  ];
 
   private stickyObserver?: IntersectionObserver;
 
@@ -60,6 +81,26 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
 
   constructor() {
     this.loadSuppliers(1, false);
+
+    combineLatest([
+      toObservable(this.statusFilter),
+      toObservable(this.typeFilter),
+    ]).pipe(
+      skip(1),
+      takeUntilDestroyed(),
+    ).subscribe(() => this.loadSuppliers(1, false));
+  }
+
+  private buildQueryParams(page: number): SupplierQueryParams {
+    const status = this.statusFilter();
+    const type   = this.typeFilter();
+    return {
+      page,
+      limit: 10,
+      ...(type !== 'all' ? { type: type as SupplierType } : {}),
+      ...(status === 'active'   ? { active: true  } : {}),
+      ...(status === 'inactive' ? { active: false } : {}),
+    };
   }
 
   private loadSuppliers(page: number, append: boolean): void {
@@ -69,7 +110,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
       this.loading.set(true);
     }
 
-    this.supplierApi.getAll({ page, limit: 10 }).subscribe({
+    this.supplierApi.getAll(this.buildQueryParams(page)).subscribe({
       next: resource => {
         if (append) {
           this.resource.update(prev => {
@@ -106,19 +147,24 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Computed ─────────────────────────────────────────────────
+  // Status and type are server-side; only text search is applied client-side.
   protected readonly filteredSuppliers = computed(() => {
     const query = this.searchQuery().trim().toLowerCase();
+    if (!query) return this.suppliers();
+
     return this.suppliers().filter(s => {
-      const matchesQuery = !query ||
-        s.name.toLowerCase().includes(query) ||
-        s.dni.includes(query) ||
+      const displayName = this.supplierDisplayName(s).toLowerCase();
+      return displayName.includes(query) ||
+        (s.dni ?? '').includes(query) ||
+        (s.ruc ?? '').includes(query) ||
         s.phone.includes(query);
-      return matchesQuery;
     });
   });
 
   protected readonly isFiltered = computed(() =>
-    this.searchQuery().trim().length > 0,
+    this.searchQuery().trim().length > 0 ||
+    this.statusFilter() !== 'all' ||
+    this.typeFilter()   !== 'all',
   );
 
   protected readonly activeCount = computed(() =>
@@ -215,8 +261,15 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────
-  protected supplierInitials(name: string): string {
-    return name.split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
+  protected supplierDisplayName(supplier: Supplier): string {
+    return supplier.type === SupplierType.NATURAL
+      ? (supplier.fullName ?? '')
+      : (supplier.businessName ?? '');
+  }
+
+  protected supplierInitials(supplier: Supplier): string {
+    return this.supplierDisplayName(supplier)
+      .split(' ').slice(0, 2).map(w => w[0]).join('').toUpperCase();
   }
 
   protected trackBySupplierId(_index: number, supplier: Supplier): number {

@@ -39,7 +39,7 @@
         </div>
     </header>
 
-    <!-- ── Sticky search ──────────────────────────────────────── -->
+    <!-- ── Sticky search + filters ───────────────────────────── -->
     <div class="sup-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
         <stp-search
             placeholder="Buscar por nombre, DNI o teléfono..."
@@ -49,6 +49,23 @@
             (cleared)="clearSearch()"
             aria-label="Buscar proveedores">
         </stp-search>
+
+        <div class="sup-filters">
+            <stp-tabs
+                [tabs]="statusTabs"
+                variant="pills"
+                size="sm"
+                [(activeTab)]="statusFilter"
+                aria-label="Filtrar por estado">
+            </stp-tabs>
+            <stp-tabs
+                [tabs]="typeTabs"
+                variant="pills"
+                size="sm"
+                [(activeTab)]="typeFilter"
+                aria-label="Filtrar por tipo de persona">
+            </stp-tabs>
+        </div>
     </div>
 
     <!-- ── Suppliers list ───────────────────────────────────── -->
@@ -70,20 +87,26 @@
 
                     <!-- Avatar -->
                     <div class="supplier-row__avatar supplier-row__avatar--general" aria-hidden="true">
-                        <span>{{ supplierInitials(supplier.name) }}</span>
+                        <span>{{ supplierInitials(supplier) }}</span>
                     </div>
 
                     <!-- Info -->
                     <div class="supplier-row__info">
                         <div class="supplier-row__name-row">
-                            <span class="supplier-row__name">{{ supplier.name }}</span>
+                            <span class="supplier-row__name">{{ supplierDisplayName(supplier) }}</span>
                             @if (!supplier.active) {
                             <span class="supplier-row__badge supplier-row__badge--inactive">Inactivo</span>
                             }
                         </div>
                         <span class="supplier-row__meta">
-                            
+                            @if (supplier.ruc) {
+                            <span class="supplier-row__ruc">· RUC {{ supplier.ruc }}</span>
+                            } @else if (supplier.dni) {
                             <span class="supplier-row__ruc">· DNI {{ supplier.dni }}</span>
+                            }
+                            @if (supplier.contactFullName) {
+                            <span class="supplier-row__ruc">· {{ supplier.contactFullName }}</span>
+                            }
                         </span>
                         <span class="supplier-row__contact">
                             <i stp-icon name="phone" style="font-size: 0.75rem"></i>

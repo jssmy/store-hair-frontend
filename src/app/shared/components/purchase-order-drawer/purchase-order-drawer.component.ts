@@ -25,6 +25,7 @@ import {
 } from '../../../features/purchase-order/purchase-order.data';
 import { PurchaseOrderService } from '../../../core/services/purchase-order.service';
 import { SupplierApiService } from '../../../features/suppliers/supplier-api.service';
+import { Supplier as SupplierData, SupplierType } from '../../../features/suppliers/suppliers.data';
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -118,7 +119,7 @@ export class PurchaseOrderDrawerComponent {
     const q = (v.supplierSearch ?? '').trim().toLowerCase();
     if (!q || v.supplierId != null) return [];
     return this.suppliers()
-      .filter(s => s.name.toLowerCase().includes(q) || s.dni.toLowerCase().includes(q))
+      .filter(s => this.supplierDisplayName(s).toLowerCase().includes(q) || (s.ruc ?? s.dni ?? '').toLowerCase().includes(q))
       .slice(0, 5);
   });
 
@@ -188,6 +189,10 @@ export class PurchaseOrderDrawerComponent {
     this.revalidateDuplicates();
   }
 
+  protected supplierDisplayName(s: SupplierData): string {
+    return s.type === SupplierType.NATURAL ? (s.fullName ?? '') : (s.businessName ?? '');
+  }
+
   protected colorLabel(color: HairColor | null | undefined): string {
     return color ? this.hairColorLabels[color] : '';
   }
@@ -206,7 +211,7 @@ export class PurchaseOrderDrawerComponent {
         j !== i &&
         other.value.color === d.color &&
         other.value.type === d.type &&
-        +other.value.length! === +d.length,
+        +other.value.length! === +(d.length ?? 0),
       );
       if (isDuplicate) next.add(i);
     });

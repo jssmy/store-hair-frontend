@@ -21,37 +21,75 @@
     </div>
     } @else {
 
-    <div class="sup-drawer__body">
+    <div class="sup-drawer__body" [formGroup]="form">
+
+        <!-- Tipo de proveedor -->
+        <stp-tabs
+            [tabs]="typeTabs"
+            variant="segment"
+            size="md"
+            [fullWidth]="true"
+            [activeTab]="form.get('type')!.value"
+            (tabChange)="setType($event)">
+        </stp-tabs>
+
+        @if (isNatural) {
+        <!-- Persona natural -->
+        <stp-input
+            label="Nombre completo *"
+            formControlName="fullName"
+            [hasError]="form.get('fullName')!.invalid && form.get('fullName')!.touched" />
 
         <stp-input
-            label="Nombre / Razón social *"
-            [value]="form().name"
-            (valueChange)="patchForm({ name: $event })" />
+            label="DNI * (8 dígitos)"
+            type="tel"
+            formControlName="dni"
+            [hasError]="form.get('dni')!.invalid && form.get('dni')!.touched" />
+        } @else {
+        <!-- Persona jurídica -->
+        <stp-input
+            label="Razón social *"
+            formControlName="businessName"
+            [hasError]="form.get('businessName')!.invalid && form.get('businessName')!.touched" />
+
+        <stp-input
+            label="RUC * (14 dígitos)"
+            type="tel"
+            formControlName="ruc"
+            [hasError]="form.get('ruc')!.invalid && form.get('ruc')!.touched" />
 
         <div class="sup-field-row">
             <stp-input
-                label="DNI *"
-                [value]="form().dni"
-                (valueChange)="patchForm({ dni: $event })" />
+                label="Nombre del contacto *"
+                formControlName="contactFullName"
+                [hasError]="form.get('contactFullName')!.invalid && form.get('contactFullName')!.touched" />
             <stp-input
-                label="Teléfono *"
+                label="DNI del contacto * (8 dígitos)"
                 type="tel"
-                autocomplete="tel"
-                [value]="form().phone"
-                (valueChange)="patchForm({ phone: $event })" />
+                formControlName="contactDni"
+                [hasError]="form.get('contactDni')!.invalid && form.get('contactDni')!.touched" />
         </div>
+        }
+
+        <!-- Campos comunes -->
+        <stp-input
+            label="Teléfono * (6–14 dígitos)"
+            type="tel"
+            autocomplete="tel"
+            formControlName="phone"
+            [hasError]="form.get('phone')!.invalid && form.get('phone')!.touched" />
 
         <stp-input
-            label="Correo electrónico"
+            label="Correo electrónico *"
             type="email"
             autocomplete="email"
-            [value]="form().email"
-            (valueChange)="patchForm({ email: $event })" />
+            formControlName="email"
+            [hasError]="form.get('email')!.invalid && form.get('email')!.touched" />
 
         <stp-input
-            label="Dirección"
-            [value]="form().address"
-            (valueChange)="patchForm({ address: $event })" />
+            label="Dirección *"
+            formControlName="address"
+            [hasError]="form.get('address')!.invalid && form.get('address')!.touched" />
 
     </div><!-- /body -->
 
@@ -66,7 +104,7 @@
             Cancelar
         </stp-button>
         <stp-button variant="primary" btnStyle="solid" size="md"
-            [disabled]="!canSubmit()"
+            [disabled]="!canSubmit"
             [loading]="submitting()"
             (click)="submit()">
             {{ submitLabel }}

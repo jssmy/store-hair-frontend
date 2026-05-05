@@ -24,6 +24,7 @@ export interface CreateSupplierDto {
   phone: string;
   email: string;
   address: string;
+  countryId: string;
   active?: boolean;
 }
 

@@ -18,27 +18,6 @@
                 Nuevo lote
             </stp-button>
         </div>
-
-        <div class="inv-hero__stats">
-            <div class="inv-stat">
-                <span class="inv-stat__num">{{ inventories().length }}</span>
-                <span class="inv-stat__label">Total lotes</span>
-            </div>
-            <span class="inv-stat__sep"></span>
-            <div class="inv-stat">
-                <span class="inv-stat__num inv-stat__num--ok">
-                    {{ inventories().filter(i => i.status === 'completed').length }}
-                </span>
-                <span class="inv-stat__label">Completados</span>
-            </div>
-            <span class="inv-stat__sep"></span>
-            <div class="inv-stat">
-                <span class="inv-stat__num inv-stat__num--warn">
-                    {{ inventories().filter(i => i.status === 'pending').length }}
-                </span>
-                <span class="inv-stat__label">Pendientes</span>
-            </div>
-        </div>
     </header>
 
     <!-- ── Sticky search ──────────────────────────────────────── -->

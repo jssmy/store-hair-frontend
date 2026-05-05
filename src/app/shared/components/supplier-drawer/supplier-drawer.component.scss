@@ -142,6 +142,48 @@
 
 }
 
+/* ── Country autocomplete ─────────────────────────────────── */
+
+.country-autocomplete {
+  position: relative;
+}
+
+.country-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--color-surface);
+  border: 1.5px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 55;
+
+  &__item {
+    display: block;
+    width: 100%;
+    padding: 0.625rem 0.875rem;
+    text-align: left;
+    border: none;
+    background: none;
+    color: var(--color-text-primary);
+    font-size: var(--text-base);
+    font-family: inherit;
+    cursor: pointer;
+    transition: background var(--duration-base);
+
+    &:hover {
+      background: var(--color-surface-alt);
+    }
+
+    & + & {
+      border-top: 1px solid var(--color-border);
+    }
+  }
+}
+
 /* ── Category select ──────────────────────────────────────── */
 
 .sup-field {

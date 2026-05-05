@@ -72,6 +72,26 @@
         }
 
         <!-- Campos comunes -->
+        <div class="country-autocomplete"
+             (focusin)="showCountryDropdown.set(true)"
+             (focusout)="onCountryFocusOut($event)">
+            <stp-input
+                label="País *"
+                [value]="countrySearch()"
+                (valueChange)="onCountryInput($event)"
+                [hasError]="form.get('countryId')!.invalid && form.get('countryId')!.touched" />
+            @if (showCountryDropdown() && filteredCountries().length > 0) {
+            <div class="country-dropdown" role="listbox">
+                @for (opt of filteredCountries(); track opt.value) {
+                <button type="button" class="country-dropdown__item" role="option"
+                        (click)="selectCountry(opt)">
+                    {{ opt.label }}
+                </button>
+                }
+            </div>
+            }
+        </div>
+
         <stp-input
             label="Teléfono * (6–14 dígitos)"
             type="tel"

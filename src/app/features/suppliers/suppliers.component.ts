@@ -167,10 +167,6 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
     this.typeFilter()   !== 'all',
   );
 
-  protected readonly activeCount = computed(() =>
-    this.suppliers().filter(s => s.active).length,
-  );
-
   protected onScroll(index: number): void {
     if (this.isLoadingMore() || this.loading()) return;
 

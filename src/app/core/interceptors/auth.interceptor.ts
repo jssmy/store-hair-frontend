@@ -1,6 +1,7 @@
 import { HttpErrorResponse, HttpInterceptorFn } from '@angular/common/http';
 import { inject } from '@angular/core';
 import { Router } from '@angular/router';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { from, throwError } from 'rxjs';
 import { catchError, switchMap } from 'rxjs/operators';
 import { StorageService } from '../services/storage.service';
@@ -14,6 +15,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const storage = inject(StorageService);
   const router = inject(Router);
   const authService = inject(AuthApiService);
+  const bottomSheet = inject(MatBottomSheet);
 
   if (ignoredUrls.some(url => req.url.includes(url))) {
     return next(req);
@@ -39,6 +41,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
           if (!refreshToken) {
             return from(storage.clear()).pipe(
               switchMap(() => {
+                bottomSheet.dismiss();
                 router.navigate([AppRoutes.login]);
                 return throwError(() => err);
               }),
@@ -64,8 +67,16 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
             catchError((refreshErr: HttpErrorResponse) =>
               from(storage.clear()).pipe(
                 switchMap(() => {
-                  router.navigate([AppRoutes.login]);
-                  return throwError(() => refreshErr);
+                  if (refreshErr.status === 401) {
+                    // Token refresh failed, likely due to invalid/expired refresh token
+                    // Clear storage and redirect to login    
+                    bottomSheet.dismiss();
+                    router.navigate([AppRoutes.login]);
+                    return throwError(() => refreshErr);
+                  } else {
+                    // Other error during refresh, just propagate it
+                    return throwError(() => refreshErr);
+                  }
                 }),
               ),
             ),

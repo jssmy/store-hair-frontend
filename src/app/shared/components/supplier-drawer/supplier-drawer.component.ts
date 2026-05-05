@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
@@ -12,6 +12,9 @@ import {
   SupplierType,
 } from '../../../features/suppliers/suppliers.data';
 import { CreateSupplierDto, SupplierApiService } from '../../../features/suppliers/supplier-api.service';
+import { CountryApiService } from '../../../features/suppliers/country-api.service';
+
+type CountryOption = { value: string; label: string };
 
 export interface SupplierDrawerData {
   supplier?: Supplier | null;
@@ -28,6 +31,7 @@ export class SupplierDrawerComponent {
     inject<MatBottomSheetRef<SupplierDrawerComponent, boolean>>(MatBottomSheetRef);
   private readonly data = inject<SupplierDrawerData>(MAT_BOTTOM_SHEET_DATA);
   private readonly supplierApi = inject(SupplierApiService);
+  private readonly countryApi = inject(CountryApiService);
   private readonly fb = inject(FormBuilder);
 
   protected readonly editing: Supplier | null = this.data.supplier ?? null;
@@ -42,6 +46,20 @@ export class SupplierDrawerComponent {
   protected readonly submitting = signal(false);
   protected readonly success = signal(false);
   protected readonly apiError = signal<string | null>(null);
+
+  private readonly countryOptions = signal<CountryOption[]>([]);
+  protected readonly countrySearch = signal(
+    this.editing?.country
+      ? `${this.editing.country.name} (${this.editing.country.prefix})`
+      : '',
+  );
+  protected readonly showCountryDropdown = signal(false);
+  protected readonly filteredCountries = computed(() => {
+    const q = this.countrySearch().toLowerCase().trim();
+    const opts = this.countryOptions();
+    if (!q) return opts;
+    return opts.filter(o => o.label.toLowerCase().includes(q));
+  });
 
   protected readonly title = this.editing ? 'Editar proveedor' : 'Nuevo proveedor';
   protected readonly submitLabel = this.editing ? 'Guardar cambios' : 'Registrar proveedor';
@@ -61,9 +79,45 @@ export class SupplierDrawerComponent {
       phone:            new FormControl(e?.phone ?? '',   [Validators.required, Validators.pattern(/^\d{6,14}$/)]),
       email:            new FormControl(e?.email ?? '',   [Validators.required, Validators.email]),
       address:          new FormControl(e?.address ?? '', [Validators.required]),
+      countryId:        new FormControl(e?.country?.id ?? '', [Validators.required]),
     });
 
     this.applyTypeValidators(initialType);
+    this.loadCountries();
+  }
+
+  private loadCountries(): void {
+    this.countryApi.getAll().subscribe({
+      next: (countries) => {
+        this.countryOptions.set(
+          countries
+            .filter(c => c.active)
+            .map(c => ({ value: c.id, label: `${c.name} (${c.prefix})` })),
+        );
+      },
+    });
+  }
+
+  protected selectCountry(opt: CountryOption): void {
+    this.form.get('countryId')!.setValue(opt.value);
+    this.form.get('countryId')!.markAsTouched();
+    this.countrySearch.set(opt.label);
+    this.showCountryDropdown.set(false);
+  }
+
+  protected onCountryInput(value: string): void {
+    this.countrySearch.set(value);
+    this.showCountryDropdown.set(true);
+    if (!value.trim()) {
+      this.form.get('countryId')!.setValue('');
+    }
+  }
+
+  protected onCountryFocusOut(event: FocusEvent): void {
+    const wrapper = event.currentTarget as HTMLElement;
+    if (!wrapper.contains(event.relatedTarget as Node)) {
+      this.showCountryDropdown.set(false);
+    }
   }
 
   protected get isNatural(): boolean {
@@ -95,6 +149,7 @@ export class SupplierDrawerComponent {
       phone: f.phone.trim(),
       email: f.email.trim(),
       address: f.address.trim(),
+      countryId: f.countryId,
     };
 
     if (f.type === SupplierType.NATURAL) {

@@ -42,7 +42,7 @@ export class PurchaseOrderService {
   }
 
   update(id: number, data: UpdatePurchaseOrderDto): Observable<PurchaseOrder> {
-    return this.http.put<PurchaseOrder>(`${this.baseUrl}/${id}`, data);
+    return this.http.patch<PurchaseOrder>(`${this.baseUrl}/${id}`, data);
   }
 
   delete(id: number): Observable<void> {

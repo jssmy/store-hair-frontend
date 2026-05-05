@@ -1,5 +1,5 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { debounceTime, map } from 'rxjs';
@@ -61,12 +61,14 @@ export class PurchaseOrderDrawerComponent {
   protected readonly hairColors = HAIR_COLORS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
+  protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
   protected readonly statusOptions = [
     PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED,
     PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED,
   ];
   protected readonly statusLabels = PO_STATUS_LABELS;
   protected readonly isEdit = !!this.data.purchaseOrder;
+  protected readonly editSupplier = this.data.purchaseOrder?.supplier ?? null;
   protected readonly hairTypeSelectOptions: SelectOption[] = HAIR_TYPE_OPTIONS.map(t => ({
     value: t, label: HAIR_TYPE_LABELS[t],
   }));
@@ -74,8 +76,8 @@ export class PurchaseOrderDrawerComponent {
   // ── Form ──────────────────────────────────────────────────────
 
   readonly form = this.fb.group({
-    supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null),
-    supplierSearch: [this.data.purchaseOrder?.supplier.name ?? ''],
+    supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null, Validators.required),
+    supplierSearch: this.fb.control(this.data.purchaseOrder?.supplier.name ?? ''),
     details: this.fb.array(
       (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
         id: d.id,
@@ -83,7 +85,7 @@ export class PurchaseOrderDrawerComponent {
         type: isHairTypeOption(d.type) ? d.type : 'lisa',
         length: d.length,
         kilo: d.weight,
-        totalPrice: d.price,
+        pricePerGram: d.weight > 0 ? d.price / (d.weight * 1000) : 0,
       })),
     ),
   });
@@ -92,15 +94,15 @@ export class PurchaseOrderDrawerComponent {
 
   private buildDetail(data?: {
     id?: number; color?: HairColor | null; type?: string;
-    length?: number | null; kilo?: number | null; totalPrice?: number | null;
+    length?: number | null; kilo?: number | null; pricePerGram?: number | null;
   }) {
     return this.fb.group({
-      id:         [data?.id ?? 0],
-      color:      this.fb.control<HairColor | null>(data?.color ?? null),
-      type:       [data?.type ?? 'lisa'],
-      length:     [data?.length?.toString() ?? ''],
-      kilo:       [data?.kilo?.toString() ?? ''],
-      totalPrice: [data?.totalPrice?.toString() ?? ''],
+      id:           this.fb.control(data?.id ?? 0),
+      color:        this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
+      type:         this.fb.control(data?.type ?? 'lisa', Validators.required),
+      length:       this.fb.control(data?.length?.toString() ?? '', [Validators.required, Validators.min(1)]),
+      kilo:         this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
+      pricePerGram: this.fb.control(data?.pricePerGram?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
     });
   }
 
@@ -110,9 +112,16 @@ export class PurchaseOrderDrawerComponent {
   protected readonly success = signal(false);
   protected readonly duplicateIndexes = signal(new Set<number>());
 
+  // ── Detail list / form state ──────────────────────────────────
+
+  protected readonly editingIdx = signal<number | null>(null);
+  protected readonly isAddingNew = signal<boolean>(false);
+  private editSnapshot: Record<string, unknown> | null = null;
+
   // ── Computed from form ────────────────────────────────────────
 
   private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
+  private readonly formStatus = toSignal(this.form.statusChanges, { initialValue: this.form.status });
 
   protected readonly filteredSuppliers = computed(() => {
     const v = this.formValue();
@@ -137,21 +146,16 @@ export class PurchaseOrderDrawerComponent {
   );
 
   protected readonly totalPrice = computed(() =>
-    (this.formValue().details ?? []).reduce((sum, d) => sum + (+(d?.totalPrice ?? 0) || 0), 0),
+    (this.formValue().details ?? []).reduce(
+      (sum, d) => sum + (+(d?.kilo ?? 0) * +(d?.pricePerGram ?? 0) || 0), 0,
+    ),
   );
 
   protected readonly canSubmit = computed(() => {
-    const v = this.formValue();
-    if (!v.supplierId) return false;
-    const details = v.details ?? [];
-    if (details.length === 0) return false;
+    if (!this.formValue().supplierId) return false;
+    if ((this.formValue().details ?? []).length === 0) return false;
     if (this.duplicateIndexes().size > 0) return false;
-    return details.every(d =>
-      d?.color !== null &&
-      +(d?.length ?? 0) > 0 &&
-      +(d?.kilo ?? 0) > 0 &&
-      +(d?.totalPrice ?? 0) > 0,
-    );
+    return this.formStatus() === 'VALID';
   });
 
   constructor() {
@@ -180,13 +184,50 @@ export class PurchaseOrderDrawerComponent {
     this.form.patchValue({ supplierId: null, supplierSearch: '' });
   }
 
-  protected addDetail(): void {
+  protected startAdd(): void {
     this.detailsArray.push(this.buildDetail());
+    this.editingIdx.set(this.detailsArray.length - 1);
+    this.isAddingNew.set(true);
+    this.editSnapshot = null;
+  }
+
+  protected startEdit(idx: number): void {
+    this.editSnapshot = { ...this.detailsArray.at(idx).value } as Record<string, unknown>;
+    this.editingIdx.set(idx);
+    this.isAddingNew.set(false);
+  }
+
+  protected confirmEdit(): void {
+    const idx = this.editingIdx();
+    if (idx !== null) this.detailsArray.at(idx).markAllAsTouched();
+    this.editingIdx.set(null);
+    this.isAddingNew.set(false);
+    this.editSnapshot = null;
+  }
+
+  protected cancelEdit(): void {
+    const idx = this.editingIdx();
+    if (idx === null) return;
+    if (this.isAddingNew()) {
+      this.detailsArray.removeAt(idx);
+    } else if (this.editSnapshot) {
+      this.detailsArray.at(idx).patchValue(this.editSnapshot);
+    }
+    this.editingIdx.set(null);
+    this.isAddingNew.set(false);
+    this.editSnapshot = null;
+    this.revalidateDuplicates();
   }
 
   protected removeDetail(index: number): void {
     this.detailsArray.removeAt(index);
     this.revalidateDuplicates();
+
+    const edit = this.editingIdx();
+    if (edit !== null) {
+      if (edit === index) { this.editingIdx.set(null); this.isAddingNew.set(false); }
+      else if (edit > index) this.editingIdx.set(edit - 1);
+    }
   }
 
   protected supplierDisplayName(s: SupplierData): string {
@@ -195,6 +236,10 @@ export class PurchaseOrderDrawerComponent {
 
   protected colorLabel(color: HairColor | null | undefined): string {
     return color ? this.hairColorLabels[color] : '';
+  }
+
+  protected hairTypeLabel(type: string): string {
+    return this.hairTypeLabels[type as keyof typeof this.hairTypeLabels] ?? type;
   }
 
   protected updateColor(index: number, color: HairColor): void {
@@ -229,11 +274,15 @@ export class PurchaseOrderDrawerComponent {
         type:   ctrl.value.type!,
         length: +ctrl.value.length!,
         weight: +ctrl.value.kilo!,
-        price:  +ctrl.value.totalPrice!,
+        price:  +ctrl.value.kilo! * +ctrl.value.pricePerGram!,
       })),
     };
 
-    this.purchaseOrderService.create(dto).subscribe({
+    const request$ = this.isEdit
+      ? this.purchaseOrderService.update(this.data.purchaseOrder!.id, dto)
+      : this.purchaseOrderService.create(dto);
+
+    request$.subscribe({
       next: () => { this.submitting.set(false); this.success.set(true); },
       error: () => { this.submitting.set(false); },
     });

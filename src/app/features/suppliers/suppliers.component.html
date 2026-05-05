@@ -18,25 +18,6 @@
                 Nuevo
             </stp-button>
         </div>
-
-        <div class="sup-hero__stats">
-            <div class="sup-stat">
-                <span class="sup-stat__num">{{ suppliers().length }}</span>
-                <span class="sup-stat__label">Total</span>
-            </div>
-            <span class="sup-stat__sep"></span>
-            <div class="sup-stat">
-                <span class="sup-stat__num sup-stat__num--ok">{{ activeCount() }}</span>
-                <span class="sup-stat__label">Activos</span>
-            </div>
-            <span class="sup-stat__sep"></span>
-            <div class="sup-stat">
-                <span class="sup-stat__num sup-stat__num--muted">
-                    {{ suppliers().length - activeCount() }}
-                </span>
-                <span class="sup-stat__label">Inactivos</span>
-            </div>
-        </div>
     </header>
 
     <!-- ── Sticky search + filters ───────────────────────────── -->
@@ -110,6 +91,9 @@
                         </span>
                         <span class="supplier-row__contact">
                             <i stp-icon name="phone" style="font-size: 0.75rem"></i>
+                            @if (supplier.country?.prefix) {
+                            <span class="supplier-row__prefix">{{ supplier.country!.prefix }}</span>
+                            }
                             {{ supplier.phone }}
                             @if (supplier.email) {
                             <span class="supplier-row__sep">·</span>
@@ -117,10 +101,12 @@
                             {{ supplier.email }}
                             }
                         </span>
-                        @if (supplier.address) {
+                        @if (supplier.address || supplier.country) {
                         <span class="supplier-row__address">
                             <i stp-icon name="map-pin" style="font-size: 0.75rem"></i>
-                            {{ supplier.address }}
+                            @if (supplier.address) { {{ supplier.address }} }
+                            @if (supplier.address && supplier.country) { · }
+                            @if (supplier.country) { {{ supplier.country.name }} }
                         </span>
                         }
                     </div>

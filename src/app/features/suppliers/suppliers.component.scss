@@ -334,6 +334,11 @@
     margin: 0 0.125rem;
   }
 
+  &__prefix {
+    font-weight: 600;
+    color: var(--color-text-primary);
+  }
+
   &__address {
     display: flex;
     align-items: center;

@@ -1,7 +1,14 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
+import { debounceTime, map } from 'rxjs';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
+import { SearchComponent } from '../search/search.component';
+import { SelectComponent, SelectOption } from '../select/select.component';
+import { InputComponent } from '../input/input.component';
 import {
   HAIR_TYPE_LABELS,
   HAIR_COLOR_HEX,
@@ -18,8 +25,6 @@ import {
 } from '../../../features/purchase-order/purchase-order.data';
 import { PurchaseOrderService } from '../../../core/services/purchase-order.service';
 import { SupplierApiService } from '../../../features/suppliers/supplier-api.service';
-import { toSignal } from '@angular/core/rxjs-interop';
-import { map } from 'rxjs';
 
 // ── Constants ─────────────────────────────────────────────────────────
 
@@ -27,27 +32,15 @@ const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
   'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
 ];
 
-const isHairColor = (value: string): value is HairColor => value in HAIR_COLOR_HEX;
-const isHairTypeOption = (value: string): value is Exclude<HairType, 'todos'> =>
-  HAIR_TYPE_OPTIONS.includes(value as Exclude<HairType, 'todos'>);
-
-// ── Types ─────────────────────────────────────────────────────────────
-
-interface DetailForm {
-  id: number;
-  color: HairColor | null;
-  type: Exclude<HairType, 'todos'>;
-  length: number | null;   // cm
-  kilo: number | null;     // kg
-  totalPrice: number | null;
-  duplicateError: boolean;
-}
+const isHairColor = (v: string): v is HairColor => v in HAIR_COLOR_HEX;
+const isHairTypeOption = (v: string): v is Exclude<HairType, 'todos'> =>
+  HAIR_TYPE_OPTIONS.includes(v as Exclude<HairType, 'todos'>);
 
 // ── Component ─────────────────────────────────────────────────────────
 
 @Component({
   selector: 'stp-purchase-order-drawer',
-  imports: [ButtonComponent, IconComponent],
+  imports: [ButtonComponent, IconComponent, SearchComponent, SelectComponent, InputComponent, ReactiveFormsModule],
   templateUrl: './purchase-order-drawer.component.html',
   styleUrl: './purchase-order-drawer.component.scss',
 })
@@ -57,128 +50,167 @@ export class PurchaseOrderDrawerComponent {
   private readonly data = inject<PurchaseOrderDrawerData>(MAT_BOTTOM_SHEET_DATA);
   private readonly purchaseOrderService = inject(PurchaseOrderService);
   private readonly supplierService = inject(SupplierApiService);
+  private readonly fb = inject(FormBuilder);
+  private readonly destroyRef = inject(DestroyRef);
 
-  protected readonly suppliers = toSignal(this.supplierService.getActiveAll({ page: 1, limit: 100 }).pipe(map(res => res.data)), { initialValue: [] });
-  protected readonly hairTypeOptions = HAIR_TYPE_OPTIONS;
-  protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
+  protected readonly suppliers = toSignal(
+    this.supplierService.getActiveAll({ page: 1, limit: 100 }).pipe(map(res => res.data)),
+    { initialValue: [] },
+  );
   protected readonly hairColors = HAIR_COLORS;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
-  protected readonly statusOptions = [PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED];
+  protected readonly statusOptions = [
+    PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED,
+    PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED,
+  ];
   protected readonly statusLabels = PO_STATUS_LABELS;
   protected readonly isEdit = !!this.data.purchaseOrder;
+  protected readonly hairTypeSelectOptions: SelectOption[] = HAIR_TYPE_OPTIONS.map(t => ({
+    value: t, label: HAIR_TYPE_LABELS[t],
+  }));
 
-  // ── Form state ────────────────────────────────────────────────
-  protected readonly supplierSearch = signal(this.data.purchaseOrder?.supplier.name ?? '');
-  protected readonly selectedSupplierId = signal<number | null>(this.data.purchaseOrder?.supplier.id ?? null);
-  protected readonly status = signal<PurchaseOrderStatus>(this.data.purchaseOrder?.status ?? PurchaseOrderStatus.PENDING);
-  protected readonly details = signal<DetailForm[]>(
-    (this.data.purchaseOrder?.details ?? []).map(d => ({
-      id: d.id,
-      color: isHairColor(d.color) ? d.color : null,
-      type: isHairTypeOption(d.type) ? d.type : 'lisa',
-      length: d.length,
-      kilo: d.weight,
-      totalPrice: d.price,
-      duplicateError: false,
-    })),
-  );
+  // ── Form ──────────────────────────────────────────────────────
 
-  // ── Submit state ──────────────────────────────────────────────
+  readonly form = this.fb.group({
+    supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null),
+    supplierSearch: [this.data.purchaseOrder?.supplier.name ?? ''],
+    details: this.fb.array(
+      (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
+        id: d.id,
+        color: isHairColor(d.color) ? d.color : null,
+        type: isHairTypeOption(d.type) ? d.type : 'lisa',
+        length: d.length,
+        kilo: d.weight,
+        totalPrice: d.price,
+      })),
+    ),
+  });
+
+  get detailsArray() { return this.form.controls.details; }
+
+  private buildDetail(data?: {
+    id?: number; color?: HairColor | null; type?: string;
+    length?: number | null; kilo?: number | null; totalPrice?: number | null;
+  }) {
+    return this.fb.group({
+      id:         [data?.id ?? 0],
+      color:      this.fb.control<HairColor | null>(data?.color ?? null),
+      type:       [data?.type ?? 'lisa'],
+      length:     [data?.length?.toString() ?? ''],
+      kilo:       [data?.kilo?.toString() ?? ''],
+      totalPrice: [data?.totalPrice?.toString() ?? ''],
+    });
+  }
+
+  // ── Submit / UI state ─────────────────────────────────────────
+
   protected readonly submitting = signal(false);
   protected readonly success = signal(false);
+  protected readonly duplicateIndexes = signal(new Set<number>());
 
-  // ── Computed ──────────────────────────────────────────────────
+  // ── Computed from form ────────────────────────────────────────
+
+  private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
 
   protected readonly filteredSuppliers = computed(() => {
-    const q = this.supplierSearch().trim().toLowerCase();
-    if (!q || this.selectedSupplierId() !== null) return [];
-    return this.suppliers().filter(s => s.name.toLowerCase().includes(q) || s.dni.toLowerCase().includes(q)).slice(0, 5);
+    const v = this.formValue();
+    const q = (v.supplierSearch ?? '').trim().toLowerCase();
+    if (!q || v.supplierId != null) return [];
+    return this.suppliers()
+      .filter(s => s.name.toLowerCase().includes(q) || s.dni.toLowerCase().includes(q))
+      .slice(0, 5);
   });
 
   protected readonly selectedSupplier = computed(() =>
-    this.suppliers().find(s => s.id === this.selectedSupplierId()) ?? null,
+    this.suppliers().find(s => s.id === this.formValue().supplierId) ?? null,
   );
 
+  protected readonly showSupplierNotFound = computed(() => {
+    const v = this.formValue();
+    return !v.supplierId && !!(v.supplierSearch ?? '').trim() && this.filteredSuppliers().length === 0;
+  });
+
   protected readonly totalKilo = computed(() =>
-    this.details().reduce((sum, d) => sum + (d.kilo ?? 0), 0),
+    (this.formValue().details ?? []).reduce((sum, d) => sum + (+(d?.kilo ?? 0) || 0), 0),
   );
 
   protected readonly totalPrice = computed(() =>
-    this.details().reduce((sum, d) => sum + (d.totalPrice ?? 0), 0),
+    (this.formValue().details ?? []).reduce((sum, d) => sum + (+(d?.totalPrice ?? 0) || 0), 0),
   );
 
   protected readonly canSubmit = computed(() => {
-    if (!this.selectedSupplierId()) return false;
-
-    const dets = this.details();
-    if (dets.length === 0) return false;
-    if (dets.some(d => d.duplicateError)) return false;
-    return dets.every(d =>
-      d.color !== null &&
-      d.length !== null && d.length > 0 &&
-      d.kilo !== null && d.kilo > 0 &&
-      d.totalPrice !== null && d.totalPrice > 0,
+    const v = this.formValue();
+    if (!v.supplierId) return false;
+    const details = v.details ?? [];
+    if (details.length === 0) return false;
+    if (this.duplicateIndexes().size > 0) return false;
+    return details.every(d =>
+      d?.color !== null &&
+      +(d?.length ?? 0) > 0 &&
+      +(d?.kilo ?? 0) > 0 &&
+      +(d?.totalPrice ?? 0) > 0,
     );
   });
 
-  // ── Actions ───────────────────────────────────────────────────
+  constructor() {
+    // Clear supplierId whenever user types in the search field
+    this.form.controls.supplierSearch.valueChanges
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() =>
+        this.form.controls.supplierId.setValue(null, { emitEvent: false }),
+      );
 
-  protected close(): void {
-    this.sheetRef.dismiss(null);
+    // Revalidate duplicate combos when any detail changes
+    this.form.controls.details.valueChanges
+      .pipe(debounceTime(0), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => this.revalidateDuplicates());
   }
 
-  protected onSupplierSearch(value: string): void {
-    this.supplierSearch.set(value);
-    this.selectedSupplierId.set(null);
+  // ── Actions ───────────────────────────────────────────────────
+
+  protected close(): void { this.sheetRef.dismiss(null); }
+
+  protected selectSupplier(id: number, name: string): void {
+    this.form.patchValue({ supplierId: id, supplierSearch: name });
   }
 
   protected clearSupplier(): void {
-    this.supplierSearch.set('');
-    this.selectedSupplierId.set(null);
-  }
-
-  protected selectSupplier(id: number, name: string): void {
-    this.selectedSupplierId.set(id);
-    this.supplierSearch.set(name);
+    this.form.patchValue({ supplierId: null, supplierSearch: '' });
   }
 
   protected addDetail(): void {
-    this.details.update(prev => [...prev, {
-      id: 0,
-      color: null,
-      type: 'lisa',
-      length: null,
-      kilo: null,
-      totalPrice: null,
-      duplicateError: false,
-    }]);
+    this.detailsArray.push(this.buildDetail());
   }
 
-  protected removeDetail(id: number): void {
-    this.details.update(prev =>
-      this.revalidateDuplicates(prev.filter(d => d.id !== id)),
-    );
+  protected removeDetail(index: number): void {
+    this.detailsArray.removeAt(index);
+    this.revalidateDuplicates();
   }
 
-  protected updateDetail(id: number, patch: Partial<DetailForm>): void {
-    this.details.update(prev =>
-      this.revalidateDuplicates(prev.map(d => d.id === id ? { ...d, ...patch } : d)),
-    );
+  protected colorLabel(color: HairColor | null | undefined): string {
+    return color ? this.hairColorLabels[color] : '';
   }
 
-  // Marks duplicate if another detail shares the same color+type+length
-  private revalidateDuplicates(details: DetailForm[]): DetailForm[] {
-    return details.map((d, i) => {
-      if (d.color === null || d.length === null) return { ...d, duplicateError: false };
-      const isDuplicate = details.some((other, j) =>
+  protected updateColor(index: number, color: HairColor): void {
+    this.detailsArray.at(index).patchValue({ color });
+  }
+
+  private revalidateDuplicates(): void {
+    const controls = this.detailsArray.controls;
+    const next = new Set<number>();
+    controls.forEach((ctrl, i) => {
+      const d = ctrl.value;
+      if (!d.color || !d.length) return;
+      const isDuplicate = controls.some((other, j) =>
         j !== i &&
-        other.color === d.color &&
-        other.type === d.type &&
-        other.length === d.length,
+        other.value.color === d.color &&
+        other.value.type === d.type &&
+        +other.value.length! === +d.length,
       );
-      return { ...d, duplicateError: isDuplicate };
+      if (isDuplicate) next.add(i);
     });
+    this.duplicateIndexes.set(next);
   }
 
   protected submit(): void {
@@ -186,44 +218,19 @@ export class PurchaseOrderDrawerComponent {
     this.submitting.set(true);
 
     const dto = {
-      supplierId: this.selectedSupplierId()!,
-      details: this.details().map(d => ({
-        color:  d.color!,
-        type:   d.type,
-        length: d.length!,
-        weight: d.kilo!,
-        price:  d.totalPrice!,
+      supplierId: this.form.value.supplierId!,
+      details: this.detailsArray.controls.map(ctrl => ({
+        color:  ctrl.value.color!,
+        type:   ctrl.value.type!,
+        length: +ctrl.value.length!,
+        weight: +ctrl.value.kilo!,
+        price:  +ctrl.value.totalPrice!,
       })),
     };
 
     this.purchaseOrderService.create(dto).subscribe({
-      next: (order) => {
-        // const supplier = this.selectedSupplier()!;
-        // const result: PurchaseOrderFull = {
-        //   id:           String(order.id),
-        //   number:       order.oc,
-        //   supplierId:   supplier.id,
-        //   supplierName: supplier.name,
-        //   registeredBy: this.registeredBy().trim(),
-        //   createdAt:    order.createdAt.toString(),
-        //   updatedAt:    order.updatedAt.toString(),
-        //   status:       'pendiente',
-        //   details:      this.details().map(d => ({
-        //     id:         d.id,
-        //     color:      d.color!,
-        //     type:       d.type,
-        //     length:     d.length!,
-        //     kilo:       d.kilo!,
-        //     totalPrice: d.totalPrice!,
-        //   })),
-        // };
-        this.submitting.set(false);
-        this.success.set(true);
-        // setTimeout(() => this.sheetRef.dismiss(result), 1200);
-      },
-      error: () => {
-        this.submitting.set(false);
-      },
+      next: () => { this.submitting.set(false); this.success.set(true); },
+      error: () => { this.submitting.set(false); },
     });
   }
 }

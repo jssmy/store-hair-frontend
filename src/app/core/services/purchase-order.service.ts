@@ -46,6 +46,10 @@ export class PurchaseOrderService {
     return this.http.patch<PurchaseOrder>(`${this.baseUrl}/${id}`, data);
   }
 
+  updateStatus(id: number, status: PurchaseOrderStatus): Observable<PurchaseOrder> {
+    return this.http.patch<PurchaseOrder>(`${this.baseUrl}/${id}/status`, { status });
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/${id}`);
   }

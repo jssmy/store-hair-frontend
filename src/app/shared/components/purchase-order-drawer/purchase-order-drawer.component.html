@@ -3,14 +3,23 @@
 
     <div class="po-drawer__handle" aria-hidden="true"></div>
 
+    <!-- ── Header ── -->
     <div class="po-drawer__header">
-        <h2 class="po-drawer__title">{{ isEdit ? 'Editar' : 'Nueva' }} Orden de Compra</h2>
+        <div class="po-drawer__header-content">
+            @if (isEdit && orderOc) {
+            <p class="po-drawer__eyebrow">Orden de Compra</p>
+            <h2 class="po-drawer__title">{{ orderOc }}</h2>
+            } @else {
+            <h2 class="po-drawer__title">Nueva Orden de Compra</h2>
+            }
+        </div>
         <button class="po-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
             <i stp-icon name="x" class="icon--sm"></i>
         </button>
     </div>
 
     @if (success()) {
+    <!-- ── Éxito ── -->
     <div class="po-drawer__success">
         <span class="icon-badge icon-badge--success icon-badge--xl">
             <i stp-icon name="check-circle" class="icon--xl"></i>
@@ -20,9 +29,37 @@
     </div>
     } @else {
 
+    <!-- ── Tarjeta de estado (solo en edición) ── -->
+    @if (isEdit) {
+    <div class="po-status-card po-status-card--{{ orderStatus }}">
+        <div class="po-status-card__icon">
+            <i stp-icon [name]="statusIcon" class="icon--lg"></i>
+        </div>
+        <div class="po-status-card__info">
+            <span class="po-status-card__title">{{ statusLabels[orderStatus!] }}</span>
+            <span class="po-status-card__desc">{{ statusDescription }}</span>
+        </div>
+        @if (!isReadOnly) {
+        <div class="po-status-card__actions">
+            <stp-button variant="danger" btnStyle="outlined" size="sm" radius="full"
+                [loading]="canceling()" (click)="cancelOrder()">
+                <i stp-icon name="x" class="icon--xs"></i>
+                Cancelar
+            </stp-button>
+            <stp-button variant="success" btnStyle="solid" size="sm" radius="full"
+                [loading]="approving()" (click)="approveOrder()">
+                <i stp-icon name="check" class="icon--xs"></i>
+                Aprobar
+            </stp-button>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- ── Cuerpo ── -->
     <div class="po-drawer__body" [formGroup]="form">
 
-        <!-- ── Proveedor ── -->
+        <!-- Proveedor -->
         <div class="po-section">
             <div class="po-section__label">
                 <i stp-icon name="truck" class="icon--sm"></i>
@@ -32,16 +69,18 @@
             <div class="po-field">
                 @if (isEdit) {
                 <div class="po-supplier-linked po-supplier-linked--readonly">
-                    <i stp-icon name="buildings" class="icon--sm"></i>
+                    <span class="icon-badge icon-badge--primary">
+                        <i stp-icon name="buildings" class="icon--sm"></i>
+                    </span>
                     <div class="po-supplier-linked__info">
-                        <span class="po-supplier-linked__name">{{ editSupplier!.name }}</span>
-                        <span class="po-supplier-linked__meta">DNI {{ editSupplier!.dni }}</span>
+                        <span class="po-supplier-linked__name">{{ editSupplier?.fullName || editSupplier?.businessName }}</span>
+                        <span class="po-supplier-linked__meta">{{ editSupplier!.dni ? 'DNI ' + editSupplier!.dni : 'RUC ' + editSupplier!.ruc }}</span>
                     </div>
                     <i stp-icon name="lock" class="icon--xs icon--muted"></i>
                 </div>
                 } @else {
                 <stp-search
-                    placeholder="Buscar proveedor..."
+                    placeholder="Buscar por nombre, RUC o DNI..."
                     formControlName="supplierSearch"
                     (cleared)="clearSupplier()">
                 </stp-search>
@@ -66,37 +105,38 @@
 
                 @if (selectedSupplier()) {
                 <div class="po-supplier-linked">
-                    <i stp-icon name="buildings" class="icon--sm"></i>
+                    <span class="icon-badge icon-badge--primary">
+                        <i stp-icon name="buildings" class="icon--sm"></i>
+                    </span>
                     <div class="po-supplier-linked__info">
                         <span class="po-supplier-linked__name">{{ supplierDisplayName(selectedSupplier()!) }}</span>
                         <span class="po-supplier-linked__meta">{{ selectedSupplier()!.ruc ? 'RUC ' + selectedSupplier()!.ruc : 'DNI ' + selectedSupplier()!.dni }}</span>
                     </div>
-                    <button class="po-field__clear-chip" type="button" (click)="clearSupplier()">
+                    <button class="po-field__clear-chip" type="button" aria-label="Quitar proveedor" (click)="clearSupplier()">
                         <i stp-icon name="x" class="icon--xs"></i>
                     </button>
                 </div>
                 } @else if (showSupplierNotFound()) {
                 <div class="po-not-found">
                     <i stp-icon name="warning" class="icon--sm"></i>
-                    Proveedor no encontrado. Escribe para buscar.
+                    Proveedor no encontrado. Intenta con otro término.
                 </div>
                 }
                 }
             </div>
         </div>
 
-
-        <!-- ── Detalles del lote ── -->
+        <!-- Detalles del lote -->
         <div class="po-section po-section--details" formArrayName="details">
             <div class="po-section__header">
                 <div class="po-section__label">
                     <i stp-icon name="list-bullets" class="icon--sm"></i>
-                    Detalles (kilo/lote)
+                    Detalles del lote
                     @if (detailsArray.length) {
                     <span class="po-section__count">{{ detailsArray.length }}</span>
                     }
                 </div>
-                @if (editingIdx() === null) {
+                @if (editingIdx() === null && !isReadOnly) {
                 <button type="button" class="po-add-btn" (click)="startAdd()">
                     <i stp-icon name="plus" class="icon--xs"></i>
                     Agregar
@@ -106,15 +146,18 @@
 
             @if (detailsArray.length === 0 && editingIdx() === null) {
             <div class="po-details-empty">
-                <i stp-icon name="list-bullets" class="icon--2xl" style="opacity:.2"></i>
-                <p>Sin detalles. Presiona «Agregar» para añadir.</p>
+                <span class="icon-badge icon-badge--surface icon-badge--xl">
+                    <i stp-icon name="list-bullets" class="icon--xl"></i>
+                </span>
+                <p class="font-medium text-secondary">Sin detalles aún</p>
+                <p class="text-sm text-disabled">Presiona «Agregar» para añadir el primer lote.</p>
             </div>
             }
 
             @for (ctrl of detailsArray.controls; track $index; let idx = $index) {
 
                 @if (editingIdx() === idx) {
-                <!-- ── Form card (add / edit) ── -->
+                <!-- Form card -->
                 <div class="po-detail-card" [formGroupName]="idx"
                     [class.po-detail-card--error]="duplicateIndexes().has(idx)">
 
@@ -125,15 +168,13 @@
                         @if (duplicateIndexes().has(idx)) {
                         <span class="po-detail-card__dup-error">
                             <i stp-icon name="warning" class="icon--xs"></i>
-                            Color + Tipo + Largo duplicado
+                            Combinación duplicada
                         </span>
                         }
-                        <button type="button" class="icon-btn" aria-label="Cancelar edición"
-                            (click)="cancelEdit()">
+                        <button type="button" class="icon-btn" aria-label="Cancelar edición" (click)="cancelEdit()">
                             <i stp-icon name="x" class="icon--sm"></i>
                         </button>
-                        <button type="button" class="icon-btn icon-btn--primary"
-                            aria-label="Confirmar" (click)="confirmEdit()">
+                        <button type="button" class="icon-btn icon-btn--primary" aria-label="Confirmar" (click)="confirmEdit()">
                             <i stp-icon name="check" class="icon--sm"></i>
                         </button>
                     </div>
@@ -162,28 +203,26 @@
                     <!-- Tipo + Largo -->
                     <div class="po-field-row">
                         <div class="po-field">
-                            <stp-select label="Tipo" [options]="hairTypeSelectOptions"
-                                formControlName="type">
-                            </stp-select>
+                            <stp-select label="Tipo" [options]="hairTypeSelectOptions" formControlName="type"></stp-select>
                         </div>
                         <div class="po-field">
-                            <stp-input label='Largo (")' type="number"
+                            <stp-select label='Largo (pulgadas)' [options]="hairLengthSelectOptions"
                                 formControlName="length"
-                                [error]="detailControlErrorMessage(idx, 'length')">
-                            </stp-input>
+                                [hasError]="detailsArray.at(idx).get('length')!.invalid && detailsArray.at(idx).get('length')!.touched">
+                            </stp-select>
                         </div>
                     </div>
 
-                    <!-- Kilo + Precio unitario -->
+                    <!-- Peso + Precio -->
                     <div class="po-field-row">
                         <div class="po-field">
-                            <stp-input label="Peso (g)" type="number"
+                            <stp-input label="Peso (g)" stpNumeric [allowDecimal]="true" type="text"
                                 formControlName="kilo"
                                 [error]="detailControlErrorMessage(idx, 'kilo')">
                             </stp-input>
                         </div>
                         <div class="po-field">
-                            <stp-input label="Precio x gramo (S/)" type="number"
+                            <stp-input label="Precio x gramo (USD)" stpNumeric [allowDecimal]="true" type="text"
                                 formControlName="pricePerGram"
                                 [error]="detailControlErrorMessage(idx, 'pricePerGram')">
                             </stp-input>
@@ -193,7 +232,10 @@
                     <!-- Total calculado -->
                     @if (+(ctrl.value.kilo || 0) > 0 && +(ctrl.value.pricePerGram || 0) > 0) {
                     <div class="po-detail-total">
-                        <span class="po-detail-total__label">Total estimado</span>
+                        <span class="po-detail-total__label">
+                            <i stp-icon name="calculator" class="icon--xs"></i>
+                            Total estimado
+                        </span>
                         <span class="po-detail-total__value">
                             S/ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
                         </span>
@@ -202,9 +244,8 @@
 
                 </div>
                 } @else {
-                <!-- ── Compact list item ── -->
-                <div class="po-detail-item"
-                    [class.po-detail-item--error]="duplicateIndexes().has(idx)">
+                <!-- Item compacto -->
+                <div class="po-detail-item" [class.po-detail-item--error]="duplicateIndexes().has(idx)">
 
                     <div class="po-detail-item__main">
                         <span class="po-detail-item__swatch"
@@ -214,28 +255,30 @@
                         <div class="po-detail-item__info">
                             <span class="po-detail-item__name">
                                 {{ ctrl.value.color ? colorLabel(ctrl.value.color) : '—' }}
-                                · {{ hairTypeLabel(ctrl.value.type ?? '') }}
+                                <span class="po-detail-item__sep">·</span>
+                                {{ hairTypeLabel(ctrl.value.type ?? '') }}
                             </span>
                             <span class="po-detail-item__meta">
+                                <i stp-icon name="ruler" class="icon--xs"></i>
                                 {{ ctrl.value.length || '—' }}"
-                                · {{ ctrl.value.kilo || '—' }} g
+                                <span class="po-detail-item__sep">·</span>
+                                <i stp-icon name="scales" class="icon--xs"></i>
+                                {{ ctrl.value.kilo || '—' }} g
                             </span>
                         </div>
                         <span class="po-detail-item__price">
                             S/ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
                         </span>
+                        @if (!isReadOnly) {
                         <div class="po-detail-item__actions">
-                            <button type="button" class="icon-btn icon-btn--primary"
-                                aria-label="Editar detalle"
-                                (click)="startEdit(idx)">
+                            <button type="button" class="icon-btn icon-btn--primary" aria-label="Editar" (click)="startEdit(idx)">
                                 <i stp-icon name="pencil" class="icon--sm"></i>
                             </button>
-                            <button type="button" class="icon-btn icon-btn--danger"
-                                aria-label="Eliminar detalle"
-                                (click)="removeDetail(idx)">
+                            <button type="button" class="icon-btn icon-btn--danger" aria-label="Eliminar" (click)="removeDetail(idx)">
                                 <i stp-icon name="trash" class="icon--sm"></i>
                             </button>
                         </div>
+                        }
                     </div>
 
                     @if (duplicateIndexes().has(idx)) {
@@ -247,35 +290,38 @@
                 </div>
                 }
 
-            }<!-- /detail items -->
+            }<!-- /items -->
 
             <!-- Totales -->
             @if (detailsArray.length > 0) {
             <div class="po-totals">
-                <span class="po-totals__item">
+                <div class="po-totals__item">
                     <i stp-icon name="scales" class="icon--xs"></i>
-                    {{ totalWeight().toFixed(0) }} g total
-                </span>
-                <span class="po-totals__sep">·</span>
-                <span class="po-totals__item po-totals__item--price">
-                    S/ {{ totalPrice().toFixed(2) }} total
-                </span>
+                    <span>{{ totalWeight().toFixed(0) }} g</span>
+                    <span class="po-totals__sub">total peso</span>
+                </div>
+                <div class="po-totals__divider"></div>
+                <div class="po-totals__item po-totals__item--price">
+                    <span>$ {{ totalPrice().toFixed(2) }}</span>
+                    <span class="po-totals__sub">total precio</span>
+                </div>
             </div>
             }
         </div>
 
     </div><!-- /body -->
 
+    <!-- ── Footer ── -->
     <div class="po-drawer__footer">
         <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
-            Cancelar
+            {{ isEdit ? 'Cerrar' : 'Cancelar' }}
         </stp-button>
+        @if (!isReadOnly) {
         <stp-button variant="primary" btnStyle="solid" size="md"
-            [disabled]="!canSubmit()"
-            [loading]="submitting()"
-            (click)="submit()">
+            [disabled]="!canSubmit()" [loading]="submitting()" (click)="submit()">
             {{ isEdit ? 'Guardar cambios' : 'Crear orden' }}
         </stp-button>
+        }
     </div>
 
     }<!-- /not success -->

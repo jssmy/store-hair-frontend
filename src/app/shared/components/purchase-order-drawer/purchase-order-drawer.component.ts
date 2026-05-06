@@ -26,11 +26,16 @@ import {
 import { PurchaseOrderService } from '../../../core/services/purchase-order.service';
 import { SupplierApiService } from '../../../features/suppliers/supplier-api.service';
 import { Supplier as SupplierData, SupplierType } from '../../../features/suppliers/suppliers.data';
+import { StpNumericDirective } from "../../directives";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
 const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
-  'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
+  'lacio', 'ondulada',
+];
+
+const HAIR_LENGTH_OPTIONS: number[] = [
+  18, 20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 37,
 ];
 
 const isHairColor = (v: string): v is HairColor => v in HAIR_COLOR_HEX;
@@ -41,7 +46,7 @@ const isHairTypeOption = (v: string): v is Exclude<HairType, 'todos'> =>
 
 @Component({
   selector: 'stp-purchase-order-drawer',
-  imports: [ButtonComponent, IconComponent, SearchComponent, SelectComponent, InputComponent, ReactiveFormsModule],
+  imports: [ButtonComponent, IconComponent, SearchComponent, SelectComponent, InputComponent, ReactiveFormsModule, StpNumericDirective],
   templateUrl: './purchase-order-drawer.component.html',
   styleUrls: ['./purchase-order-drawer.component.scss'],
 })
@@ -62,22 +67,48 @@ export class PurchaseOrderDrawerComponent {
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
   protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
-  protected readonly statusOptions = [
-    PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED,
-    PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED,
-  ];
   protected readonly statusLabels = PO_STATUS_LABELS;
+  protected readonly PurchaseOrderStatus = PurchaseOrderStatus;
   protected readonly isEdit = !!this.data.purchaseOrder;
   protected readonly editSupplier = this.data.purchaseOrder?.supplier ?? null;
+  protected readonly orderStatus = this.data.purchaseOrder?.status ?? null;
+  protected readonly isApproved = this.orderStatus === PurchaseOrderStatus.APPROVED;
+  protected readonly isCanceled = this.orderStatus === PurchaseOrderStatus.CANCELED;
+  protected readonly isReadOnly = this.isApproved || this.isCanceled;
+  protected readonly orderOc = this.data.purchaseOrder?.oc ?? null;
+
+  protected get statusDescription(): string {
+    switch (this.orderStatus) {
+      case PurchaseOrderStatus.PENDING:   return 'Esperando revisión y aprobación';
+      case PurchaseOrderStatus.APPROVED:  return 'Aprobada · No puede modificarse';
+      case PurchaseOrderStatus.CANCELED:  return 'Esta orden fue cancelada';
+      case PurchaseOrderStatus.COMPLETED: return 'Completada exitosamente';
+      default: return '';
+    }
+  }
+
+  protected get statusIcon(): string {
+    switch (this.orderStatus) {
+      case PurchaseOrderStatus.APPROVED:  return 'check-circle';
+      case PurchaseOrderStatus.CANCELED:  return 'x-circle';
+      case PurchaseOrderStatus.COMPLETED: return 'check-square';
+      default: return 'clock';
+    }
+  }
+
   protected readonly hairTypeSelectOptions: SelectOption[] = HAIR_TYPE_OPTIONS.map(t => ({
     value: t, label: HAIR_TYPE_LABELS[t],
+  }));
+
+  protected readonly hairLengthSelectOptions: SelectOption[] = HAIR_LENGTH_OPTIONS.map(l => ({
+    value: l.toString(), label: `${l}`,
   }));
 
   // ── Form ──────────────────────────────────────────────────────
 
   readonly form = this.fb.group({
     supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null, Validators.required),
-    supplierSearch: this.fb.control(this.data.purchaseOrder?.supplier.name ?? ''),
+    supplierSearch: this.fb.control(this.data.purchaseOrder?.supplier.fullName || this.data.purchaseOrder?.supplier.businessName || ''),
     details: this.fb.array(
       (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
         id: d.id,
@@ -100,7 +131,7 @@ export class PurchaseOrderDrawerComponent {
       id: this.fb.control(data?.id ?? 0),
       color: this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
       type: this.fb.control(data?.type ?? 'lisa', Validators.required),
-      length: this.fb.control(data?.length?.toString() ?? '', [Validators.required, Validators.min(1)]),
+      length: this.fb.control(data?.length?.toString() ?? '', Validators.required),
       kilo: this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
       pricePerGram: this.fb.control(data?.pricePerGram?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
     });
@@ -109,6 +140,8 @@ export class PurchaseOrderDrawerComponent {
   // ── Submit / UI state ─────────────────────────────────────────
 
   protected readonly submitting = signal(false);
+  protected readonly approving = signal(false);
+  protected readonly canceling = signal(false);
   protected readonly success = signal(false);
   protected readonly duplicateIndexes = signal(new Set<number>());
 
@@ -158,7 +191,7 @@ export class PurchaseOrderDrawerComponent {
   );
 
   protected readonly canSubmit = computed(() => {
-
+    if (this.isReadOnly) return false;
     if (!this.formValue().supplierId) return false;
     if ((this.formValue().details ?? []).length === 0) return false;
     if (this.duplicateIndexes().size > 0) return false;
@@ -166,13 +199,12 @@ export class PurchaseOrderDrawerComponent {
   });
 
   constructor() {
+    if (this.isReadOnly) this.form.disable();
+
     // Clear supplierId only when the typed text no longer matches the selected supplier
     this.form.controls.supplierSearch.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((query) => {
-
-
-
         const supplierId = this.form.controls.supplierId.value;
         if (supplierId == null) return;
 
@@ -309,6 +341,26 @@ export class PurchaseOrderDrawerComponent {
     return 'Valor no valido.';
   }
 
+  protected approveOrder(): void {
+    if (this.approving() || !this.data.purchaseOrder) return;
+    this.approving.set(true);
+    this.purchaseOrderService.updateStatus(this.data.purchaseOrder.id, PurchaseOrderStatus.APPROVED)
+      .subscribe({
+        next: result => { this.approving.set(false); this.sheetRef.dismiss(result); },
+        error: () => this.approving.set(false),
+      });
+  }
+
+  protected cancelOrder(): void {
+    if (this.canceling() || !this.data.purchaseOrder) return;
+    this.canceling.set(true);
+    this.purchaseOrderService.updateStatus(this.data.purchaseOrder.id, PurchaseOrderStatus.CANCELED)
+      .subscribe({
+        next: result => { this.canceling.set(false); this.sheetRef.dismiss(result); },
+        error: () => this.canceling.set(false),
+      });
+  }
+
   protected submit(): void {
     if (!this.canSubmit()) return;
     this.submitting.set(true);
@@ -320,7 +372,7 @@ export class PurchaseOrderDrawerComponent {
         type: ctrl.value.type!,
         length: +ctrl.value.length!,
         weight: +ctrl.value.kilo!,
-        price: +ctrl.value.kilo! * +ctrl.value.pricePerGram!,
+        price: +ctrl.value.pricePerGram!,
       })),
     };
 

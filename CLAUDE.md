@@ -139,6 +139,30 @@ Always pass `panelClass: 'stp-supplier-panel'` (or equivalent) when opening.
 
 ---
 
+## Shared Directives
+
+All in `src/app/shared/directives/`. Import directly (standalone).
+
+| Selector | Inputs | Notes |
+|---|---|---|
+| `stp-input[stpNumeric]` | `min`, `max`, `allowDecimal`, `allowNegative` | Blocks non-numeric keystrokes; clamps to range on blur |
+
+```html
+<!-- Only digits -->
+<stp-input stpNumeric label="Cantidad" [(value)]="qty" />
+
+<!-- Digits + decimal point -->
+<stp-input stpNumeric [allowDecimal]="true" label="Precio" [(value)]="price" />
+
+<!-- Digits + range clamp on blur -->
+<stp-input stpNumeric [min]="0" [max]="100" label="Descuento %" [(value)]="discount" />
+
+<!-- Full options -->
+<stp-input stpNumeric [allowDecimal]="true" [allowNegative]="true" [min]="-9999" [max]="9999" />
+```
+
+---
+
 ## CSS Tokens
 
 Defined in `src/styles.scss`, available in every component without import.

@@ -46,7 +46,7 @@ export type InventoryDrawerResult = Lote;
 // ── Constants ────────────────────────────────────────────────────────
 
 const PRODUCT_HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
-  'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
+  'lacio', 'ondulada',
 ];
 
 const HAIR_TYPE_OPTIONS: SelectOption[] = [
@@ -273,7 +273,7 @@ export class InventoryDrawerComponent {
       registeredBy: 'Usuario Actual',
       registeredAt: new Date().toISOString(),
       supplierId: po.supplier.id,
-      supplierName: po.supplier.name,
+      supplierName: po.supplier.fullName || po.supplier.businessName || '',
       products: loteProductsMapped,
     };
 

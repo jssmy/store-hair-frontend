@@ -3,50 +3,26 @@
 
 export type HairType =
   | 'todos'
-  | 'lisa'
-  | 'ondulada'
-  | 'rizada'
-  | 'cortina'
-  | 'extensiones'
-  | 'peluca';
+  | 'lacio'
+  | 'ondulada';
 
 export const HAIR_TYPE_LABELS: Record<HairType, string> = {
   todos: 'Todos',
-  lisa: 'Lisa',
+  lacio: 'Lacio',
   ondulada: 'Ondulada',
-  rizada: 'Rizada',
-  cortina: 'Cortina',
-  extensiones: 'Extensiones',
-  peluca: 'Peluca',
 };
 
 export const HAIR_TYPE_ICONS: Record<HairType, string> = {
   todos: '💇',
-  lisa: '📏',
+  lacio: '📏',
   ondulada: '〰️',
-  rizada: '🌀',
-  cortina: '✂️',
-  extensiones: '💈',
-  peluca: '👑',
 };
 
 // ── Hair colors ──────────────────────────────────────────────────────
 
 export const HAIR_COLOR_HEX = {
-  'negro': '#1a1a1a',
-  'negro-azabache': '#050505',
-  'marron-oscuro': '#3b1c0f',
-  'marron-medio': '#6b3a2a',
-  'marron-claro': '#a0522d',
-  'castano': '#7b3f20',
-  'rubio-oscuro': '#c19a6b',
-  'rubio-medio': '#d4a853',
-  'rubio-ceniza': '#c9b89a',
-  'borgona': '#722f37',
-  'rojo': '#8b0000',
-  'cobre': '#b87333',
-  'gris': '#9e9e9e',
-  'blanco': '#f0e6d3',
+  'natural': '#3b1c0f',
+  'pintado': '#d4a853',
 } as const;
 
 export type HairColor = keyof typeof HAIR_COLOR_HEX;
@@ -54,20 +30,8 @@ export type HairColor = keyof typeof HAIR_COLOR_HEX;
 export const HAIR_COLORS: HairColor[] = Object.keys(HAIR_COLOR_HEX) as HairColor[];
 
 export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
-  'negro': 'Negro',
-  'negro-azabache': 'Negro Azabache',
-  'marron-oscuro': 'Marrón Oscuro',
-  'marron-medio': 'Marrón Medio',
-  'marron-claro': 'Marrón Claro',
-  'castano': 'Castaño',
-  'rubio-oscuro': 'Rubio Oscuro',
-  'rubio-medio': 'Rubio Medio',
-  'rubio-ceniza': 'Rubio Ceniza',
-  'borgona': 'Borgoña',
-  'rojo': 'Rojo',
-  'cobre': 'Cobre',
-  'gris': 'Gris/Plateado',
-  'blanco': 'Blanco/Platino',
+  'natural': 'Natural',
+  'pintado': 'Pintado',
 };
 
 // ── Product model ────────────────────────────────────────────────────
@@ -161,18 +125,18 @@ export interface Lote {
 // ── Mock products ────────────────────────────────────────────────────
 
 export const MOCK_PRODUCTS: Product[] = [
-  { id: 1, name: 'Coleta Lisa 30cm', price: 45.00, unit: 'unidad', color: 'negro', weight: 80, length: 30 },
-  { id: 2, name: 'Coleta Lisa 40cm', price: 58.00, unit: 'unidad', color: 'marron-oscuro', weight: 100, length: 40 },
-  { id: 3, name: 'Coleta Lisa 50cm', price: 72.00, unit: 'unidad', color: 'rubio-medio', weight: 120, length: 50 },
-  { id: 4, name: 'Coleta Ondulada 35cm', price: 55.00, unit: 'unidad', color: 'castano', weight: 90, length: 35 },
-  { id: 5, name: 'Coleta Ondulada 45cm', price: 68.00, unit: 'unidad', color: 'marron-medio', weight: 110, length: 45 },
-  { id: 6, name: 'Coleta Rizada 30cm', price: 50.00, unit: 'unidad', color: 'negro', weight: 85, length: 30 },
-  { id: 7, name: 'Coleta Rizada 40cm', price: 65.00, unit: 'unidad', color: 'borgona', weight: 105, length: 40 },
-  { id: 8, name: 'Coleta Cortina 25cm', price: 35.00, unit: 'unidad', color: 'negro-azabache', weight: 60, length: 25 },
-  { id: 9, name: 'Extensión Lisa 60cm', price: 95.00, unit: 'unidad', color: 'rubio-ceniza', weight: 150, length: 60 },
-  { id: 10, name: 'Extensión Clip 50cm', price: 85.00, unit: 'unidad', color: 'marron-claro', weight: 130, length: 50 },
-  { id: 11, name: 'Peluca Natural Corta', price: 180.00, unit: 'unidad', color: 'negro', weight: 200, length: 20 },
-  { id: 12, name: 'Peluca Natural Larga', price: 250.00, unit: 'unidad', color: 'castano', weight: 280, length: 50 },
+  { id: 1, name: 'Coleta Lisa 30cm', price: 45.00, unit: 'unidad', color: 'natural', weight: 80, length: 30 },
+  { id: 2, name: 'Coleta Lisa 40cm', price: 58.00, unit: 'unidad', color: 'natural', weight: 100, length: 40 },
+  { id: 3, name: 'Coleta Lisa 50cm', price: 72.00, unit: 'unidad', color: 'pintado', weight: 120, length: 50 },
+  { id: 4, name: 'Coleta Ondulada 35cm', price: 55.00, unit: 'unidad', color: 'natural', weight: 90, length: 35 },
+  { id: 5, name: 'Coleta Ondulada 45cm', price: 68.00, unit: 'unidad', color: 'pintado', weight: 110, length: 45 },
+  { id: 6, name: 'Coleta Rizada 30cm', price: 50.00, unit: 'unidad', color: 'natural', weight: 85, length: 30 },
+  { id: 7, name: 'Coleta Rizada 40cm', price: 65.00, unit: 'unidad', color: 'pintado', weight: 105, length: 40 },
+  { id: 8, name: 'Coleta Cortina 25cm', price: 35.00, unit: 'unidad', color: 'natural', weight: 60, length: 25 },
+  { id: 9, name: 'Extensión Lisa 60cm', price: 95.00, unit: 'unidad', color: 'pintado', weight: 150, length: 60 },
+  { id: 10, name: 'Extensión Clip 50cm', price: 85.00, unit: 'unidad', color: 'pintado', weight: 130, length: 50 },
+  { id: 11, name: 'Peluca Natural Corta', price: 180.00, unit: 'unidad', color: 'natural', weight: 200, length: 20 },
+  { id: 12, name: 'Peluca Natural Larga', price: 250.00, unit: 'unidad', color: 'natural', weight: 280, length: 50 },
 ];
 
 export const MOCK_INVENTORIES: Inventory[] = [
@@ -182,8 +146,8 @@ export const MOCK_INVENTORIES: Inventory[] = [
       {
         id: '13a82db0-7fd1-4d9b-bb1c-327f50d8e9c3',
         type: 'lisa',
-        color: 'marron-oscuro',
-        name: 'Coleta lisa marron-oscuro 1 cm 1 g',
+        color: 'natural',
+        name: 'Coleta lisa natural 1 cm 1 g',
         price: 1,
         length: 1,
         weight: 1,
@@ -207,8 +171,8 @@ export const MOCK_INVENTORIES: Inventory[] = [
       {
         id: 'f95aa503-ecb8-4fb0-bf53-3cce8f9cb041',
         type: 'ondulada',
-        color: 'negro',
-        name: 'Coleta ondulada negro 45 cm 110 g',
+        color: 'natural',
+        name: 'Coleta ondulada natural 45 cm 110 g',
         price: 68,
         length: 45,
         weight: 110,
@@ -220,8 +184,8 @@ export const MOCK_INVENTORIES: Inventory[] = [
       {
         id: 'b0f7f3f3-d7da-4f1f-8ca1-6b6cd0095f53',
         type: 'rizada',
-        color: 'castano',
-        name: 'Coleta rizada castano 35 cm 90 g',
+        color: 'natural',
+        name: 'Coleta rizada natural 35 cm 90 g',
         price: 55,
         length: 35,
         weight: 90,

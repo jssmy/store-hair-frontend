@@ -39,7 +39,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
 
   // ── Search & filter ──────────────────────────────────────
   protected readonly hairTypes: HairType[] = [
-    'todos', 'lisa', 'ondulada', 'rizada', 'cortina', 'extensiones', 'peluca',
+    'todos', 'lacio', 'ondulada',
   ];
 
   protected readonly hairTypeLabels = HAIR_TYPE_LABELS;

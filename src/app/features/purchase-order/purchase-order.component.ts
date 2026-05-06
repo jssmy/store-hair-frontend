@@ -129,9 +129,14 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     return this.hairTypeLabels[type as keyof typeof this.hairTypeLabels] ?? type;
   }
 
-  protected readonly swipeOptions: SwipeOption[] = [
-    { label: 'Editar', icon: 'pencil', key: 'edit', stpClass: 'bg-primary-light' },
-  ];
+  protected swipeOptionsFor(order: PurchaseOrder): SwipeOption[] {
+    if (order.status !== PurchaseOrderStatus.PENDING) return [];
+    return [
+      { label: 'Editar', icon: 'pencil', key: 'edit', stpClass: 'bg-primary-light' },
+      { label: 'Aprobar', icon: 'check', key: 'approve', stpClass: 'bg-success-light' },
+      { label: 'Cancelar', icon: 'x-circle', key: 'cancel', stpClass: 'bg-error-light' },
+    ];
+  }
 
   // ── Actions ───────────────────────────────────────────────────
   protected onSearchInput(value: string): void {
@@ -155,12 +160,19 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.openDrawer(null);
   }
 
-  protected openEditDrawer(order: PurchaseOrder): void {
+  protected openDrawerForOrder(order: PurchaseOrder): void {
     this.openDrawer(order);
   }
 
   protected swipeOptionSelected(order: PurchaseOrder, option: SwipeOption): void {
     if (option.key === 'edit') this.openDrawer(order);
+    if (option.key === 'approve') this.updateOrderStatus(order, PurchaseOrderStatus.APPROVED);
+    if (option.key === 'cancel') this.updateOrderStatus(order, PurchaseOrderStatus.CANCELED);
+  }
+
+  private updateOrderStatus(order: PurchaseOrder, status: PurchaseOrderStatus): void {
+    this.purchaseOrderService.updateStatus(order.id, status)
+      .subscribe({ next: () => this.loadOrders(1, false) });
   }
 
   private openDrawer(order: PurchaseOrder | null): void {
@@ -183,7 +195,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   }
 
   protected totalPrice(order: PurchaseOrder): number {
-    return order.details.reduce((s, d) => s + Number(d.price), 0);
+    return order.details.reduce((s, d) => s + (Number(d.price) * Number(d.weight)), 0);
   }
 
   protected statusFilterLabel(s: PurchaseOrderStatus | 'todos'): string {

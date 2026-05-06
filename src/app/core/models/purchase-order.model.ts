@@ -1,17 +1,7 @@
 import { HairColor, HairType } from "../../features/products/products.data";
 import { PurchaseOrderStatus } from "../../features/purchase-order/purchase-order.data";
+import { Supplier } from "../../features/suppliers/suppliers.data";
 
-export interface Supplier {
-  id: number;
-  name: string;
-  dni: string;
-  phone: string;
-  email: string;
-  address: string;
-  active: boolean;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 export interface PurchaseOrderDetail {
   id: number;

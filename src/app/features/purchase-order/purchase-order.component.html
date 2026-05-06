@@ -70,7 +70,7 @@
         <cdk-virtual-scroll-viewport [itemSize]="50" (scrolledIndexChange)="onScroll($event)">
             <ul class="po-list" role="list">
                 <stp-swipe-item *cdkVirtualFor="let order of filteredOrders(); trackBy: trackByOrderId"
-                    [options]="swipeOptions" (optionSelected)="swipeOptionSelected(order, $event)">
+                    [options]="swipeOptionsFor(order)" (optionSelected)="swipeOptionSelected(order, $event)">
                     <li class="po-row bg-base">
 
                         <!-- Fila resumen (clicable para expandir) -->
@@ -88,7 +88,7 @@
                                 </div>
                                 <span class="po-row__supplier icon-row">
                                     <i stp-icon name="buildings" class="icon--xs"></i>
-                                    {{ order.supplier.name }}
+                                    {{ order.supplier.fullName || order.supplier.businessName }}
                                 </span>
                                 <div class="po-row__meta">
                                     <span class="icon-row">
@@ -104,7 +104,7 @@
                             </div>
 
                             <div class="po-row__aside">
-                                <span class="po-row__price">S/ {{ totalPrice(order) }}</span>
+                                <span class="po-row__price">$ {{ totalPrice(order).toFixed(2) }}</span>
                                 <span class="po-row__kilo">{{ totalWeight(order) }} g</span>
                                 <span class="po-row__det-count">
                                     {{ order.details.length }}
@@ -128,7 +128,7 @@
                                 <span>Tipo</span>
                                 <span>Largo</span>
                                 <span>Gramos</span>
-                                <span>Precio</span>
+                                <span>USD</span>
                             </div>
 
                             <!-- Filas de detalle -->
@@ -142,9 +142,9 @@
                                     <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
                                 </span>
                                 <span>{{ hairTypeLabel(d.type) }}</span>
-                                <span>{{ d.length }}"</span>
-                                <span>{{ d.weight }} kg</span>
-                                <span class="po-detail-row__price">S/ {{ d.price }}</span>
+                                <span>{{ d.length }}</span>
+                                <span>{{ d.weight }} g</span>
+                                <span class="po-detail-row__price"> {{ d.price }}</span>
                             </div>
                             }
 
@@ -156,13 +156,15 @@
                                 </span>
                                 <span class="po-details-foot__total">
                                     Total:
-                                    <strong>S/ {{ totalPrice(order) }}</strong>
+                                    <strong>$ {{ totalPrice(order).toFixed(2) }}</strong>
                                     · {{ totalWeight(order) }} g
                                 </span>
-                                <stp-button class="po-details-foot__edit" variant="primary" btnStyle="ghost" size="sm" radius="md"
-                                    (click)="openEditDrawer(order); $event.stopPropagation()">
-                                    <i stp-icon name="pencil" style="font-size:0.875rem"></i>
-                                    Editar
+                                <stp-button class="po-details-foot__edit"
+                                    [variant]="order.status === 'pending' ? 'primary' : 'surface'"
+                                    btnStyle="ghost" size="sm" radius="md"
+                                    (click)="openDrawerForOrder(order); $event.stopPropagation()">
+                                    <i stp-icon [name]="order.status === 'pending' ? 'pencil' : 'eye'" style="font-size:0.875rem"></i>
+                                    {{ order.status === 'pending' ? 'Editar' : 'Ver detalle' }}
                                 </stp-button>
                             </div>
 

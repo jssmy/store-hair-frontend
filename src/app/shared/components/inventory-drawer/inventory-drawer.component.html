@@ -74,7 +74,7 @@
                         </span>
                         <div class="inv-dropdown__info">
                             <span class="inv-dropdown__name">{{ po.oc }}</span>
-                            <span class="inv-dropdown__stock">{{ po.supplier.name }} · {{ formatDate(po.createdAt) }}</span>
+                            <span class="inv-dropdown__stock">{{ po.supplier.fullName || po.supplier.businessName }} · {{ formatDate(po.createdAt) }}</span>
                         </div>
                     </li>
                     }
@@ -96,7 +96,7 @@
                 <div class="inv-supplier-linked">
                     <i stp-icon name="truck" class="icon--sm"></i>
                     <div class="inv-supplier-linked__info">
-                        <span class="inv-supplier-linked__name">{{ loteSelectedPO()!.supplier.name }}</span>
+                        <span class="inv-supplier-linked__name">{{ loteSelectedPO()!.supplier.fullName || loteSelectedPO()!.supplier.businessName }}</span>
                         <span class="inv-supplier-linked__meta">Proveedor vinculado a esta OC</span>
                     </div>
                 </div>

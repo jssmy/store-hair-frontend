@@ -11,6 +11,7 @@ export interface SupplierQueryParams {
   limit: number;
   type?: SupplierType;
   active?: boolean;
+  search?: string;
 }
 
 export interface CreateSupplierDto {
@@ -37,17 +38,15 @@ export class SupplierApiService {
   constructor(private readonly http: HttpClient) {}
 
   getAll(params: SupplierQueryParams = { page: 1, limit: 10 }): Observable<PaginatedResponse<Supplier>> {
-    let httpParams = new HttpParams()
-      .set('page', params.page.toString())
-      .set('limit', params.limit.toString());
+    let httpParams = new HttpParams();
 
-    if (params.type) {
-      httpParams = httpParams.set('type', params.type);
-    }
-
-    if (params.active !== undefined) {
-      httpParams = httpParams.set('active', params.active.toString());
-    }
+    const objectKeys = Object.keys(params) as (keyof SupplierQueryParams)[];
+    objectKeys.forEach(key => {
+      const value = params[key];
+      if (value) {
+        httpParams = httpParams.set(key, String(value));
+      }
+    });
 
     return this.http.get<PaginatedResponse<Supplier>>(this.url, { params: httpParams });
   }

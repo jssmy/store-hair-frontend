@@ -1,8 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { AfterViewInit, Component, DestroyRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
-import { combineLatest, skip } from 'rxjs';
-import { toObservable } from '@angular/core/rxjs-interop';
+import { combineLatest, debounceTime, skip } from 'rxjs';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
@@ -41,6 +40,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   private readonly suppliersHeader = viewChild<SectionHeaderComponent>('suppliersHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly supplierApi = inject(SupplierApiService);
+  private readonly destroyRef = inject(DestroyRef);
 
   protected readonly isStuck = signal(false);
   protected readonly loading = signal(false);
@@ -50,15 +50,15 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   protected readonly typeFilter = signal<string>('all');
 
   protected readonly statusTabs: TabItem[] = [
-    { value: 'all',      label: 'Todos' },
-    { value: 'active',   label: 'Activos' },
+    { value: 'all', label: 'Todos' },
+    { value: 'active', label: 'Activos' },
     { value: 'inactive', label: 'Inactivos' },
   ];
 
   protected readonly typeTabs: TabItem[] = [
-    { value: 'all',                   label: 'Todos' },
-    { value: SupplierType.NATURAL,    label: 'Persona natural' },
-    { value: SupplierType.JURIDICA,   label: 'Persona jurídica' },
+    { value: 'all', label: 'Todos' },
+    { value: SupplierType.NATURAL, label: 'Persona natural' },
+    { value: SupplierType.JURIDICA, label: 'Persona jurídica' },
   ];
 
   private stickyObserver?: IntersectionObserver;
@@ -82,39 +82,56 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   protected readonly searchQuery = signal('');
 
   constructor() {
-    this.loadSuppliers(1, false);
+    this.loadSuppliers(this.buildQueryParams(1));
 
     combineLatest([
       toObservable(this.statusFilter),
       toObservable(this.typeFilter),
     ]).pipe(
       skip(1),
-      takeUntilDestroyed(),
-    ).subscribe(() => this.loadSuppliers(1, false));
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadSuppliers(this.buildQueryParams(1)));
+
+    toObservable(computed(() => ({
+      search: this.searchQuery().trim(),
+    }))).pipe(
+      skip(1),
+      debounceTime(2000),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadSuppliers(this.buildQueryParams(1)));
   }
 
   private buildQueryParams(page: number): SupplierQueryParams {
-    const status = this.statusFilter();
-    const type   = this.typeFilter();
+    const statusValue = {
+      active: true,
+      inactive: false,
+    };
+
+    const active = statusValue[this.statusFilter() as keyof typeof statusValue] as boolean | undefined;
+    const type = this.typeFilter() === 'all' ? undefined : this.typeFilter() as SupplierType | undefined;
+    const search = this.searchQuery().trim() || undefined;
+
     return {
       page,
       limit: 10,
-      ...(type !== 'all' ? { type: type as SupplierType } : {}),
-      ...(status === 'active'   ? { active: true  } : {}),
-      ...(status === 'inactive' ? { active: false } : {}),
+      search,
+      active,
+      type,
+
     };
   }
 
-  private loadSuppliers(page: number, append: boolean): void {
-    if (append) {
+  private loadSuppliers(query: SupplierQueryParams): void {
+
+    if (query.page > 1) {
       this.isLoadingMore.set(true);
     } else {
       this.loading.set(true);
     }
 
-    this.supplierApi.getAll(this.buildQueryParams(page)).subscribe({
+    this.supplierApi.getAll(query).subscribe({
       next: resource => {
-        if (append) {
+        if (query.page > 1) {
           this.resource.update(prev => {
             if (!prev) {
               return {
@@ -134,14 +151,6 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
           });
         }
       },
-      error: () => {
-        if (!append) {
-          this.resource.set({
-            data: [],
-            meta: PaginatedMeta.empty(10),
-          });
-        }
-      },
     }).add(() => {
       this.loading.set(false);
       this.isLoadingMore.set(false);
@@ -149,31 +158,19 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Computed ─────────────────────────────────────────────────
-  // Status and type are server-side; only text search is applied client-side.
-  protected readonly filteredSuppliers = computed(() => {
-    const query = this.searchQuery().trim().toLowerCase();
-    if (!query) return this.suppliers();
-
-    return this.suppliers().filter(s => {
-      const displayName = this.supplierDisplayName(s).toLowerCase();
-      return displayName.includes(query) ||
-        (s.dni ?? '').includes(query) ||
-        (s.ruc ?? '').includes(query) ||
-        s.phone.includes(query);
-    });
-  });
+  protected readonly filteredSuppliers = computed(() => this.suppliers());
 
   protected readonly isFiltered = computed(() =>
     this.searchQuery().trim().length > 0 ||
     this.statusFilter() !== 'all' ||
-    this.typeFilter()   !== 'all',
+    this.typeFilter() !== 'all',
   );
 
   protected onScroll(index: number): void {
     if (this.isLoadingMore() || this.loading()) return;
 
     const maxTotal = this.resource()?.meta.total ?? 0;
-    const totalItems = this.filteredSuppliers().length;
+    const totalItems = this.suppliers().length;
     const threshold = 7;
 
     if (totalItems >= maxTotal) return;
@@ -181,7 +178,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
     if (index + threshold >= totalItems) {
       const currentPage = this.resource()?.meta.page ?? 1;
       const nextPage = currentPage + 1;
-      this.loadSuppliers(nextPage, true);
+      this.loadSuppliers(this.buildQueryParams(nextPage));
     }
   }
 
@@ -205,7 +202,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-        this.loadSuppliers(1, false);
+        this.loadSuppliers(this.buildQueryParams(1));
       });
   }
 

@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -10,14 +10,16 @@ import {
   PurchaseOrderDrawerData,
   PurchaseOrderStatus,
 } from './purchase-order.data';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { PurchaseOrderService } from '../../core/services/purchase-order.service';
-import { map } from 'rxjs';
-import { PurchaseOrder } from '../../core/models/purchase-order.model';
+import { skip } from 'rxjs';
+import { PurchaseOrder, PurchaseOrderQueryParams } from '../../core/models/purchase-order.model';
+import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
+import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.model';
 
 @Component({
   selector: 'stp-purchase-order',
-  imports: [ButtonComponent, IconComponent, SwipeItemComponent],
+  imports: [ButtonComponent, IconComponent, SwipeItemComponent, CdkVirtualScrollViewport, CdkVirtualForOf, ScrollingModule],
   templateUrl: './purchase-order.component.html',
   styleUrl: './purchase-order.component.scss',
 })
@@ -25,42 +27,103 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   private readonly pageHeader = viewChild<ElementRef>('pageHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly purchaseOrderService = inject(PurchaseOrderService);
-
   protected readonly hairColorHex = HAIR_COLOR_HEX;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
   protected readonly statusLabels = PO_STATUS_LABELS;
 
   protected readonly isStuck = signal(false);
+  protected readonly loading = signal(false);
+  protected readonly isLoadingMore = signal(false);
   protected readonly searchQuery = signal('');
   protected readonly activeStatus = signal<PurchaseOrderStatus | 'todos'>('todos');
   protected readonly expandedId = signal<number | null>(null);
-  protected readonly orders = toSignal(this.purchaseOrderService.getAll({ page: 1, limit: 100 }).pipe(map(res => res.data)), { initialValue: [] });
+
+  // ── Main list state ──────────────────────────────────────────
+  protected readonly resource = signal<PaginatedResponse<PurchaseOrder> | null>(null);
+  protected readonly orders = computed(() => this.resource()?.data ?? []);
 
   private stickyObserver?: IntersectionObserver;
 
   // ── Computed ──────────────────────────────────────────────────
   protected readonly filteredOrders = computed(() => {
     const q = this.searchQuery().trim().toLowerCase();
-    const status = this.activeStatus();
-    return this.orders().filter(o => {
-      const matchesStatus = status === 'todos' || o.status === status;
-      const matchesQuery = !q ||
-        o.oc.toLowerCase().includes(q)
-        // o.supplierName.toLowerCase().includes(q) ||
-        // o.registeredBy.toLowerCase().includes(q);
-      return matchesStatus && matchesQuery;
-    });
+    if (!q) return this.orders();
+    return this.orders().filter(o => o.oc.toLowerCase().includes(q));
   });
 
   protected readonly isFiltered = computed(() =>
     this.searchQuery().trim().length > 0 || this.activeStatus() !== 'todos',
   );
 
+  protected readonly orderTotal = computed(() => this.resource()?.meta.total ?? 0);
+
+  constructor() {
+    this.loadOrders(1, false);
+
+    toObservable(this.activeStatus).pipe(
+      skip(1),
+      takeUntilDestroyed(),
+    ).subscribe(() => this.loadOrders(1, false));
+  }
+
   protected readonly statusFilterOptions: (PurchaseOrderStatus | 'todos')[] = [
     'todos', PurchaseOrderStatus.PENDING, PurchaseOrderStatus.APPROVED, PurchaseOrderStatus.CANCELED, PurchaseOrderStatus.COMPLETED,
   ];
 
+  private buildQueryParams(page: number): PurchaseOrderQueryParams {
+    const status = this.activeStatus();
+    return {
+      page,
+      limit: 10,
+      ...(status !== 'todos' ? { status: status as PurchaseOrderStatus } : {}),
+    };
+  }
+
+  private loadOrders(page: number, append: boolean): void {
+    if (append) {
+      this.isLoadingMore.set(true);
+    } else {
+      this.loading.set(true);
+    }
+
+    this.purchaseOrderService.getAll(this.buildQueryParams(page)).subscribe({
+      next: resource => {
+        if (append) {
+          this.resource.update(prev => {
+            if (!prev) return { data: resource.data, meta: resource.meta };
+            return { data: [...prev.data, ...resource.data], meta: resource.meta };
+          });
+        } else {
+          this.resource.set({ data: resource.data, meta: resource.meta });
+        }
+      },
+      error: () => {
+        if (!append) {
+          this.resource.set({ data: [], meta: PaginatedMeta.empty(10) });
+        }
+      },
+    }).add(() => {
+      this.loading.set(false);
+      this.isLoadingMore.set(false);
+    });
+  }
+
+  protected onScroll(index: number): void {
+    if (this.isLoadingMore() || this.loading()) return;
+
+    const maxTotal = this.resource()?.meta.total ?? 0;
+    const loadedItems = this.orders().length;
+    const visibleItems = this.filteredOrders().length;
+    const threshold = 5;
+
+    if (loadedItems >= maxTotal) return;
+
+    if (index + threshold >= visibleItems) {
+      const currentPage = this.resource()?.meta.page ?? 1;
+      this.loadOrders(currentPage + 1, true);
+    }
+  }
 
   protected hairTypeLabel(type: string): string {
     return this.hairTypeLabels[type as keyof typeof this.hairTypeLabels] ?? type;
@@ -92,6 +155,10 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.openDrawer(null);
   }
 
+  protected openEditDrawer(order: PurchaseOrder): void {
+    this.openDrawer(order);
+  }
+
   protected swipeOptionSelected(order: PurchaseOrder, option: SwipeOption): void {
     if (option.key === 'edit') this.openDrawer(order);
   }
@@ -106,22 +173,17 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-        // this.orders.update(prev => {
-        //   const idx = prev.findIndex(o => o.id === result.id);
-        //   return idx >= 0
-        //     ? prev.map(o => o.id === result.id ? result : o)
-        //     : [result, ...prev];
-        // });
+        this.loadOrders(1, false);
       });
   }
 
   // ── Helpers ───────────────────────────────────────────────────
-  protected totalKilo(order: PurchaseOrder): number {
-    return order.details.reduce((s, d) => s + d.weight, 0);
+  protected totalWeight(order: PurchaseOrder): number {
+    return order.details.reduce((s, d) => s + Number(d.weight), 0);
   }
 
   protected totalPrice(order: PurchaseOrder): number {
-    return order.details.reduce((s, d) => s + d.price, 0);
+    return order.details.reduce((s, d) => s + Number(d.price), 0);
   }
 
   protected statusFilterLabel(s: PurchaseOrderStatus | 'todos'): string {
@@ -132,6 +194,10 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     return new Date(iso).toLocaleDateString('es-PE', {
       year: 'numeric', month: 'short', day: 'numeric',
     });
+  }
+
+  protected trackByOrderId(_index: number, order: PurchaseOrder): number {
+    return order.id;
   }
 
   // ── Sticky header ─────────────────────────────────────────────

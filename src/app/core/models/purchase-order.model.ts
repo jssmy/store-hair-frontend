@@ -58,4 +58,5 @@ export interface UpdatePurchaseOrderDto {
 export interface PurchaseOrderQueryParams {
   page: number;
   limit: number;
+  status?: PurchaseOrderStatus;
 }

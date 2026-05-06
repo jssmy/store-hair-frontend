@@ -6,8 +6,8 @@
             <div>
                 <h1 class="po-header__title">Órdenes de Compra</h1>
                 <p class="po-header__subtitle">
-                    {{ orders().length }} orden{{ orders().length !== 1 ? 'es' : '' }}
-                    registrada{{ orders().length !== 1 ? 's' : '' }}
+                    {{ orderTotal() }} orden{{ orderTotal() !== 1 ? 'es' : '' }}
+                    registrada{{ orderTotal() !== 1 ? 's' : '' }}
                 </p>
             </div>
             <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
@@ -67,106 +67,125 @@
             }
         </p>
 
-        <ul class="po-list" role="list">
-            @for (order of filteredOrders(); track order.id) {
-            <stp-swipe-item [options]="swipeOptions" (optionSelected)="swipeOptionSelected(order, $event)">
-                <li class="po-row bg-base">
+        <cdk-virtual-scroll-viewport [itemSize]="50" (scrolledIndexChange)="onScroll($event)">
+            <ul class="po-list" role="list">
+                <stp-swipe-item *cdkVirtualFor="let order of filteredOrders(); trackBy: trackByOrderId"
+                    [options]="swipeOptions" (optionSelected)="swipeOptionSelected(order, $event)">
+                    <li class="po-row bg-base">
 
-                    <!-- Fila resumen (clicable para expandir) -->
-                    <div class="po-row__summary" (click)="toggleExpand(order.id)"
-                        role="button" tabindex="0"
-                        [attr.aria-expanded]="expandedId() === order.id"
-                        (keydown.enter)="toggleExpand(order.id)">
+                        <!-- Fila resumen (clicable para expandir) -->
+                        <div class="po-row__summary" (click)="toggleExpand(order.id)"
+                            role="button" tabindex="0"
+                            [attr.aria-expanded]="expandedId() === order.id"
+                            (keydown.enter)="toggleExpand(order.id)">
 
-                        <div class="po-row__main">
-                            <div class="po-row__number-row">
-                                <span class="po-row__number">{{ order.oc }}</span>
-                                <span class="po-row__status po-row__status--{{ order.status }}">
-                                    {{ statusLabels[order.status] }}
+                            <div class="po-row__main">
+                                <div class="po-row__number-row">
+                                    <span class="po-row__number">{{ order.oc }}</span>
+                                    <span class="po-row__status po-row__status--{{ order.status }}">
+                                        {{ statusLabels[order.status] }}
+                                    </span>
+                                </div>
+                                <span class="po-row__supplier icon-row">
+                                    <i stp-icon name="buildings" class="icon--xs"></i>
+                                    {{ order.supplier.name }}
                                 </span>
+                                <div class="po-row__meta">
+                                    <span class="icon-row">
+                                        <i stp-icon name="user" class="icon--xs"></i>
+                                        {{ order.user.name }}
+                                    </span>
+                                    <span class="po-row__sep">·</span>
+                                    <span class="icon-row">
+                                        <i stp-icon name="calendar" class="icon--xs"></i>
+                                        {{ formatDate(order.createdAt) }}
+                                    </span>
+                                </div>
                             </div>
-                            <span class="po-row__supplier icon-row">
-                                <i stp-icon name="buildings" class="icon--xs"></i>
-                                {{ order.supplier.name }}
-                            </span>
-                            <div class="po-row__meta">
-                                <span class="icon-row">
-                                    <i stp-icon name="user" class="icon--xs"></i>
-                                    {{ order.user.name }}
+
+                            <div class="po-row__aside">
+                                <span class="po-row__price">S/ {{ totalPrice(order) }}</span>
+                                <span class="po-row__kilo">{{ totalWeight(order) }} g</span>
+                                <span class="po-row__det-count">
+                                    {{ order.details.length }}
+                                    detalle{{ order.details.length !== 1 ? 's' : '' }}
                                 </span>
-                                <span class="po-row__sep">·</span>
-                                <span class="icon-row">
-                                    <i stp-icon name="calendar" class="icon--xs"></i>
-                                    {{ formatDate(order.createdAt) }}
-                                </span>
+                                <i stp-icon
+                                    [name]="expandedId() === order.id ? 'caret-up' : 'caret-down'"
+                                    class="icon--sm po-row__chevron">
+                                </i>
                             </div>
-                        </div>
 
-                        <div class="po-row__aside">
-                            <span class="po-row__price">S/ {{ totalPrice(order) }}</span>
-                            <span class="po-row__kilo">{{ totalKilo(order) }} kg</span>
-                            <span class="po-row__det-count">
-                                {{ order.details.length }}
-                                detalle{{ order.details.length !== 1 ? 's' : '' }}
-                            </span>
-                            <i stp-icon
-                                [name]="expandedId() === order.id ? 'caret-up' : 'caret-down'"
-                                class="icon--sm po-row__chevron">
-                            </i>
-                        </div>
+                        </div><!-- /summary -->
 
-                    </div><!-- /summary -->
+                        <!-- Detalles expandidos -->
+                        @if (expandedId() === order.id) {
+                        <div class="po-row__details">
 
-                    <!-- Detalles expandidos -->
-                    @if (expandedId() === order.id) {
-                    <div class="po-row__details">
+                            <!-- Cabecera tabla -->
+                            <div class="po-details-head">
+                                <span>Color</span>
+                                <span>Tipo</span>
+                                <span>Largo</span>
+                                <span>Gramos</span>
+                                <span>Precio</span>
+                            </div>
 
-                        <!-- Cabecera tabla -->
-                        <div class="po-details-head">
-                            <span>Color</span>
-                            <span>Tipo</span>
-                            <span>Largo</span>
-                            <span>Kilo</span>
-                            <span>Precio</span>
-                        </div>
-
-                        <!-- Filas de detalle -->
-                        @for (d of order.details; track d.id) {
-                        <div class="po-detail-row">
-                            <span class="po-detail-row__color">
-                                <span class="po-detail-row__swatch"
-                                    [style.background]="hairColorHex[d.color]"
-                                    [title]="hairColorLabels[d.color]">
+                            <!-- Filas de detalle -->
+                            @for (d of order.details; track d.id) {
+                            <div class="po-detail-row">
+                                <span class="po-detail-row__color">
+                                    <span class="po-detail-row__swatch"
+                                        [style.background]="hairColorHex[d.color]"
+                                        [title]="hairColorLabels[d.color]">
+                                    </span>
+                                    <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
                                 </span>
-                                <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
-                            </span>
-                            <span>{{ hairTypeLabel(d.type) }}</span>
-                            <span>{{ d.length }}"</span>
-                            <span>{{ d.weight }} kg</span>
-                            <span class="po-detail-row__price">S/ {{ d.price }}</span>
-                        </div>
+                                <span>{{ hairTypeLabel(d.type) }}</span>
+                                <span>{{ d.length }}"</span>
+                                <span>{{ d.weight }} kg</span>
+                                <span class="po-detail-row__price">S/ {{ d.price }}</span>
+                            </div>
+                            }
+
+                            <!-- Footer con fechas y totales -->
+                            <div class="po-details-foot">
+                                <span class="po-details-foot__modified icon-row">
+                                    <i stp-icon name="pencil-simple" class="icon--xs"></i>
+                                    Modificado {{ formatDate(order.updatedAt) }}
+                                </span>
+                                <span class="po-details-foot__total">
+                                    Total:
+                                    <strong>S/ {{ totalPrice(order) }}</strong>
+                                    · {{ totalWeight(order) }} g
+                                </span>
+                                <stp-button class="po-details-foot__edit" variant="primary" btnStyle="ghost" size="sm" radius="md"
+                                    (click)="openEditDrawer(order); $event.stopPropagation()">
+                                    <i stp-icon name="pencil" style="font-size:0.875rem"></i>
+                                    Editar
+                                </stp-button>
+                            </div>
+
+                        </div><!-- /details -->
                         }
 
-                        <!-- Footer con fechas y totales -->
-                        <div class="po-details-foot">
-                            <span class="po-details-foot__modified icon-row">
-                                <i stp-icon name="pencil-simple" class="icon--xs"></i>
-                                Modificado {{ formatDate(order.updatedAt) }}
-                            </span>
-                            <span class="po-details-foot__total">
-                                Total:
-                                <strong>S/ {{ totalPrice(order) }}</strong>
-                                · {{ totalKilo(order) }} kg
-                            </span>
-                        </div>
+                    </li>
+                </stp-swipe-item>
 
-                    </div><!-- /details -->
-                    }
+                @if (isLoadingMore()) {
+                <li class="po-list__state text-sm text-secondary">Cargando más órdenes...</li>
+                }
 
+                @if (orders().length === resource()?.meta?.total && orders().length > 0) {
+                <li class="po-list__end-state">
+                    <span class="icon-badge icon-badge--success icon-badge--sm">
+                        <i stp-icon name="check" class="icon--sm"></i>
+                    </span>
+                    <span class="text-sm text-secondary">Has llegado al límite de registros</span>
                 </li>
-            </stp-swipe-item>
-            }
-        </ul>
+                }
+            </ul>
+        </cdk-virtual-scroll-viewport>
     </section>
     }
 

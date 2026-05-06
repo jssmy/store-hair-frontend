@@ -18,6 +18,7 @@ export class PurchaseOrderService {
       params: {
         page: params.page,
         limit: params.limit,
+        ...(params.status ? { status: params.status } : {}),
       },
     });
   }

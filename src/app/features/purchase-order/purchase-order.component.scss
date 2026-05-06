@@ -6,6 +6,10 @@
 
 :host {
   display: block;
+
+  cdk-virtual-scroll-viewport {
+    height: 70dvh;
+  }
 }
 
 .po-page {
@@ -397,6 +401,23 @@
   }
 }
 
+/* ── List states ──────────────────────────────────────────── */
+
+.po-list__state {
+  list-style: none;
+  text-align: center;
+  padding: var(--p-3) var(--p-2);
+}
+
+.po-list__end-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--gap-1);
+  padding: var(--p-4) 0;
+  list-style: none;
+}
+
 /* ── Empty state ──────────────────────────────────────────── */
 
 .po-empty {
@@ -423,5 +444,12 @@
     color: var(--color-text-secondary);
     max-width: 22rem;
     line-height: 1.5;
+  }
+}
+
+
+.po-details-foot__edit {
+  @include bp.mobile-only {
+    display: none;
   }
 }

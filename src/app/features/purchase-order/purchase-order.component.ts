@@ -17,15 +17,16 @@ import { debounceTime, skip } from 'rxjs';
 import { PurchaseOrder, PurchaseOrderQueryParams } from '../../core/models/purchase-order.model';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { PaginatedResponse } from '../../core/models/pagination.model';
+import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
 
 @Component({
   selector: 'stp-purchase-order',
-  imports: [ButtonComponent, IconComponent, SwipeItemComponent, CdkVirtualScrollViewport, CdkVirtualForOf, ScrollingModule, SearchComponent],
+  imports: [ButtonComponent, IconComponent, SwipeItemComponent, CdkVirtualScrollViewport, CdkVirtualForOf, ScrollingModule, SearchComponent, SectionHeaderComponent],
   templateUrl: './purchase-order.component.html',
   styleUrl: './purchase-order.component.scss',
 })
 export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
-  private readonly pageHeader = viewChild<ElementRef>('pageHeader');
+  private readonly pageHeader = viewChild<SectionHeaderComponent>('pageHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly destroyRef = inject(DestroyRef);
 
@@ -276,7 +277,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
 
   // ── Sticky header ─────────────────────────────────────────────
   ngAfterViewInit(): void {
-    const el = this.pageHeader()?.nativeElement;
+    const el = this.pageHeader()?.elementRef.nativeElement;
     if (!el) return;
     this.stickyObserver = new IntersectionObserver(
       ([entry]) => this.isStuck.set(!entry.isIntersecting),

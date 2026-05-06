@@ -55,14 +55,16 @@ export interface CustomerGroup {
 }
 
 
+import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
+
 @Component({
   selector: 'stp-credits',
-  imports: [DecimalPipe, LowerCasePipe, ButtonComponent, IconComponent, AlertComponent, BadgeComponent, TabsComponent, SearchComponent, EmptyStateComponent],
+  imports: [DecimalPipe, LowerCasePipe, ButtonComponent, IconComponent, AlertComponent, BadgeComponent, TabsComponent, SearchComponent, EmptyStateComponent, SectionHeaderComponent],
   templateUrl: './credits.component.html',
   styleUrl: './credits.component.scss',
 })
 export class CreditsComponent implements AfterViewInit, OnDestroy {
-  private readonly creditsHeader = viewChild<ElementRef>('creditsHeader');
+  private readonly creditsHeader = viewChild<SectionHeaderComponent>('creditsHeader');
   private readonly bottomSheet   = inject(MatBottomSheet);
   protected readonly isStuck     = signal(false);
   private stickyObserver?: IntersectionObserver;
@@ -170,6 +172,15 @@ export class CreditsComponent implements AfterViewInit, OnDestroy {
   protected readonly activeCreditsCount = computed(() =>
     this.credits().filter(c => c.status === 'active' || c.status === 'overdue').length,
   );
+
+  protected readonly headerSubtitle = computed(() => {
+    if (this.viewMode() === 'credits') {
+      const count = this.activeCreditsCount();
+      return `${count} crédito${count !== 1 ? 's' : ''} activo${count !== 1 ? 's' : ''} · ${this.credits().length} en total`;
+    }
+    const count = this.activeCustomerCount();
+    return `${count} cliente${count !== 1 ? 's' : ''} con crédito activo · ${this.customerGroups().length} en total`;
+  });
 
   protected readonly filteredCredits = computed(() => {
     const query  = this.searchQuery().trim().toLowerCase();
@@ -309,7 +320,7 @@ export class CreditsComponent implements AfterViewInit, OnDestroy {
   }
 
   ngAfterViewInit(): void {
-    const el = this.creditsHeader()?.nativeElement;
+    const el = this.creditsHeader()?.elementRef.nativeElement;
     if (!el) return;
     this.stickyObserver = new IntersectionObserver(
       ([entry]) => this.isStuck.set(!entry.isIntersecting),

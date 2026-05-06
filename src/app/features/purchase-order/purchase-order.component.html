@@ -1,21 +1,12 @@
 <div class="po-page">
 
     <!-- ── Header ────────────────────────────────────────────── -->
-    <header #pageHeader class="po-header">
-        <div class="po-header__row">
-            <div>
-                <h1 class="po-header__title">Órdenes de Compra</h1>
-                <p class="po-header__subtitle">
-                    {{ orderTotal() }} orden{{ orderTotal() !== 1 ? 'es' : '' }}
-                    registrada{{ orderTotal() !== 1 ? 's' : '' }}
-                </p>
-            </div>
-            <stp-button variant="primary" btnStyle="solid" size="md" radius="md" (click)="openNewDrawer()">
-                <i stp-icon name="plus" style="font-size:1rem"></i>
-                Nueva OC
-            </stp-button>
-        </div>
-    </header>
+    <stp-section-header #pageHeader
+        title="Órdenes de Compra"
+        [subtitle]="orderTotal() + ' orden' + (orderTotal() !== 1 ? 'es' : '') + ' registrada' + (orderTotal() !== 1 ? 's' : '')"
+        buttonLabel="Nueva OC"
+        (newItem)="openNewDrawer()">
+    </stp-section-header>
 
     <!-- ── Sticky bar (búsqueda + filtros de estado) ──────────── -->
     <div class="po-sticky-bar sticky-bar" [class.po-sticky-bar--stuck]="isStuck()"

@@ -19,30 +19,6 @@
     padding: 1.5rem 1.25rem 7rem; // bottom: space for cart bar + bottom-bar
 }
 
-/* ── Header ───────────────────────────────────────────────── */
-
-.sale-header {
-    padding: var(--p-5) var(--p-5) var(--p-4);
-    background: linear-gradient(135deg, var(--color-primary) 0%, color-mix(in srgb, var(--color-primary) 80%, #7c3aed) 100%);
-    border-radius: 1.25rem;
-    box-shadow: var(--shadow-md);
-
-    &__title {
-        margin: 0 0 0.25rem;
-        font-size: 1.5rem;
-        font-weight: 800;
-        color: var(--color-primary-fg);
-        letter-spacing: -0.02em;
-        line-height: 1.2;
-    }
-
-    &__subtitle {
-        margin: 0;
-        font-size: 0.9rem;
-        color: color-mix(in srgb, var(--color-primary-fg) 72%, transparent);
-    }
-}
-
 /* ── Search bar ───────────────────────────────────────────── */
 
 .sale-search {

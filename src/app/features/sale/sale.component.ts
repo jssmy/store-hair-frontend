@@ -24,16 +24,17 @@ import {
 } from '../products/products.data';
 import { ShimmerComponent } from '../../shared/components/shimmer/shimmer.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
 
 @Component({
   selector: 'stp-sale',
-  imports: [DecimalPipe, FormsModule, ButtonComponent, SaleProductCardComponent, ShimmerComponent, IconComponent],
+  imports: [DecimalPipe, FormsModule, ButtonComponent, SaleProductCardComponent, ShimmerComponent, IconComponent, SectionHeaderComponent],
   templateUrl: './sale.component.html',
   styleUrl: './sale.component.scss',
 })
 export class SaleComponent implements AfterViewInit, OnDestroy {
   private readonly bottomSheet = inject(MatBottomSheet);
-  private readonly saleHeader = viewChild<ElementRef>('saleHeader');
+  private readonly saleHeader = viewChild<SectionHeaderComponent>('saleHeader');
   protected readonly isStuck = signal(false);
   private stickyObserver?: IntersectionObserver;
 
@@ -180,7 +181,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
 
   // ── Sticky observer ───────────────────────────────────────
   ngAfterViewInit(): void {
-    const el = this.saleHeader()?.nativeElement;
+    const el = this.saleHeader()?.elementRef.nativeElement;
     if (!el) return;
 
     // Read the actual rendered height of the fixed app-header (includes safe-area-inset-top)

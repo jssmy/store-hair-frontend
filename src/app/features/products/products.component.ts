@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
+import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
 import {
   HAIR_COLOR_HEX,
@@ -25,8 +26,8 @@ import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@ang
     SearchComponent,
     CdkVirtualScrollViewport,
     CdkVirtualForOf,
-    ScrollingModule
-
+    ScrollingModule,
+    SectionHeaderComponent,
   ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss',
@@ -36,7 +37,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   private readonly inventoryService = inject(InventoryService);
   private readonly bottomSheet = inject(MatBottomSheet);
 
-  private readonly productHeader = viewChild<ElementRef>('productHeader');
+  private readonly productHeader = viewChild<SectionHeaderComponent>('productHeader');
   protected readonly isStuck = signal(false);
   private stickyObserver?: IntersectionObserver;
 
@@ -147,7 +148,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
 
   // ── Sticky header ────────────────────────────────────────────────
   ngAfterViewInit(): void {
-    const el = this.productHeader()?.nativeElement;
+    const el = this.productHeader()?.elementRef.nativeElement;
     if (!el) return;
     this.stickyObserver = new IntersectionObserver(
       ([entry]) => this.isStuck.set(!entry.isIntersecting),

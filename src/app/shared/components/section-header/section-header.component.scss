@@ -1,0 +1,28 @@
+.section-header {
+  padding: var(--p-5);
+  background-color: var(--color-primary);
+  border-radius: 1.25rem;
+  box-shadow: var(--shadow-md);
+
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+  }
+
+  &__title {
+    margin: 0 0 0.25rem;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: var(--color-primary-fg);
+    letter-spacing: -0.02em;
+    line-height: 1.2;
+  }
+
+  &__subtitle {
+    margin: 0;
+    font-size: 0.875rem;
+    color: color-mix(in srgb, var(--color-primary-fg) 72%, transparent);
+  }
+}

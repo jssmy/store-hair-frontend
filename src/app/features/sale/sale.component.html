@@ -1,10 +1,10 @@
 <div class="sale-page">
 
     <!-- ── Header ───────────────────────────────────────────── -->
-    <header #saleHeader class="sale-header">
-        <h1 class="sale-header__title">Nueva Venta</h1>
-        <p class="sale-header__subtitle">Selecciona productos para agregar al carrito</p>
-    </header>
+    <stp-section-header #saleHeader
+        title="Nueva Venta"
+        subtitle="Selecciona productos para agregar al carrito">
+    </stp-section-header>
 
     <!-- ── Sticky search + categories ──────────────────────── -->
     <div class="sale-sticky-bar sticky-bar" [class.sale-sticky-bar--stuck]="isStuck()" [class.sticky-bar--stuck]="isStuck()">

@@ -1,22 +1,10 @@
 <div class="credits-page">
 
     <!-- ── Header ────────────────────────────────────────────── -->
-    <header #creditsHeader class="credits-header">
-        <div class="credits-header__row">
-            <div>
-                <h1 class="credits-header__title">Créditos</h1>
-                <p class="credits-header__subtitle">
-                    @if (viewMode() === 'credits') {
-                    {{ activeCreditsCount() }} crédito{{ activeCreditsCount() !== 1 ? 's' : '' }} activo{{ activeCreditsCount() !== 1 ? 's' : '' }}
-                    · {{ credits().length }} en total
-                    } @else {
-                    {{ activeCustomerCount() }} cliente{{ activeCustomerCount() !== 1 ? 's' : '' }} con crédito activo
-                    · {{ customerGroups().length }} en total
-                    }
-                </p>
-            </div>
-        </div>
-    </header>
+    <stp-section-header #creditsHeader
+        title="Créditos"
+        [subtitle]="headerSubtitle()">
+    </stp-section-header>
 
     <!-- ── Alert banner ──────────────────────────────────────── -->
     @if (displayAlertCount() > 0) {

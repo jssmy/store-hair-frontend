@@ -1,24 +1,12 @@
 <div class="inv-page">
 
-    <!-- ── Hero header ─────────────────────────────────────────── -->
-    <header #productHeader class="inv-hero">
-        <span class="inv-hero__blob inv-hero__blob--1" aria-hidden="true"></span>
-        <span class="inv-hero__blob inv-hero__blob--2" aria-hidden="true"></span>
-
-        <div class="inv-hero__main">
-            <div class="inv-hero__text">
-                <p class="inv-hero__eyebrow">
-                    <i stp-icon name="stack" class="icon--xs"></i>
-                    Gestión de stock
-                </p>
-                <h1 class="inv-hero__title">Inventario</h1>
-            </div>
-            <stp-button (click)="createNewBatch()" variant="surface" btnStyle="outlined" size="md" radius="full">
-                <i stp-icon name="plus" class="icon--sm"></i>
-                Nuevo lote
-            </stp-button>
-        </div>
-    </header>
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <stp-section-header #productHeader
+        title="Inventario"
+        subtitle="Gestión de stock"
+        buttonLabel="Nuevo lote"
+        (newItem)="createNewBatch()">
+    </stp-section-header>
 
     <!-- ── Sticky search ──────────────────────────────────────── -->
     <div class="inv-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">

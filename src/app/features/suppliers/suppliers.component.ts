@@ -19,6 +19,7 @@ import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-i
 import { SupplierApiService, SupplierQueryParams } from './supplier-api.service';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
 import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.model';
+import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
 
 @Component({
   selector: 'stp-suppliers',
@@ -31,12 +32,13 @@ import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.m
     CdkVirtualScrollViewport,
     CdkVirtualForOf,
     ScrollingModule,
+    SectionHeaderComponent,
   ],
   templateUrl: './suppliers.component.html',
   styleUrl: './suppliers.component.scss',
 })
 export class SuppliersComponent implements AfterViewInit, OnDestroy {
-  private readonly suppliersHeader = viewChild<ElementRef>('suppliersHeader');
+  private readonly suppliersHeader = viewChild<SectionHeaderComponent>('suppliersHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
   private readonly supplierApi = inject(SupplierApiService);
 
@@ -243,7 +245,7 @@ export class SuppliersComponent implements AfterViewInit, OnDestroy {
 
   // ── Sticky header ────────────────────────────────────────────
   ngAfterViewInit(): void {
-    const el = this.suppliersHeader()?.nativeElement;
+    const el = this.suppliersHeader()?.elementRef.nativeElement;
     if (!el) return;
     this.stickyObserver = new IntersectionObserver(
       ([entry]) => this.isStuck.set(!entry.isIntersecting),

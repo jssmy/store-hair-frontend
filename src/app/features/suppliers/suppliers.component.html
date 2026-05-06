@@ -1,24 +1,12 @@
 <div class="suppliers-page">
 
     <!-- ── Hero header ─────────────────────────────────────────── -->
-    <header #suppliersHeader class="sup-hero">
-        <span class="sup-hero__blob sup-hero__blob--1" aria-hidden="true"></span>
-        <span class="sup-hero__blob sup-hero__blob--2" aria-hidden="true"></span>
-
-        <div class="sup-hero__main">
-            <div class="sup-hero__text">
-                <p class="sup-hero__eyebrow">
-                    <i stp-icon name="truck" class="icon--xs"></i>
-                    Gestión de proveedores
-                </p>
-                <h1 class="sup-hero__title">Proveedores</h1>
-            </div>
-            <stp-button variant="surface" btnStyle="outlined" size="md" radius="full" (click)="openNewDrawer()">
-                <i stp-icon name="plus" class="icon--sm"></i>
-                Nuevo
-            </stp-button>
-        </div>
-    </header>
+    <stp-section-header #suppliersHeader
+        title="Proveedores"
+        subtitle="Gestión de proveedores"
+        buttonLabel="Nuevo"
+        (newItem)="openNewDrawer()">
+    </stp-section-header>
 
     <!-- ── Sticky search + filters ───────────────────────────── -->
     <div class="sup-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">

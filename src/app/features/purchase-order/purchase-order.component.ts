@@ -35,6 +35,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   protected readonly isStuck = signal(false);
   protected readonly loading = signal(false);
   protected readonly isLoadingMore = signal(false);
+  protected readonly downloadingId = signal<number | null>(null);
   protected readonly searchQuery = signal('');
   protected readonly activeStatus = signal<PurchaseOrderStatus | 'todos'>('todos');
   protected readonly expandedId = signal<number | null>(null);
@@ -130,12 +131,21 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   }
 
   protected swipeOptionsFor(order: PurchaseOrder): SwipeOption[] {
-    if (order.status !== PurchaseOrderStatus.PENDING) return [];
-    return [
-      { label: 'Editar', icon: 'pencil', key: 'edit', stpClass: 'bg-primary-light' },
-      { label: 'Aprobar', icon: 'check', key: 'approve', stpClass: 'bg-success-light' },
-      { label: 'Cancelar', icon: 'x-circle', key: 'cancel', stpClass: 'bg-error-light' },
-    ];
+    if (order.status === PurchaseOrderStatus.PENDING) {
+      return [
+        { label: 'Editar', icon: 'pencil', key: 'edit', stpClass: 'bg-primary-light' },
+        { label: 'Aprobar', icon: 'check', key: 'approve', stpClass: 'bg-success-light' },
+        { label: 'Cancelar', icon: 'x-circle', key: 'cancel', stpClass: 'bg-error-light' },
+      ];
+    }
+
+    if (order.status === PurchaseOrderStatus.APPROVED) {
+      return [
+        { label: 'Descargar PDF', icon: 'download-simple', key: 'download', stpClass: 'bg-info-light' },
+      ];
+    }
+
+    return [];
   }
 
   // ── Actions ───────────────────────────────────────────────────
@@ -164,10 +174,31 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     this.openDrawer(order);
   }
 
+  protected downloadPdf(order: PurchaseOrder): void {
+    this.downloadOrderPdf(order);
+  }
+
   protected swipeOptionSelected(order: PurchaseOrder, option: SwipeOption): void {
     if (option.key === 'edit') this.openDrawer(order);
     if (option.key === 'approve') this.updateOrderStatus(order, PurchaseOrderStatus.APPROVED);
     if (option.key === 'cancel') this.updateOrderStatus(order, PurchaseOrderStatus.CANCELED);
+    if (option.key === 'download') this.downloadOrderPdf(order);
+  }
+
+  private downloadOrderPdf(order: PurchaseOrder): void {
+    if (this.downloadingId() !== null) return;
+    this.downloadingId.set(order.id);
+    this.purchaseOrderService.downloadPdf(order.id).subscribe({
+      next: blob => {
+        const fileName = `${order.oc}.pdf`;
+        const objectUrl = URL.createObjectURL(blob);
+        const anchor = document.createElement('a');
+        anchor.href = objectUrl;
+        anchor.download = fileName;
+        anchor.click();
+        URL.revokeObjectURL(objectUrl);
+      },
+    }).add(() => this.downloadingId.set(null));
   }
 
   private updateOrderStatus(order: PurchaseOrder, status: PurchaseOrderStatus): void {

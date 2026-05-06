@@ -166,6 +166,17 @@
                                     <i stp-icon [name]="order.status === 'pending' ? 'pencil' : 'eye'" style="font-size:0.875rem"></i>
                                     {{ order.status === 'pending' ? 'Editar' : 'Ver detalle' }}
                                 </stp-button>
+
+                                @if (order.status === 'approved') {
+                                <stp-button class="po-details-foot__download"
+                                    variant="info" btnStyle="ghost" size="sm" radius="md"
+                                    [loading]="downloadingId() === order.id"
+                                    [disabled]="downloadingId() !== null"
+                                    (click)="downloadPdf(order); $event.stopPropagation()">
+                                    <i stp-icon name="download-simple" style="font-size:0.875rem"></i>
+                                    Descargar PDF
+                                </stp-button>
+                                }
                             </div>
 
                         </div><!-- /details -->

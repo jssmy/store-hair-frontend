@@ -12,7 +12,7 @@ export enum PurchaseOrderStatus {
 
 export const PO_STATUS_LABELS: Record<PurchaseOrderStatus, string> = {
   [PurchaseOrderStatus.PENDING]: 'Pendiente',
-  [PurchaseOrderStatus.APPROVED]: 'Recibida',
+  [PurchaseOrderStatus.APPROVED]: 'Aprobada',
   [PurchaseOrderStatus.CANCELED]: 'Cancelada',
   [PurchaseOrderStatus.COMPLETED]: 'Completada',
 };

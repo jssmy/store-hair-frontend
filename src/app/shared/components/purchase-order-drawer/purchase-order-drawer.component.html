@@ -237,7 +237,7 @@
                             Total estimado
                         </span>
                         <span class="po-detail-total__value">
-                            S/ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                            $ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
                         </span>
                     </div>
                     }
@@ -267,7 +267,7 @@
                             </span>
                         </div>
                         <span class="po-detail-item__price">
-                            S/ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                            $ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
                         </span>
                         @if (!isReadOnly) {
                         <div class="po-detail-item__actions">

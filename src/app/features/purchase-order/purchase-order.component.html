@@ -18,36 +18,18 @@
     </header>
 
     <!-- ── Sticky bar (búsqueda + filtros de estado) ──────────── -->
-    <div class="po-sticky-bar sticky-bar"
-        [class.po-sticky-bar--stuck]="isStuck()"
+    <div class="po-sticky-bar sticky-bar" [class.po-sticky-bar--stuck]="isStuck()"
         [class.sticky-bar--stuck]="isStuck()">
 
-        <section class="po-search" aria-label="Buscar órdenes">
-            <div class="po-search__field">
-                <span class="po-search__icon" aria-hidden="true">
-                    <i stp-icon name="magnifying-glass" style="font-size:1.125rem"></i>
-                </span>
-                <input class="po-search__input" type="search"
-                    placeholder="Buscar por número, proveedor o responsable..."
-                    autocomplete="off" aria-label="Buscar órdenes de compra"
-                    [value]="searchQuery()"
-                    (input)="onSearchInput($any($event.target).value)" />
-                @if (searchQuery()) {
-                <button class="po-search__clear" type="button" aria-label="Limpiar búsqueda"
-                    (click)="clearSearch()">
-                    <i stp-icon name="x" style="font-size:1rem"></i>
-                </button>
-                }
-            </div>
-        </section>
+        <stp-search placeholder="Buscar por número, proveedor o responsable..." size="md" [(value)]="searchQuery"
+            (cleared)="clearSearch()">
+        </stp-search>
 
         <section class="po-status-bar" aria-label="Filtrar por estado">
             <div class="po-status-bar__scroll">
                 @for (s of statusFilterOptions; track s) {
-                <button class="po-status-chip"
-                    [class.po-status-chip--active]="activeStatus() === s"
-                    [attr.data-status]="s"
-                    (click)="setStatus(s)">
+                <button class="po-status-chip" [class.po-status-chip--active]="activeStatus() === s"
+                    [attr.data-status]="s" (click)="setStatus(s)">
                     {{ statusFilterLabel(s) }}
                 </button>
                 }
@@ -74,10 +56,8 @@
                     <li class="po-row bg-base">
 
                         <!-- Fila resumen (clicable para expandir) -->
-                        <div class="po-row__summary" (click)="toggleExpand(order.id)"
-                            role="button" tabindex="0"
-                            [attr.aria-expanded]="expandedId() === order.id"
-                            (keydown.enter)="toggleExpand(order.id)">
+                        <div class="po-row__summary" (click)="toggleExpand(order.id)" role="button" tabindex="0"
+                            [attr.aria-expanded]="expandedId() === order.id" (keydown.enter)="toggleExpand(order.id)">
 
                             <div class="po-row__main">
                                 <div class="po-row__number-row">
@@ -110,8 +90,7 @@
                                     {{ order.details.length }}
                                     detalle{{ order.details.length !== 1 ? 's' : '' }}
                                 </span>
-                                <i stp-icon
-                                    [name]="expandedId() === order.id ? 'caret-up' : 'caret-down'"
+                                <i stp-icon [name]="expandedId() === order.id ? 'caret-up' : 'caret-down'"
                                     class="icon--sm po-row__chevron">
                                 </i>
                             </div>
@@ -135,8 +114,7 @@
                             @for (d of order.details; track d.id) {
                             <div class="po-detail-row">
                                 <span class="po-detail-row__color">
-                                    <span class="po-detail-row__swatch"
-                                        [style.background]="hairColorHex[d.color]"
+                                    <span class="po-detail-row__swatch" [style.background]="hairColorHex[d.color]"
                                         [title]="hairColorLabels[d.color]">
                                     </span>
                                     <span class="po-detail-row__color-name">{{ hairColorLabels[d.color] }}</span>
@@ -159,18 +137,19 @@
                                     <strong>$ {{ totalPrice(order).toFixed(2) }}</strong>
                                     · {{ totalWeight(order) }} g
                                 </span>
+                                @if (order.status === 'pending') {
                                 <stp-button class="po-details-foot__edit"
-                                    [variant]="order.status === 'pending' ? 'primary' : 'surface'"
-                                    btnStyle="ghost" size="sm" radius="md"
-                                    (click)="openDrawerForOrder(order); $event.stopPropagation()">
-                                    <i stp-icon [name]="order.status === 'pending' ? 'pencil' : 'eye'" style="font-size:0.875rem"></i>
-                                    {{ order.status === 'pending' ? 'Editar' : 'Ver detalle' }}
+                                    [variant]="order.status === 'pending' ? 'primary' : 'surface'" btnStyle="ghost"
+                                    size="sm" radius="md" (click)="openDrawerForOrder(order); $event.stopPropagation()">
+                                    <i stp-icon [name]="'pencil'"
+                                        style="font-size:0.875rem"></i>
+                                    Editar
                                 </stp-button>
+                                }
 
                                 @if (order.status === 'approved') {
-                                <stp-button class="po-details-foot__download"
-                                    variant="info" btnStyle="ghost" size="sm" radius="md"
-                                    [loading]="downloadingId() === order.id"
+                                <stp-button class="po-details-foot__download" variant="info" btnStyle="ghost" size="sm"
+                                    radius="md" [loading]="downloadingId() === order.id"
                                     [disabled]="downloadingId() !== null"
                                     (click)="downloadPdf(order); $event.stopPropagation()">
                                     <i stp-icon name="download-simple" style="font-size:0.875rem"></i>

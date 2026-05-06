@@ -49,4 +49,5 @@ export interface PurchaseOrderQueryParams {
   page: number;
   limit: number;
   status?: PurchaseOrderStatus;
+  search?: string;
 }

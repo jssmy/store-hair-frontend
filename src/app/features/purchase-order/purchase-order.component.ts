@@ -1,8 +1,9 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, ElementRef, OnDestroy, computed, effect, inject, signal, viewChild } from '@angular/core';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SwipeItemComponent, SwipeOption } from '../../shared/components/swipe-item/swipe-item.component';
+import { SearchComponent } from '../../shared/components/search/search.component';
 import { PurchaseOrderDrawerComponent } from '../../shared/components/purchase-order-drawer/purchase-order-drawer.component';
 import { HAIR_TYPE_LABELS, HAIR_COLOR_HEX, HAIR_COLOR_LABELS } from '../products/products.data';
 import {
@@ -12,20 +13,22 @@ import {
 } from './purchase-order.data';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { PurchaseOrderService } from '../../core/services/purchase-order.service';
-import { skip } from 'rxjs';
+import { debounceTime, skip } from 'rxjs';
 import { PurchaseOrder, PurchaseOrderQueryParams } from '../../core/models/purchase-order.model';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
-import { PaginatedMeta, PaginatedResponse } from '../../core/models/pagination.model';
+import { PaginatedResponse } from '../../core/models/pagination.model';
 
 @Component({
   selector: 'stp-purchase-order',
-  imports: [ButtonComponent, IconComponent, SwipeItemComponent, CdkVirtualScrollViewport, CdkVirtualForOf, ScrollingModule],
+  imports: [ButtonComponent, IconComponent, SwipeItemComponent, CdkVirtualScrollViewport, CdkVirtualForOf, ScrollingModule, SearchComponent],
   templateUrl: './purchase-order.component.html',
   styleUrl: './purchase-order.component.scss',
 })
 export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   private readonly pageHeader = viewChild<ElementRef>('pageHeader');
   private readonly bottomSheet = inject(MatBottomSheet);
+  private readonly destroyRef = inject(DestroyRef);
+
   private readonly purchaseOrderService = inject(PurchaseOrderService);
   protected readonly hairColorHex = HAIR_COLOR_HEX;
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
@@ -47,11 +50,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   private stickyObserver?: IntersectionObserver;
 
   // ── Computed ──────────────────────────────────────────────────
-  protected readonly filteredOrders = computed(() => {
-    const q = this.searchQuery().trim().toLowerCase();
-    if (!q) return this.orders();
-    return this.orders().filter(o => o.oc.toLowerCase().includes(q));
-  });
+  protected readonly filteredOrders = computed(() => this.orders());
 
   protected readonly isFiltered = computed(() =>
     this.searchQuery().trim().length > 0 || this.activeStatus() !== 'todos',
@@ -60,12 +59,25 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   protected readonly orderTotal = computed(() => this.resource()?.meta.total ?? 0);
 
   constructor() {
-    this.loadOrders(1, false);
+    this.loadOrders(this. buildQueryParams(1));
 
-    toObservable(this.activeStatus).pipe(
+    toObservable(computed(() => ({
+      search: this.searchQuery().trim(),
+    }))).pipe(
       skip(1),
-      takeUntilDestroyed(),
-    ).subscribe(() => this.loadOrders(1, false));
+      debounceTime(2000),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadOrders(this.buildQueryParams(1)));
+
+    toObservable(computed(() => ({
+      status: this.activeStatus(),
+    }))).pipe(
+      skip(1),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadOrders(this.buildQueryParams(1)));
+    
+
+
   }
 
   protected readonly statusFilterOptions: (PurchaseOrderStatus | 'todos')[] = [
@@ -73,42 +85,65 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   ];
 
   private buildQueryParams(page: number): PurchaseOrderQueryParams {
-    const status = this.activeStatus();
+    const status = (this.activeStatus() === 'todos' ? undefined : this.activeStatus()) as PurchaseOrderStatus | undefined;
+    const search = this.searchQuery().trim() || undefined;
     return {
       page,
-      limit: 10,
-      ...(status !== 'todos' ? { status: status as PurchaseOrderStatus } : {}),
+      limit:10,
+      status,
+      search
     };
   }
 
-  private loadOrders(page: number, append: boolean): void {
-    if (append) {
-      this.isLoadingMore.set(true);
-    } else {
+  private loadOrders(query: PurchaseOrderQueryParams): void {
+
+    if (query.page === 1) {
       this.loading.set(true);
+    } else {
+      this.isLoadingMore.set(true);
     }
 
-    this.purchaseOrderService.getAll(this.buildQueryParams(page)).subscribe({
-      next: resource => {
-        if (append) {
+    this.purchaseOrderService.getAll(query).subscribe({
+      next: (resource) => {
+        if (query.page === 1) {
+          this.resource.set(resource);
+        } else {
           this.resource.update(prev => {
-            if (!prev) return { data: resource.data, meta: resource.meta };
+            if (!prev) return resource;
             return { data: [...prev.data, ...resource.data], meta: resource.meta };
           });
-        } else {
-          this.resource.set({ data: resource.data, meta: resource.meta });
-        }
-      },
-      error: () => {
-        if (!append) {
-          this.resource.set({ data: [], meta: PaginatedMeta.empty(10) });
         }
       },
     }).add(() => {
       this.loading.set(false);
       this.isLoadingMore.set(false);
     });
+        
   }
+
+  // private loadOrders(page: number): void {
+
+  //   this.purchaseOrderService.getAll(this.buildQueryParams(page)).subscribe({
+  //     next: resource => {
+  //       if (append) {
+  //         this.resource.update(prev => {
+  //           if (!prev) return { data: resource.data, meta: resource.meta };
+  //           return { data: [...prev.data, ...resource.data], meta: resource.meta };
+  //         });
+  //       } else {
+  //         this.resource.set({ data: resource.data, meta: resource.meta });
+  //       }
+  //     },
+  //     error: () => {
+  //       if (!append) {
+  //         this.resource.set({ data: [], meta: PaginatedMeta.empty(10) });
+  //       }
+  //     },
+  //   }).add(() => {
+  //     this.loading.set(false);
+  //     this.isLoadingMore.set(false);
+  //   });
+  // }
 
   protected onScroll(index: number): void {
     if (this.isLoadingMore() || this.loading()) return;
@@ -122,7 +157,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
 
     if (index + threshold >= visibleItems) {
       const currentPage = this.resource()?.meta.page ?? 1;
-      this.loadOrders(currentPage + 1, true);
+      this.loadOrders(this.buildQueryParams(currentPage + 1));
     }
   }
 
@@ -149,10 +184,6 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Actions ───────────────────────────────────────────────────
-  protected onSearchInput(value: string): void {
-    this.searchQuery.set(value);
-  }
-
   protected clearSearch(): void {
     this.searchQuery.set('');
     this.activeStatus.set('todos');
@@ -203,7 +234,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
 
   private updateOrderStatus(order: PurchaseOrder, status: PurchaseOrderStatus): void {
     this.purchaseOrderService.updateStatus(order.id, status)
-      .subscribe({ next: () => this.loadOrders(1, false) });
+      .subscribe({ next: () => this.loadOrders(this.buildQueryParams(1)) });
   }
 
   private openDrawer(order: PurchaseOrder | null): void {
@@ -216,7 +247,7 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
       .afterDismissed()
       .subscribe(result => {
         if (!result) return;
-        this.loadOrders(1, false);
+        this.loadOrders(this.buildQueryParams(1));
       });
   }
 

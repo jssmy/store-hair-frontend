@@ -143,22 +143,28 @@
     color: var(--color-primary-fg);
   }
 
-  &--active[data-status='pendiente'] {
+  &--active[data-status='pending'] {
     background: var(--color-warning);
     border-color: var(--color-warning);
     color: var(--color-warning-fg);
   }
 
-  &--active[data-status='recibida'] {
+  &--active[data-status='approved'] {
     background: var(--color-success);
     border-color: var(--color-success);
     color: var(--color-success-fg);
   }
 
-  &--active[data-status='cancelada'] {
+  &--active[data-status='canceled'] {
     background: var(--color-error);
     border-color: var(--color-error);
     color: var(--color-error-fg);
+  }
+
+  &--active[data-status='completed'] {
+    background: var(--color-info);
+    border-color: var(--color-info);
+    color: var(--color-info-fg);
   }
 }
 
@@ -237,19 +243,24 @@
     padding: 0.125rem 0.5rem;
     border-radius: var(--radius-full);
 
-    &--pendiente {
+    &--pending {
       background: color-mix(in srgb, var(--color-warning) 15%, transparent);
       color: var(--color-warning);
     }
 
-    &--recibida {
+    &--approved {
       background: color-mix(in srgb, var(--color-success) 15%, transparent);
       color: var(--color-success);
     }
 
-    &--cancelada {
+    &--canceled {
       background: color-mix(in srgb, var(--color-error) 15%, transparent);
       color: var(--color-error);
+    }
+
+    &--completed {
+      background: color-mix(in srgb, var(--color-info) 15%, transparent);
+      color: var(--color-info);
     }
   }
 
@@ -398,6 +409,12 @@
   &__total {
     font-weight: var(--font-medium);
     color: var(--color-text-primary);
+  }
+
+  &__download {
+    @include bp.mobile-only {
+      display: none;
+    }
   }
 }
 

@@ -1,4 +1,4 @@
-import { HttpClient } from "@angular/common/http";
+import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
 import { environment } from "../../../environments/environment";
 import { map, Observable } from "rxjs";
@@ -14,12 +14,18 @@ export class PurchaseOrderService {
   private readonly baseUrl = environment.endpoints.purchaseOrder;
 
   getAll(params: PurchaseOrderQueryParams = { page: 1, limit: 10 }): Observable<PaginatedResponse<PurchaseOrder>> {
+    let httpParams = new HttpParams();
+
+    const objectKeys = Object.keys(params) as (keyof PurchaseOrderQueryParams)[];
+    objectKeys.forEach(key => {
+      const value = params[key];
+      if (value !== undefined) {
+          httpParams = httpParams.set(key, String(value));
+      }
+    });
+
     return this.http.get<PaginatedResponse<PurchaseOrder>>(this.baseUrl, {
-      params: {
-        page: params.page,
-        limit: params.limit,
-        ...(params.status ? { status: params.status } : {}),
-      },
+      params: httpParams,
     });
   }
 

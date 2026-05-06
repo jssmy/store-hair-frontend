@@ -8,6 +8,15 @@
     display: contents;
 }
 
+.stp-error-text {
+    display: block;
+    width: 100%;
+    margin-top: var(--p-1);
+    padding-inline: var(--p-1);
+    font-size: var(--text-xs);
+    color: var(--color-error);
+}
+
 .stp-input-numeric {
     width: 100%;
     // Internal CSS vars resolved by size modifiers

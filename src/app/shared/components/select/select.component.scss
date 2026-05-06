@@ -103,6 +103,14 @@
   }
 }
 
+.stp-error-text {
+  display: block;
+  margin-top: var(--p-1);
+  padding-inline: var(--p-1);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}
+
 .stp-select__caret {
   position: absolute;
   right: 1rem;

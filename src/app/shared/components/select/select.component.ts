@@ -40,6 +40,7 @@ export class SelectComponent implements ControlValueAccessor {
   readonly placeholder = input<string>('Selecciona una opción');
   readonly options = input<SelectOption[]>([]);
   readonly hasError = input<boolean>(false);
+  readonly error = input<string>('');
   readonly size = input<SelectSize>('md');
   readonly id = input<string>('stp-' + Math.random().toString(36).slice(2, 7));
 
@@ -57,7 +58,7 @@ export class SelectComponent implements ControlValueAccessor {
     'stp-focused': this.focused(),
     'stp-floated': this.floated(),
     'stp-disabled': this.disabled(),
-    'stp-error': this.hasError(),
+    'stp-error': this.hasError() || !!this.error(),
     'stp-no-label': !this.label(),
     [`stp-select-wrapper--${this.size()}`]: true,
   }));

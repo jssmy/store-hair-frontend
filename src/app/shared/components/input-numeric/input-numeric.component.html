@@ -29,3 +29,6 @@
     </button>
 
 </div>
+@if (error()) {
+  <span class="stp-error-text">{{ error() }}</span>
+}

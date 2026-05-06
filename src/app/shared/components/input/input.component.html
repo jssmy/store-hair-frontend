@@ -3,7 +3,7 @@
   [class.stp-focused]="focused()"
   [class.stp-floated]="floated()"
   [class.stp-disabled]="disabled()"
-  [class.stp-error]="hasError()"
+  [class.stp-error]="hasErrorState()"
   [class.stp-no-label]="!label()"
 >
   <input
@@ -45,3 +45,6 @@
     </label>
   }
 </div>
+@if (error()) {
+  <span class="stp-error-text">{{ error() }}</span>
+}

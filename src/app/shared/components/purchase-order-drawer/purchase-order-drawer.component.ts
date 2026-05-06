@@ -1,8 +1,8 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
-import { debounceTime, map } from 'rxjs';
+import { debounceTime, map, startWith } from 'rxjs';
 import { toSignal } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
@@ -43,7 +43,7 @@ const isHairTypeOption = (v: string): v is Exclude<HairType, 'todos'> =>
   selector: 'stp-purchase-order-drawer',
   imports: [ButtonComponent, IconComponent, SearchComponent, SelectComponent, InputComponent, ReactiveFormsModule],
   templateUrl: './purchase-order-drawer.component.html',
-  styleUrl: './purchase-order-drawer.component.scss',
+  styleUrls: ['./purchase-order-drawer.component.scss'],
 })
 export class PurchaseOrderDrawerComponent {
   private readonly sheetRef =
@@ -85,7 +85,7 @@ export class PurchaseOrderDrawerComponent {
         type: isHairTypeOption(d.type) ? d.type : 'lisa',
         length: d.length,
         kilo: d.weight,
-        pricePerGram: d.weight > 0 ? d.price / (d.weight * 1000) : 0,
+        pricePerGram: d.price,
       })),
     ),
   });
@@ -97,11 +97,11 @@ export class PurchaseOrderDrawerComponent {
     length?: number | null; kilo?: number | null; pricePerGram?: number | null;
   }) {
     return this.fb.group({
-      id:           this.fb.control(data?.id ?? 0),
-      color:        this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
-      type:         this.fb.control(data?.type ?? 'lisa', Validators.required),
-      length:       this.fb.control(data?.length?.toString() ?? '', [Validators.required, Validators.min(1)]),
-      kilo:         this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
+      id: this.fb.control(data?.id ?? 0),
+      color: this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
+      type: this.fb.control(data?.type ?? 'lisa', Validators.required),
+      length: this.fb.control(data?.length?.toString() ?? '', [Validators.required, Validators.min(1)]),
+      kilo: this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
       pricePerGram: this.fb.control(data?.pricePerGram?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
     });
   }
@@ -120,8 +120,14 @@ export class PurchaseOrderDrawerComponent {
 
   // ── Computed from form ────────────────────────────────────────
 
-  private readonly formValue = toSignal(this.form.valueChanges, { initialValue: this.form.value });
-  private readonly formStatus = toSignal(this.form.statusChanges, { initialValue: this.form.status });
+  private readonly formValue = toSignal(
+    this.form.valueChanges.pipe(startWith(this.form.getRawValue())),
+    { initialValue: this.form.getRawValue() },
+  );
+  private readonly formStatus = toSignal(
+    this.form.statusChanges.pipe(startWith(this.form.status)),
+    { initialValue: this.form.status },
+  );
 
   protected readonly filteredSuppliers = computed(() => {
     const v = this.formValue();
@@ -141,7 +147,7 @@ export class PurchaseOrderDrawerComponent {
     return !v.supplierId && !!(v.supplierSearch ?? '').trim() && this.filteredSuppliers().length === 0;
   });
 
-  protected readonly totalKilo = computed(() =>
+  protected readonly totalWeight = computed(() =>
     (this.formValue().details ?? []).reduce((sum, d) => sum + (+(d?.kilo ?? 0) || 0), 0),
   );
 
@@ -152,6 +158,7 @@ export class PurchaseOrderDrawerComponent {
   );
 
   protected readonly canSubmit = computed(() => {
+
     if (!this.formValue().supplierId) return false;
     if ((this.formValue().details ?? []).length === 0) return false;
     if (this.duplicateIndexes().size > 0) return false;
@@ -159,12 +166,22 @@ export class PurchaseOrderDrawerComponent {
   });
 
   constructor() {
-    // Clear supplierId whenever user types in the search field
+    // Clear supplierId only when the typed text no longer matches the selected supplier
     this.form.controls.supplierSearch.valueChanges
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe(() =>
-        this.form.controls.supplierId.setValue(null, { emitEvent: false }),
-      );
+      .subscribe((query) => {
+
+
+
+        const supplierId = this.form.controls.supplierId.value;
+        if (supplierId == null) return;
+
+        const selected = this.suppliers().find(s => s.id === supplierId);
+        const selectedName = selected ? this.supplierDisplayName(selected) : '';
+        if ((query ?? '') !== selectedName) {
+          this.form.controls.supplierId.setValue(null);
+        }
+      });
 
     // Revalidate duplicate combos when any detail changes
     this.form.controls.details.valueChanges
@@ -246,6 +263,12 @@ export class PurchaseOrderDrawerComponent {
     this.detailsArray.at(index).patchValue({ color });
   }
 
+  protected detailControlErrorMessage(index: number, controlName: 'length' | 'kilo' | 'pricePerGram'): string {
+    const control = this.detailsArray.at(index).get(controlName);
+    if (!control || !(control.touched || control.dirty)) return '';
+    return this.getControlErrorMessage(control, controlName);
+  }
+
   private revalidateDuplicates(): void {
     const controls = this.detailsArray.controls;
     const next = new Set<number>();
@@ -263,6 +286,29 @@ export class PurchaseOrderDrawerComponent {
     this.duplicateIndexes.set(next);
   }
 
+
+  private getControlErrorMessage(
+    control: AbstractControl,
+    controlName: 'length' | 'kilo' | 'pricePerGram',
+  ): string {
+
+    if (!control.errors) return '';
+
+    if (control.hasError('required')) {
+      if (controlName === 'length') return 'El largo es obligatorio.';
+      if (controlName === 'kilo') return 'El peso es obligatorio.';
+      return 'El precio por gramo es obligatorio.';
+    }
+
+    if (control.hasError('min')) {
+      if (controlName === 'length') return 'El largo debe ser mayor o igual a 1.';
+      if (controlName === 'kilo') return 'El peso debe ser mayor o igual a 0.001.';
+      return 'El precio por gramo debe ser mayor o igual a 0.001.';
+    }
+
+    return 'Valor no valido.';
+  }
+
   protected submit(): void {
     if (!this.canSubmit()) return;
     this.submitting.set(true);
@@ -270,11 +316,11 @@ export class PurchaseOrderDrawerComponent {
     const dto = {
       supplierId: this.form.value.supplierId!,
       details: this.detailsArray.controls.map(ctrl => ({
-        color:  ctrl.value.color!,
-        type:   ctrl.value.type!,
+        color: ctrl.value.color!,
+        type: ctrl.value.type!,
         length: +ctrl.value.length!,
         weight: +ctrl.value.kilo!,
-        price:  +ctrl.value.kilo! * +ctrl.value.pricePerGram!,
+        price: +ctrl.value.kilo! * +ctrl.value.pricePerGram!,
       })),
     };
 

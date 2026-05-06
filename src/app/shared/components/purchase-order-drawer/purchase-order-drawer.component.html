@@ -169,7 +169,7 @@
                         <div class="po-field">
                             <stp-input label='Largo (")' type="number"
                                 formControlName="length"
-                                [hasError]="!!(ctrl.get('length')?.invalid && ctrl.get('length')?.touched)">
+                                [error]="detailControlErrorMessage(idx, 'length')">
                             </stp-input>
                         </div>
                     </div>
@@ -179,13 +179,13 @@
                         <div class="po-field">
                             <stp-input label="Peso (g)" type="number"
                                 formControlName="kilo"
-                                [hasError]="!!(ctrl.get('kilo')?.invalid && ctrl.get('kilo')?.touched)">
+                                [error]="detailControlErrorMessage(idx, 'kilo')">
                             </stp-input>
                         </div>
                         <div class="po-field">
                             <stp-input label="Precio x gramo (S/)" type="number"
                                 formControlName="pricePerGram"
-                                [hasError]="!!(ctrl.get('pricePerGram')?.invalid && ctrl.get('pricePerGram')?.touched)">
+                                [error]="detailControlErrorMessage(idx, 'pricePerGram')">
                             </stp-input>
                         </div>
                     </div>
@@ -254,7 +254,7 @@
             <div class="po-totals">
                 <span class="po-totals__item">
                     <i stp-icon name="scales" class="icon--xs"></i>
-                    {{ totalKilo().toFixed(0) }} g total
+                    {{ totalWeight().toFixed(0) }} g total
                 </span>
                 <span class="po-totals__sep">·</span>
                 <span class="po-totals__item po-totals__item--price">

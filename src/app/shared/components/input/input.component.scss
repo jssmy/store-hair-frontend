@@ -179,3 +179,11 @@
 @media (prefers-reduced-motion: reduce) {
   .stp-password-toggle--ripple::after { animation: none !important; }
 }
+
+.stp-error-text {
+  display: block;
+  margin-top: var(--p-1);
+  padding-inline: var(--p-1);
+  font-size: var(--text-xs);
+  color: var(--color-error);
+}

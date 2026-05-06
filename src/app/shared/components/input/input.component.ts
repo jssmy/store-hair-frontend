@@ -31,6 +31,7 @@ export class InputComponent implements ControlValueAccessor {
   readonly label = input<string>('');
   readonly type = input<string>('text');
   readonly hasError = input<boolean>(false);
+  readonly error = input<string>('');
   readonly id = input<string>('stp-' + Math.random().toString(36).slice(2, 7));
   readonly autocomplete = input<string>('off');
 
@@ -40,6 +41,7 @@ export class InputComponent implements ControlValueAccessor {
   protected readonly disabled = signal(false);
 
   /** true when type is password — enables built-in show/hide toggle */
+  protected readonly hasErrorState = computed(() => this.hasError() || !!this.error());
   protected readonly isPassword = computed(() => this.type() === 'password');
 
   /** Tracks whether password is currently visible */

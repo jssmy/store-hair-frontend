@@ -25,6 +25,7 @@ export class InputNumericComponent implements ControlValueAccessor {
     readonly max    = input<number | null>(null);
     readonly radius = input<InputNumericRadius>('md');
     readonly size   = input<InputNumericSize>('md');
+    readonly error  = input<string>('');
 
     
 

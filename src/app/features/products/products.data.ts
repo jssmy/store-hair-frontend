@@ -2,19 +2,16 @@
 
 
 export type HairType =
-  | 'todos'
-  | 'lacio'
+  | 'lasio'
   | 'ondulada';
 
 export const HAIR_TYPE_LABELS: Record<HairType, string> = {
-  todos: 'Todos',
-  lacio: 'Lacio',
+  lasio: 'Lasio',
   ondulada: 'Ondulada',
 };
 
 export const HAIR_TYPE_ICONS: Record<HairType, string> = {
-  todos: '💇',
-  lacio: '📏',
+  lasio: '📏',
   ondulada: '〰️',
 };
 
@@ -33,6 +30,14 @@ export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
   'natural': 'Natural',
   'pintado': 'Pintado',
 };
+
+export const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
+  'lasio', 'ondulada',
+];
+
+export const HAIR_LENGTH_OPTIONS: number[] = [
+  18, 20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 37,
+];
 
 // ── Product model ────────────────────────────────────────────────────
 
@@ -75,10 +80,18 @@ export interface InventoryUser {
   name: string;
 }
 
+export interface InventoryPurchaseOrder {
+  id?: number;
+  oc: string;
+  supplier?: { fullName?: string; businessName?: string };
+  createdAt?: string;
+}
+
 export interface Inventory {
   id: string;
   products: InventoryProduct[];
   user?: InventoryUser;
+  purchaseOrder?: InventoryPurchaseOrder;
   status: InventoryStatus;
   createdAt: string;
   updatedAt: string;
@@ -112,6 +125,12 @@ export interface CreateProductDto {
     images: string[];
 }
 
+
+export interface CreateLoteDto {
+  purchaseOrderId: number;
+  products: CreateProductDto[];
+}
+
 export interface Lote {
   id?: string;
   purchaseOrderNumber: string;
@@ -139,64 +158,3 @@ export const MOCK_PRODUCTS: Product[] = [
   { id: 12, name: 'Peluca Natural Larga', price: 250.00, unit: 'unidad', color: 'natural', weight: 280, length: 50 },
 ];
 
-export const MOCK_INVENTORIES: Inventory[] = [
-  {
-    id: '9349f8b0-125e-480b-912d-a87c58b009d6',
-    products: [
-      {
-        id: '13a82db0-7fd1-4d9b-bb1c-327f50d8e9c3',
-        type: 'lisa',
-        color: 'natural',
-        name: 'Coleta lisa natural 1 cm 1 g',
-        price: 1,
-        length: 1,
-        weight: 1,
-        status: 'pending',
-        imageUrls: [
-          'images/products/product-1777756581669-0-0-890055331.png',
-          'images/products/product-1777756581673-0-1-273681809.png',
-          'images/products/product-1777756581688-0-2-198380898.png',
-        ],
-        createdAt: '2026-05-03T02:16:21.694Z',
-        updatedAt: '2026-05-03T02:16:21.694Z',
-      },
-    ],
-    status: 'pending',
-    createdAt: '2026-05-03T02:16:21.694Z',
-    updatedAt: '2026-05-03T02:16:21.694Z',
-  },
-  {
-    id: 'd102f4a2-c67f-45be-b87e-b60b2d80a3cb',
-    products: [
-      {
-        id: 'f95aa503-ecb8-4fb0-bf53-3cce8f9cb041',
-        type: 'ondulada',
-        color: 'natural',
-        name: 'Coleta ondulada natural 45 cm 110 g',
-        price: 68,
-        length: 45,
-        weight: 110,
-        status: 'completed',
-        imageUrls: [],
-        createdAt: '2026-05-04T09:33:10.000Z',
-        updatedAt: '2026-05-04T09:33:10.000Z',
-      },
-      {
-        id: 'b0f7f3f3-d7da-4f1f-8ca1-6b6cd0095f53',
-        type: 'rizada',
-        color: 'natural',
-        name: 'Coleta rizada natural 35 cm 90 g',
-        price: 55,
-        length: 35,
-        weight: 90,
-        status: 'completed',
-        imageUrls: [],
-        createdAt: '2026-05-04T09:33:10.000Z',
-        updatedAt: '2026-05-04T09:33:10.000Z',
-      },
-    ],
-    status: 'completed',
-    createdAt: '2026-05-04T09:33:10.000Z',
-    updatedAt: '2026-05-04T09:33:10.000Z',
-  },
-];

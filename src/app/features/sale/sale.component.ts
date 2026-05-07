@@ -21,6 +21,7 @@ import {
   MOCK_PRODUCTS,
   Product,
   HairType,
+  HAIR_TYPE_OPTIONS,
 } from '../products/products.data';
 import { ShimmerComponent } from '../../shared/components/shimmer/shimmer.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
@@ -39,14 +40,12 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
   private stickyObserver?: IntersectionObserver;
 
   // ── Search & filter ──────────────────────────────────────
-  protected readonly hairTypes: HairType[] = [
-    'todos', 'lacio', 'ondulada',
-  ];
+  protected readonly hairTypes = HAIR_TYPE_OPTIONS;
 
   protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
 
   protected readonly searchQuery = signal('');
-  protected readonly activeHairType = signal<HairType>('todos');
+  protected readonly activeHairType = signal<HairType>('lasio');
   protected readonly hasSearched = signal(false);
 
   // ── Quantity per product (before adding to cart) ─────────

@@ -16,6 +16,8 @@ import {
   HAIR_COLORS,
   HairColor,
   HairType,
+  HAIR_TYPE_OPTIONS,
+  HAIR_LENGTH_OPTIONS,
 } from '../../../features/products/products.data';
 import {
   PO_STATUS_LABELS,
@@ -30,13 +32,7 @@ import { StpNumericDirective } from "../../directives";
 
 // ── Constants ─────────────────────────────────────────────────────────
 
-const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
-  'lacio', 'ondulada',
-];
 
-const HAIR_LENGTH_OPTIONS: number[] = [
-  18, 20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 37,
-];
 
 const isHairColor = (v: string): v is HairColor => v in HAIR_COLOR_HEX;
 const isHairTypeOption = (v: string): v is Exclude<HairType, 'todos'> =>

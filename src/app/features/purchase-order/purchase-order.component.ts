@@ -122,29 +122,6 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
         
   }
 
-  // private loadOrders(page: number): void {
-
-  //   this.purchaseOrderService.getAll(this.buildQueryParams(page)).subscribe({
-  //     next: resource => {
-  //       if (append) {
-  //         this.resource.update(prev => {
-  //           if (!prev) return { data: resource.data, meta: resource.meta };
-  //           return { data: [...prev.data, ...resource.data], meta: resource.meta };
-  //         });
-  //       } else {
-  //         this.resource.set({ data: resource.data, meta: resource.meta });
-  //       }
-  //     },
-  //     error: () => {
-  //       if (!append) {
-  //         this.resource.set({ data: [], meta: PaginatedMeta.empty(10) });
-  //       }
-  //     },
-  //   }).add(() => {
-  //     this.loading.set(false);
-  //     this.isLoadingMore.set(false);
-  //   });
-  // }
 
   protected onScroll(index: number): void {
     if (this.isLoadingMore() || this.loading()) return;

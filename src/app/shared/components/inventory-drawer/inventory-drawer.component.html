@@ -2,230 +2,329 @@
 
     <div class="inv-drawer__handle" aria-hidden="true"></div>
 
+    <!-- ── Header ── -->
     <div class="inv-drawer__header">
-        <h2 class="inv-drawer__title">{{ isEditMode ? 'Editar Lote' : 'Registrar Lote' }}</h2>
+        <div class="inv-drawer__header-content">
+            @if (isEditMode && editInventory) {
+            <p class="inv-drawer__eyebrow">Lote</p>
+            <h2 class="inv-drawer__title">{{ editInventory.id.slice(0, 8).toUpperCase() }}</h2>
+            } @else {
+            <h2 class="inv-drawer__title">Registrar lote</h2>
+            }
+        </div>
         <button class="inv-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
             <i stp-icon name="x" class="icon--sm"></i>
         </button>
     </div>
 
     @if (invSuccess()) {
+    <!-- ── Éxito ── -->
     <div class="inv-drawer__success">
         <span class="icon-badge icon-badge--success icon-badge--xl">
             <i stp-icon name="check-circle" class="icon--xl"></i>
         </span>
-        <p class="inv-drawer__success-text">{{ isEditMode ? 'Lote actualizado' : 'Lote registrado' }}</p>
+        <p class="inv-drawer__success-text">Lote {{ isEditMode ? 'actualizado' : 'registrado' }}</p>
         <p class="inv-drawer__success-sub">El inventario fue actualizado correctamente</p>
     </div>
     } @else {
 
-    <div class="inv-drawer__body">
+    <!-- ── Cuerpo ── -->
+    <div class="inv-drawer__body" [formGroup]="form">
 
-        <!-- ── Sección: Inventario (edit mode) ── -->
-        @if (isEditMode) {
-        <div class="inv-section">
-            <div class="inv-section__label">
-                <i stp-icon name="pencil-simple" class="icon--sm"></i>
-                Editando lote
-            </div>
-            <div class="inv-po-linked">
-                <i stp-icon name="package" class="icon--sm"></i>
-                <div class="inv-po-linked__info">
-                    <span class="inv-po-linked__number">{{ editInventory!.id.slice(0, 8).toUpperCase() }}</span>
-                    <span class="inv-po-linked__meta">
-                        {{ editInventory!.products.length }} producto{{ editInventory!.products.length !== 1 ? 's' : '' }}
-                        · {{ formatDate(editInventory!.createdAt) }}
-                    </span>
-                </div>
-            </div>
-        </div>
-        }
-
-        <!-- ── Sección: Orden de Compra ── -->
-        @if (!isEditMode) {
+        <!-- ── Sección: Orden de compra ── -->
         <div class="inv-section">
             <div class="inv-section__label">
                 <i stp-icon name="receipt" class="icon--sm"></i>
-                Orden de Compra
+                Orden de compra
             </div>
 
-            <div class="inv-field">
-                <label class="inv-field__label" for="inv-po">N° OC *</label>
-                <div class="inv-field__search-wrap">
-                    <i stp-icon name="magnifying-glass" class="inv-field__search-icon icon--sm"></i>
-                    <input id="inv-po" class="inv-field__input inv-field__input--search" type="text"
-                        placeholder="Buscar o ingresar número de OC..." [value]="lotePoSearch()"
-                        (input)="onPoSearchInput($any($event.target).value)" autocomplete="off" />
-                    @if (lotePoSearch()) {
-                    <button class="inv-field__clear" type="button" (click)="clearPoSearch()">
-                        <i stp-icon name="x" class="icon--xs"></i>
-                    </button>
+            @if (isEditMode) {
+            <!-- Readonly en edición -->
+            @if (poSearchLoading()) {
+            <p class="text-sm text-disabled">Cargando orden de compra...</p>
+            } @else if (loteSelectedPO()) {
+            <div class="inv-po-linked inv-po-linked--readonly">
+                <span class="icon-badge icon-badge--primary">
+                    <i stp-icon name="receipt" class="icon--sm"></i>
+                </span>
+                <div class="inv-po-linked__info">
+                    <span class="inv-po-linked__name">{{ loteSelectedPO()!.oc }}</span>
+                    <span class="inv-po-linked__meta">
+                        {{ loteSelectedPO()!.supplier.fullName || loteSelectedPO()!.supplier.businessName }}
+                        · {{ formatDate(loteSelectedPO()!.createdAt) }}
+                    </span>
+                </div>
+                <i stp-icon name="lock" class="icon--xs icon--muted"></i>
+            </div>
+            } @else if (editInventory?.purchaseOrder) {
+            <div class="inv-po-linked inv-po-linked--readonly">
+                <span class="icon-badge icon-badge--primary">
+                    <i stp-icon name="receipt" class="icon--sm"></i>
+                </span>
+                <div class="inv-po-linked__info">
+                    <span class="inv-po-linked__name">{{ editInventory!.purchaseOrder!.oc }}</span>
+                    @if (editInventory!.purchaseOrder!.supplier) {
+                    <span class="inv-po-linked__meta">
+                        {{ editInventory!.purchaseOrder!.supplier!.fullName || editInventory!.purchaseOrder!.supplier!.businessName }}
+                        @if (editInventory!.purchaseOrder!.createdAt) {
+                        · {{ formatDate(editInventory!.purchaseOrder!.createdAt) }}
+                        }
+                    </span>
                     }
                 </div>
+                <i stp-icon name="lock" class="icon--xs icon--muted"></i>
+            </div>
+            } @else {
+            <p class="text-sm text-disabled">Sin orden de compra asociada</p>
+            }
+            } @else {
+            <!-- Búsqueda en creación -->
+            <stp-search placeholder="Buscar por número de OC..." size="md"
+                formControlName="poSearch"
+                (cleared)="clearPoSearch()">
+            </stp-search>
+            @if (poSearchLoading()) {
+            <p class="text-sm text-disabled">Buscando...</p>
+            }
 
-                <!-- PO dropdown -->
-                @if (filteredPOs().length && !loteSelectedPO()) {
-                <ul class="inv-dropdown" role="listbox">
-                    @for (po of filteredPOs(); track po.oc) {
-                    <li class="inv-dropdown__item" role="option" aria-selected="false" tabindex="0"
-                        (click)="selectPO(po)" (keydown.enter)="selectPO(po)">
-                        <span class="icon-badge icon-badge--primary" style="--size:2rem;font-size:.75rem">
-                            <i stp-icon name="receipt" class="icon--xs"></i>
+            @if (filteredPOs().length && !loteSelectedPO()) {
+            <ul class="inv-dropdown" role="listbox">
+                @for (po of filteredPOs(); track po.oc) {
+                <li class="inv-dropdown__item" role="option" aria-selected="false" tabindex="0" (click)="selectPO(po)"
+                    (keydown.enter)="selectPO(po)">
+                    <span class="icon-badge icon-badge--primary" style="--size:2rem;font-size:.75rem">
+                        <i stp-icon name="receipt" class="icon--xs"></i>
+                    </span>
+                    <div class="inv-dropdown__info">
+                        <span class="inv-dropdown__name">{{ po.oc }}</span>
+                        <span class="inv-dropdown__sub">
+                            {{ po.supplier.fullName || po.supplier.businessName }} · {{ formatDate(po.createdAt) }}
                         </span>
-                        <div class="inv-dropdown__info">
-                            <span class="inv-dropdown__name">{{ po.oc }}</span>
-                            <span class="inv-dropdown__stock">{{ po.supplier.fullName || po.supplier.businessName }} · {{ formatDate(po.createdAt) }}</span>
-                        </div>
-                    </li>
-                    }
-                </ul>
+                    </div>
+                </li>
                 }
+            </ul>
+            }
 
-                <!-- OC seleccionada: chip + proveedor vinculado -->
-                @if (loteSelectedPO()) {
-                <div class="inv-po-linked">
-                    <i stp-icon name="link" class="icon--sm"></i>
-                    <div class="inv-po-linked__info">
-                        <span class="inv-po-linked__number">{{ loteSelectedPO()!.oc }}</span>
-                        <span class="inv-po-linked__meta">{{ formatDate(loteSelectedPO()!.createdAt) }}</span>
-                    </div>
-                    <button class="inv-selected__remove" type="button" (click)="clearPoSearch()">
-                        <i stp-icon name="x" class="icon--xs"></i>
-                    </button>
+            @if (loteSelectedPO()) {
+            <div class="inv-po-linked">
+                <span class="icon-badge icon-badge--primary">
+                    <i stp-icon name="receipt" class="icon--sm"></i>
+                </span>
+                <div class="inv-po-linked__info">
+                    <span class="inv-po-linked__name">{{ loteSelectedPO()!.oc }}</span>
+                    <span class="inv-po-linked__meta">
+                        {{ loteSelectedPO()!.supplier.fullName || loteSelectedPO()!.supplier.businessName }}
+                        · {{ formatDate(loteSelectedPO()!.createdAt) }}
+                    </span>
                 </div>
-                <div class="inv-supplier-linked">
-                    <i stp-icon name="truck" class="icon--sm"></i>
-                    <div class="inv-supplier-linked__info">
-                        <span class="inv-supplier-linked__name">{{ loteSelectedPO()!.supplier.fullName || loteSelectedPO()!.supplier.businessName }}</span>
-                        <span class="inv-supplier-linked__meta">Proveedor vinculado a esta OC</span>
-                    </div>
-                </div>
-                } @else if (lotePoSearch().trim() && !filteredPOs().length) {
-                <div class="inv-po-not-found">
-                    <i stp-icon name="warning" class="icon--sm"></i>
-                    OC no encontrada en el sistema. Selecciona una OC de la lista.
-                </div>
-                }
+                <button class="inv-field__clear-chip" type="button" aria-label="Quitar OC" (click)="clearPoSearch()">
+                    <i stp-icon name="x" class="icon--xs"></i>
+                </button>
             </div>
+            } @else if (lotePoSearch().trim() && !filteredPOs().length && !poSearchLoading()) {
+            <div class="inv-not-found">
+                <i stp-icon name="warning" class="icon--sm"></i>
+                OC no encontrada. Intenta con otro término.
+            </div>
+            }
+            }
         </div>
-        }<!-- /!isEditMode -->
 
-        <!-- ── Sección: Productos del Lote ── -->
-        <div class="inv-section inv-section--products">
+        <!-- ── Sección: Productos del lote ── -->
+        <div class="inv-section inv-section--products" formArrayName="products">
             <div class="inv-section__header">
                 <div class="inv-section__label">
                     <i stp-icon name="package" class="icon--sm"></i>
                     Productos del lote
-                    @if (loteProducts().length) {
-                    <span class="inv-section__count">{{ loteProducts().length }}</span>
+                    @if (productsArray.length) {
+                    <span class="inv-section__count">{{ productsArray.length }}</span>
                     }
                 </div>
-                <button type="button" class="inv-add-product-btn" (click)="addProduct()">
+                @if (editingIdx() === null) {
+                <button type="button" class="inv-add-btn" (click)="startAdd()">
                     <i stp-icon name="plus" class="icon--xs"></i>
                     Agregar
                 </button>
+                }
             </div>
 
-            @if (loteProducts().length === 0) {
+            @if (productsArray.length === 0 && editingIdx() === null) {
             <div class="inv-products-empty">
-                <i stp-icon name="package" class="icon--2xl" style="opacity:.25"></i>
-                <p>Sin productos. Presiona «Agregar» para comenzar.</p>
+                <span class="icon-badge icon-badge--surface icon-badge--xl">
+                    <i stp-icon name="package" class="icon--xl"></i>
+                </span>
+                <p class="font-medium text-secondary">Sin productos aún</p>
+                <p class="text-sm text-disabled">Presiona «Agregar» para añadir el primer producto.</p>
             </div>
             }
 
-            @for (product of loteProducts(); track product.id; let idx = $index) {
-            <div class="inv-product-card">
+            @for (ctrl of productsArray.controls; track ctrl.value['id']; let idx = $index) {
 
-                <!-- Card header -->
-                <div class="inv-product-card__header">
-                    <span class="inv-product-card__num">Producto {{ idx + 1 }}</span>
-                    <button type="button" class="inv-product-card__remove icon-btn icon-btn--danger"
-                        aria-label="Eliminar producto" (click)="removeProduct(product.id)">
-                        <i stp-icon name="trash" class="icon--sm"></i>
+            @if (editingIdx() === idx) {
+            <!-- ── Form card ── -->
+            <div class="inv-detail-card" [formGroupName]="idx">
+
+                <div class="inv-detail-card__header">
+                    <span class="inv-detail-card__num">
+                        {{ isAddingNew() ? 'Nuevo producto' : 'Editando producto ' + (idx + 1) }}
+                    </span>
+                    <button type="button" class="icon-btn" aria-label="Cancelar" (click)="cancelEdit()">
+                        <i stp-icon name="x" class="icon--sm"></i>
+                    </button>
+                    <button type="button" class="icon-btn icon-btn--primary" aria-label="Confirmar"
+                        (click)="confirmEdit()">
+                        <i stp-icon name="check" class="icon--sm"></i>
                     </button>
                 </div>
-
-                <div class="inv-field">
-                    <stp-select
-                        label="Tipo *"
-                        [options]="hairTypeOptions"
-                        [value]="product.type"
-                        (valueChange)="updateProduct(product.id, { type: $any($event) })">
-                    </stp-select>
-                </div>
-
 
                 <!-- Color -->
                 <div class="inv-field">
                     <label class="inv-field__label">
                         Color *
-                        @if (product.color) {
-                        <span class="inv-color-label">{{ hairColorLabels[product.color] }}</span>
+                        @if (ctrl.value['color']) {
+                        <span class="inv-color-label">{{ colorLabel(ctrl.value['color']) }}</span>
                         }
                     </label>
                     <div class="inv-color-row">
                         @for (color of hairColors; track color) {
                         <button type="button" class="inv-color-swatch"
-                            [class.inv-color-swatch--selected]="product.color === color"
+                            [class.inv-color-swatch--selected]="ctrl.value['color'] === color"
                             [style.background]="hairColorHex[color]" [title]="hairColorLabels[color]"
-                            [attr.aria-label]="hairColorLabels[color]"
-                            (click)="updateProduct(product.id, { color: color })">
+                            [attr.aria-label]="hairColorLabels[color]" (click)="patchProductColor(idx, color)">
                         </button>
                         }
                     </div>
                 </div>
 
-                <!-- Measurements: Peso | Largo | Precio -->
-                <div class="inv-field-row inv-field-row--3">
+                <!-- Tipo + Largo -->
+                <div class="inv-field-row">
                     <div class="inv-field">
-                        <stp-input label="Peso (kg) *" type="number" [value]="product.weight?.toString() ?? ''"
-                            (valueChange)="updateProduct(product.id, { weight: +$event })" />
+                        <stp-select label="Tipo" [options]="productHairTypeSelectOptions" formControlName="type"
+                            [hasError]="asGroup(ctrl).get('type')!.invalid && asGroup(ctrl).get('type')!.touched">
+                        </stp-select>
                     </div>
                     <div class="inv-field">
-                        <stp-input label="Precio (S/) *" type="number"
-                            [value]="product.price !== null ? '' + product.price : ''"
-                            (valueChange)="updateProduct(product.id, { price: +$event || null })" />
-                    </div>
-                    <div class="inv-field">
-                        <stp-input label="Largo (cm) *" type="number" [value]="product.length?.toString() ?? ''"
-                            (valueChange)="updateProduct(product.id, { length: +$event })" />
+                        <stp-select label="Largo (cm)" [options]="productHairLengthSelectOptions"
+                            formControlName="length"
+                            [hasError]="asGroup(ctrl).get('length')!.invalid && asGroup(ctrl).get('length')!.touched">
+                        </stp-select>
                     </div>
                 </div>
 
-                <!-- Images -->
+                <!-- Peso + Precio -->
+                <div class="inv-field-row">
+                    <div class="inv-field">
+                        <stp-input label="Peso (kg)" stpNumeric [allowDecimal]="true" type="text"
+                            formControlName="weight"
+                            [error]="productControlErrorMessage(idx, 'weight')">
+                        </stp-input>
+                    </div>
+                    <div class="inv-field">
+                        <stp-input label="Precio (S/)" stpNumeric [allowDecimal]="true" type="text"
+                            formControlName="price"
+                            [error]="productControlErrorMessage(idx, 'price')">
+                        </stp-input>
+                    </div>
+                </div>
+
+                <!-- Imágenes -->
                 <div class="inv-field">
                     <label class="inv-field__label">
                         <i stp-icon name="image" class="icon--xs"></i>
                         Imágenes
                     </label>
                     <div class="inv-images-area">
-                        @for (img of product.images; track img.dataUrl; let i = $index) {
+                        @for (img of getProductImages(ctrl.value['id']); track img.dataUrl; let i = $index) {
                         <div class="inv-image-thumb">
                             <img [src]="img.dataUrl" [alt]="'Imagen ' + (i + 1)" />
                             <button type="button" class="inv-image-thumb__remove"
-                                [attr.aria-label]="'Eliminar imagen ' + (i + 1)" (click)="removeImage(product.id, i)">
+                                [attr.aria-label]="'Eliminar imagen ' + (i + 1)"
+                                (click)="removeImage(ctrl.value['id'], i)">
                                 <i stp-icon name="x" class="icon--xs"></i>
                             </button>
                         </div>
                         }
-                        <input #fileInput type="file" multiple accept="image/*" style="display:none"
-                            (change)="addImages(product.id, $any($event.target).files); $any($event.target).value = ''" />
+                        @if(getProductImages(ctrl.value['id']).length
+                        < 2 ){ <input #fileInput type="file" multiple accept="image/*" style="display:none"
+                            (change)="addImages(ctrl.value['id'], $any($event.target).files); $any($event.target).value = ''" />
                         <button type="button" class="inv-image-add" (click)="fileInput.click()">
                             <i stp-icon name="camera-plus" class="icon--sm"></i>
                             <span>Fotos</span>
                         </button>
+                        }
                     </div>
                 </div>
 
+            </div>
+            } @else {
+            <!-- ── Item compacto ── -->
+            <div class="inv-detail-item">
+                <div class="inv-detail-item__main">
+                    <span class="inv-detail-item__swatch" [class.inv-detail-item__swatch--empty]="!ctrl.value['color']"
+                        [style.background]="colorHex(ctrl.value['color']) || null">
+                    </span>
+                    <div class="inv-detail-item__info">
+                        <span class="inv-detail-item__name">
+                            {{ ctrl.value['color'] ? colorLabel(ctrl.value['color']) : '—' }}
+                            <span class="inv-detail-item__sep">·</span>
+                            {{ typeLabel(ctrl.value['type']) }}
+                        </span>
+                        <span class="inv-detail-item__meta">
+                            <i stp-icon name="ruler" class="icon--xs"></i>
+                            {{ ctrl.value['length'] || '—' }} cm
+                            <span class="inv-detail-item__sep">·</span>
+                            <i stp-icon name="scales" class="icon--xs"></i>
+                            {{ ctrl.value['weight'] || '—' }} kg
+                            @if (getProductImages(ctrl.value['id']).length) {
+                            <span class="inv-detail-item__sep">·</span>
+                            <i stp-icon name="image" class="icon--xs"></i>
+                            {{ getProductImages(ctrl.value['id']).length }}
+                            }
+                        </span>
+                    </div>
+                    <span class="inv-detail-item__price">
+                        S/ {{ ctrl.value['price'] || '0' }}
+                    </span>
+                    <div class="inv-detail-item__actions">
+                        <button type="button" class="icon-btn icon-btn--primary" aria-label="Editar producto"
+                            (click)="startEdit(idx)">
+                            <i stp-icon name="pencil" class="icon--sm"></i>
+                        </button>
+                        <button type="button" class="icon-btn icon-btn--danger" aria-label="Eliminar producto"
+                            (click)="removeProduct(idx)">
+                            <i stp-icon name="trash" class="icon--sm"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            }
+
+            }<!-- /items -->
+
+            <!-- Totales -->
+            @if (productsArray.length > 0) {
+            <div class="inv-totals">
+                <div class="inv-totals__item">
+                    <i stp-icon name="scales" class="icon--xs"></i>
+                    <span>{{ loteTotals().totalWeight.toFixed(2) }} kg</span>
+                    <span class="inv-totals__sub">peso total</span>
+                </div>
+                <div class="inv-totals__divider"></div>
+                <div class="inv-totals__item inv-totals__item--price">
+                    <span>S/ {{ loteTotals().totalPrice.toFixed(2) }}</span>
+                    <span class="inv-totals__sub">precio total</span>
+                </div>
             </div>
             }
         </div>
 
     </div><!-- /body -->
 
+    <!-- ── Footer ── -->
     <div class="inv-drawer__footer">
         <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
-            Cancelar
+            {{ isEditMode ? 'Cerrar' : 'Cancelar' }}
         </stp-button>
         <stp-button variant="primary" btnStyle="solid" size="md" [disabled]="!canSubmitLote()"
             [loading]="invSubmitting()" (click)="submitLote()">

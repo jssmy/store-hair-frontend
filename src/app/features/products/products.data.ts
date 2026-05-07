@@ -63,6 +63,7 @@ export type InventoryStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface InventoryProduct {
   id: string;
+  po: string;
   type: string;
   color: HairColor;
   name: string;
@@ -139,6 +140,12 @@ export interface Lote {
   supplierId: number;
   supplierName: string;
   products: LoteProduct[];
+}
+
+
+export enum LoteStatus {
+  PENDING = 'pending',
+  COMPLETED = 'completed',
 }
 
 // ── Mock products ────────────────────────────────────────────────────

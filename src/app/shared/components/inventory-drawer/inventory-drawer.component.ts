@@ -1,4 +1,4 @@
-import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
+import { Component, DestroyRef, computed, effect, inject, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, FormArray, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
@@ -19,6 +19,7 @@ import {
   Inventory,
   Lote,
   LoteProduct,
+  LoteStatus,
   HAIR_TYPE_OPTIONS,
   HAIR_LENGTH_OPTIONS,
   CreateProductDto,
@@ -32,6 +33,16 @@ import { PurchaseOrderStatus } from '../../../features/purchase-order/purchase-o
 // ── Types ────────────────────────────────────────────────────────────
 
 type ProductImage = { file: File | null; dataUrl: string };
+
+type ComplianceAlertType = 'incomplete' | 'over' | 'unexpected';
+
+interface ComplianceAlert {
+  alertType: ComplianceAlertType;
+  label: string;
+  expected: number;
+  received: number;
+  diff: number;
+}
 
 export interface InventoryDrawerData {
   inventory?: Inventory;
@@ -73,6 +84,33 @@ export class InventoryDrawerComponent {
 
   protected readonly isEditMode = !!this.data.inventory;
   protected readonly editInventory = this.data.inventory ?? null;
+  protected readonly isCompleted = this.data.inventory?.status === LoteStatus.COMPLETED;
+  protected readonly isReadOnly = this.data.inventory?.status === LoteStatus.COMPLETED
+    || this.data.inventory?.status === 'cancelled';
+
+  protected get statusIcon(): string {
+    switch (this.editInventory?.status) {
+      case 'completed': return 'check-circle';
+      case 'cancelled': return 'x-circle';
+      default: return 'clock';
+    }
+  }
+
+  protected get statusLabel(): string {
+    switch (this.editInventory?.status) {
+      case 'completed': return 'Completado';
+      case 'cancelled': return 'Cancelado';
+      default: return 'Pendiente';
+    }
+  }
+
+  protected get statusDesc(): string {
+    switch (this.editInventory?.status) {
+      case 'completed': return 'Este lote fue completado y no puede modificarse.';
+      case 'cancelled': return 'Este lote fue cancelado.';
+      default: return 'Este lote está en proceso. Puedes editarlo y completarlo cuando esté listo.';
+    }
+  }
 
   // Images live outside the form — File objects aren't serializable as form values
   private readonly productImages = signal<Map<string, ProductImage[]>>(
@@ -98,12 +136,13 @@ export class InventoryDrawerComponent {
   }
 
   private buildProductGroup(p?: {
-    id?: string; name?: string; type?: string;
+    id?: string; po?: string; name?: string; type?: string;
     color?: HairColor | null; weight?: number | null;
     length?: number | null; price?: number | null;
   }): FormGroup {
     return this.fb.group({
       id:     [p?.id ?? crypto.randomUUID()],
+      po:     [p?.po ?? ''],
       name:   [p?.name ?? ''],
       type:   [p?.type ?? '', Validators.required],
       color:  [p?.color ?? null, Validators.required],
@@ -138,12 +177,15 @@ export class InventoryDrawerComponent {
   protected readonly editingIdx = signal<number | null>(null);
   protected readonly isAddingNew = signal(false);
   private editSnapshot: Record<string, unknown> | null = null;
+  private prevPriceAutofillKey = '';
 
   // ── PO + submit state ─────────────────────────────────────────────
 
   protected readonly loteSelectedPO = signal<PurchaseOrder | null>(null);
   protected readonly invSubmitting = signal(false);
   protected readonly invSuccess = signal(false);
+  protected readonly markingComplete = signal(false);
+  protected readonly completedNow = signal(false);
 
   // ── Computed ─────────────────────────────────────────────────────
 
@@ -216,23 +258,116 @@ export class InventoryDrawerComponent {
           });
       }
     }
+
+    // Auto-rellena el precio cuando el producto en edición coincide con un detalle de la OC
+    effect(() => {
+      const idx = this.editingIdx();
+      const products = this.productsValue() as Array<Record<string, unknown>>;
+
+      if (idx === null) { this.prevPriceAutofillKey = ''; return; }
+
+      const p = products[idx];
+      if (!p) return;
+
+      const type   = String(p['type']   ?? '');
+      const color  = String(p['color']  ?? '');
+      const length = Number(p['length'] ?? 0);
+      if (!type || !color || !length) return;
+
+      const key = `${idx}|${type}|${color}|${length}`;
+      if (key === this.prevPriceAutofillKey) return;
+      this.prevPriceAutofillKey = key;
+
+      const po = this.loteSelectedPO();
+      if (!po?.details?.length) return;
+
+      const match = po.details.find(d =>
+        String(d.type) === type && String(d.color) === color && Number(d.length) === length
+      );
+      if (!match) return;
+
+      this.productsArray.at(idx).patchValue({ price: String(Number(match.price)) }, { emitEvent: false });
+    });
   }
 
   protected readonly loteTotals = computed(() => {
     const products = this.productsValue() as Array<Record<string, unknown>>;
     return {
       count:       products.length,
-      totalPrice:  products.reduce((s, p) => s + (Number(p['price'])  || 0), 0),
+      totalPrice:  products.reduce((s, p) => s + (Number(p['price']) || 0) * (Number(p['weight']) || 0), 0),
       totalWeight: products.reduce((s, p) => s + (Number(p['weight']) || 0), 0),
     };
   });
 
   protected readonly canSubmitLote = computed(() => {
+    if (this.isReadOnly) return false;
     const products = this.productsValue();
     if (products.length === 0) return false;
     if (this.formStatus() !== 'VALID') return false;
     if (!this.isEditMode && !this.loteSelectedPO()) return false;
     return true;
+  });
+
+  protected readonly complianceAlerts = computed<ComplianceAlert[]>(() => {
+    const po = this.loteSelectedPO();
+    if (!po?.details?.length) return [];
+
+    const products = this.productsValue() as Array<Record<string, unknown>>;
+
+
+    const makeKey = (type: string, color: string, length: number) => `${type}|${color}|${length}`;
+    const makeLabel = (type: string, color: string, length: number) =>
+      `${HAIR_TYPE_LABELS[type as HairType] ?? type} ${HAIR_COLOR_LABELS[color as HairColor] ?? color} ${length} cm`;
+
+    const expectedMap = new Map<string, { label: string; weight: number }>();
+    for (const d of po.details) {
+      const type = String(d.type ?? '');
+      const color = String(d.color ?? '');
+      const length = Number(d.length);
+      const weight = Number(d.weight);
+      const key = makeKey(type, color, length);
+      const existing = expectedMap.get(key);
+      if (existing) {
+        existing.weight += weight;
+      } else {
+        expectedMap.set(key, { label: makeLabel(type, color, length), weight });
+      }
+    }
+
+    const receivedMap = new Map<string, number>();
+    for (const p of products) {
+      const type = String(p['type'] ?? '');
+      const color = String(p['color'] ?? '');
+      const length = Number(p['length'] ?? 0);
+      if (!type || !color || !length) continue;
+      const key = makeKey(type, color, length);
+      receivedMap.set(key, (receivedMap.get(key) ?? 0) + (Number(p['weight']) || 0));
+    }
+
+    const alerts: ComplianceAlert[] = [];
+
+    for (const [key, exp] of expectedMap) {
+      const rec = receivedMap.get(key) ?? 0;
+      if (rec < exp.weight) {
+        alerts.push({ alertType: 'incomplete', label: exp.label, expected: exp.weight, received: rec, diff: exp.weight - rec });
+      } else if (rec > exp.weight) {
+        alerts.push({ alertType: 'over', label: exp.label, expected: exp.weight, received: rec, diff: rec - exp.weight });
+      }
+    }
+
+    for (const [key, rec] of receivedMap) {
+      if (!expectedMap.has(key)) {
+        const p = products.find(prod =>
+          makeKey(String(prod['type'] ?? ''), String(prod['color'] ?? ''), Number(prod['length'] ?? 0)) === key
+        );
+        if (p) {
+          const label = makeLabel(String(p['type'] ?? ''), String(p['color'] ?? ''), Number(p['length'] ?? 0));
+          alerts.push({ alertType: 'unexpected', label, expected: 0, received: rec, diff: rec });
+        }
+      }
+    }
+
+    return alerts;
   });
 
   // ── Helpers ──────────────────────────────────────────────────────
@@ -257,6 +392,26 @@ export class InventoryDrawerComponent {
 
   protected formatDate(iso: string): string {
     return new Date(iso).toLocaleDateString('es-PE', { dateStyle: 'short' });
+  }
+
+  protected complianceIcon(type: ComplianceAlertType): string {
+    if (type === 'incomplete') return 'warning';
+    if (type === 'over') return 'arrow-up';
+    return 'prohibit';
+  }
+
+  protected productTotal(price: unknown, weight: unknown): string {
+    return ((Number(price) || 0) * (Number(weight) || 0)).toFixed(2);
+  }
+
+  protected complianceMessage(alert: ComplianceAlert): string {
+    if (alert.alertType === 'incomplete') {
+      return `Esperado ${alert.expected} g · Recibido ${alert.received} g · Faltan ${alert.diff} g`;
+    }
+    if (alert.alertType === 'over') {
+      return `Esperado ${alert.expected} g · Recibido ${alert.received} g · Excede ${alert.diff} g`;
+    }
+    return `${alert.received} g recibidos · No corresponde a ningún ítem de la OC`;
   }
 
   protected close(): void { this.sheetRef.dismiss(null); }
@@ -376,6 +531,20 @@ export class InventoryDrawerComponent {
   }
 
   // ── Submit ───────────────────────────────────────────────────────
+
+  protected markAsCompleted(): void {
+    if (!this.editInventory) return;
+    this.markingComplete.set(true);
+    this.inventoryService.updateStatus(this.editInventory.id, LoteStatus.COMPLETED).subscribe({
+      next: () => {
+        this.markingComplete.set(false);
+        this.completedNow.set(true);
+        this.invSuccess.set(true);
+        setTimeout(() => this.sheetRef.dismiss(null), 1200);
+      },
+      error: () => { this.markingComplete.set(false); },
+    });
+  }
 
   protected submitLote(): void {
     if (!this.canSubmitLote()) return;

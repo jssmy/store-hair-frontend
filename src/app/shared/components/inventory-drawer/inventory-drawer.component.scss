@@ -136,6 +136,87 @@
   to   { transform: scale(1);   opacity: 1; }
 }
 
+/* ── Status card ──────────────────────────────────────────── */
+
+.inv-status-card {
+  display: flex;
+  align-items: center;
+  gap: 0.875rem;
+  padding: 0.875rem 1.25rem;
+  border-bottom: 1px solid transparent;
+  flex-shrink: 0;
+
+  &__icon {
+    width: 2.5rem;
+    height: 2.5rem;
+    border-radius: var(--radius-md);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__title {
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    line-height: var(--leading-tight);
+  }
+
+  &__desc {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  &__actions {
+    display: flex;
+    gap: 0.5rem;
+    flex-shrink: 0;
+
+    @include bp.mobile-only { flex-direction: column; }
+  }
+
+  &--pending {
+    background: color-mix(in srgb, var(--color-warning) 8%, var(--color-bg));
+    border-bottom-color: color-mix(in srgb, var(--color-warning) 20%, transparent);
+
+    .inv-status-card__icon {
+      background: color-mix(in srgb, var(--color-warning) 15%, transparent);
+      color: var(--color-warning);
+    }
+    .inv-status-card__title { color: var(--color-warning); }
+  }
+
+  &--completed {
+    background: color-mix(in srgb, var(--color-success) 8%, var(--color-bg));
+    border-bottom-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+
+    .inv-status-card__icon {
+      background: color-mix(in srgb, var(--color-success) 15%, transparent);
+      color: var(--color-success);
+    }
+    .inv-status-card__title { color: var(--color-success); }
+  }
+
+  &--cancelled {
+    background: color-mix(in srgb, var(--color-error) 8%, var(--color-bg));
+    border-bottom-color: color-mix(in srgb, var(--color-error) 20%, transparent);
+
+    .inv-status-card__icon {
+      background: color-mix(in srgb, var(--color-error) 15%, transparent);
+      color: var(--color-error);
+    }
+    .inv-status-card__title { color: var(--color-error); }
+  }
+}
+
 /* ── Sections ─────────────────────────────────────────────── */
 
 .inv-section {
@@ -614,6 +695,27 @@
     text-overflow: ellipsis;
   }
 
+  &__po {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    margin-top: 0.1rem;
+  }
+
+  &__po-label {
+    font-size: var(--text-xs);
+    color: var(--color-text-disabled);
+    font-weight: var(--font-medium);
+  }
+
+  &__po-code {
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
+    font-family: monospace;
+    color: var(--color-primary);
+    letter-spacing: var(--tracking-wide);
+  }
+
   &__meta {
     display: flex;
     align-items: center;
@@ -634,10 +736,119 @@
     white-space: nowrap;
   }
 
+  &__pricing {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.125rem;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  &__unit-price {
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__total-price {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--color-primary);
+  }
+
   &__actions {
     display: flex;
     gap: 0.25rem;
     flex-shrink: 0;
+  }
+}
+
+/* ── Subtotal preview (dentro del card de edición) ───────── */
+
+.inv-subtotal {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+  border: 1px solid color-mix(in srgb, var(--color-primary) 20%, transparent);
+  border-radius: var(--radius-sm);
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+  }
+
+  &__value {
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    color: var(--color-primary);
+  }
+}
+
+/* ── Compliance alerts ────────────────────────────────────── */
+
+.inv-compliance {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.inv-compliance-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: var(--radius-sm);
+
+  > i { flex-shrink: 0; margin-top: 0.1rem; }
+
+  &__info {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+
+  &__product {
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  &__detail {
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+  }
+
+  &--incomplete {
+    background: color-mix(in srgb, var(--color-warning) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-warning) 30%, transparent);
+
+    > i { color: var(--color-warning); }
+  }
+
+  &--over {
+    background: color-mix(in srgb, var(--color-info) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-info) 30%, transparent);
+
+    > i { color: var(--color-info); }
+  }
+
+  &--unexpected {
+    background: color-mix(in srgb, var(--color-error) 10%, transparent);
+    border: 1px solid color-mix(in srgb, var(--color-error) 30%, transparent);
+
+    > i { color: var(--color-error); }
   }
 }
 

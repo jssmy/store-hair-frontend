@@ -1,6 +1,6 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Lote, CreateProductDto, Inventory, FindAllLoteQuery, CreateLoteDto } from '../../features/products/products.data';
+import { Lote, CreateProductDto, Inventory, FindAllLoteQuery, CreateLoteDto, LoteStatus } from '../../features/products/products.data';
 import { environment } from "../../../environments/environment";
 import { PaginatedResponse } from '../models/pagination.model';
 
@@ -29,6 +29,10 @@ export class InventoryService {
 
     update(id: string, products: CreateProductDto[]) {
         return this.http.patch(`${environment.endpoints.lote}/${id}`, { products });
+    }
+
+    updateStatus(id: string, status: LoteStatus) {
+        return this.http.patch(`${environment.endpoints.lote}/${id}/status`, { status });
     }
 
     delete(id: string) {

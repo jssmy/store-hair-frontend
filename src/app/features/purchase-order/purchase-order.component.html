@@ -138,7 +138,7 @@
                                 </stp-button>
                                 }
 
-                                @if (order.status === 'approved') {
+                                @if (order.status === 'approved' || order.status === 'completed') {
                                 <stp-button class="po-details-foot__download" variant="info" btnStyle="ghost" size="sm"
                                     radius="md" [loading]="downloadingId() === order.id"
                                     [disabled]="downloadingId() !== null"

@@ -55,7 +55,13 @@
                         </span>
                     </span>
 
-                    
+                    <span class="inv-card__status inv-card__status--{{ inventory.status }}">
+                        @switch (inventory.status) {
+                            @case ('completed') { <i stp-icon name="check-circle" class="icon--xs"></i> Completado }
+                            @case ('cancelled') { <i stp-icon name="x-circle" class="icon--xs"></i> Cancelado }
+                            @default { <i stp-icon name="clock" class="icon--xs"></i> Pendiente }
+                        }
+                    </span>
 
                 </button>
 
@@ -86,23 +92,40 @@
                                 <span class="inv-prod__name">{{ product.name }}</span>
                                 <span class="inv-prod__meta">
                                     {{ hairColorLabels[product.color] }}&nbsp;·&nbsp;{{ product.length
-                                    }}cm&nbsp;·&nbsp;{{
-                                    product.weight }}g
+                                    }}cm&nbsp;·&nbsp;{{ product.weight }}g
                                 </span>
+                                @if (product.po) {
+                                <span class="inv-prod__po">
+                                    <i stp-icon name="barcode" class="icon--xs"></i>
+                                    <span class="inv-prod__po-label">Cód. producto</span>
+                                    <span class="inv-prod__po-code">{{ product.po }}</span>
+                                </span>
+                                }
                             </span>
 
-                            <span class="inv-prod__price">S/&nbsp;{{ product.price }}</span>
+                            <div class="inv-prod__pricing">
+                                <span class="inv-prod__unit-price">S/ {{ product.price }}/g</span>
+                                <span class="inv-prod__total-price">S/ {{ productTotal(product.price, product.weight) }}</span>
+                            </div>
 
                         </li>
                         }
                     </ul>
 
                     <div class="inv-card__edit-bar">
+                        @if (inventory.status === 'pending') {
                         <stp-button variant="primary" btnStyle="ghost" size="sm" radius="md"
                             (click)="openEditDrawer(inventory)">
                             <i stp-icon name="pencil-simple" class="icon--sm"></i>
                             Editar lote
                         </stp-button>
+                        } @else {
+                        <stp-button variant="surface" btnStyle="ghost" size="sm" radius="md"
+                            (click)="openEditDrawer(inventory)">
+                            <i stp-icon name="eye" class="icon--sm"></i>
+                            Ver lote
+                        </stp-button>
+                        }
                     </div>
 
                 </div>

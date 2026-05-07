@@ -109,7 +109,7 @@ export class PurchaseOrderDrawerComponent {
       (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
         id: d.id,
         color: isHairColor(d.color) ? d.color : null,
-        type: isHairTypeOption(d.type) ? d.type : 'lisa',
+        type: isHairTypeOption(d.type) ? d.type : 'lasio',
         length: d.length,
         kilo: d.weight,
         pricePerGram: d.price,
@@ -120,13 +120,13 @@ export class PurchaseOrderDrawerComponent {
   get detailsArray() { return this.form.controls.details; }
 
   private buildDetail(data?: {
-    id?: number; color?: HairColor | null; type?: string;
+    id?: number; color?: HairColor | null; type?: HairType;
     length?: number | null; kilo?: number | null; pricePerGram?: number | null;
   }) {
     return this.fb.group({
       id: this.fb.control(data?.id ?? 0),
       color: this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
-      type: this.fb.control(data?.type ?? 'lisa', Validators.required),
+      type: this.fb.control<HairType>(data?.type ?? 'lasio', Validators.required),
       length: this.fb.control(data?.length?.toString() ?? '', Validators.required),
       kilo: this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
       pricePerGram: this.fb.control(data?.pricePerGram?.toString() ?? '', [Validators.required, Validators.min(0.001)]),

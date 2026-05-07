@@ -166,6 +166,10 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     return product.name.split(' ').slice(0, 2).map(word => word[0]).join('').toUpperCase();
   }
 
+  protected productTotal(price: number, weight: number): string {
+    return (price * weight).toFixed(2);
+  }
+
   protected openEditDrawer(inventory: Inventory): void {
     this.bottomSheet
       .open(InventoryDrawerComponent, {

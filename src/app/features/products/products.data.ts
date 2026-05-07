@@ -59,7 +59,6 @@ export interface CartItem {
   quantity: number;
 }
 
-export type InventoryStatus = 'pending' | 'completed' | 'cancelled';
 
 export interface InventoryProduct {
   id: string;
@@ -70,7 +69,7 @@ export interface InventoryProduct {
   price: number;
   length: number;
   weight: number;
-  status: InventoryStatus;
+  status: LoteStatus;
   imageUrls: string[];
   createdAt: string;
   updatedAt: string;
@@ -93,7 +92,7 @@ export interface Inventory {
   products: InventoryProduct[];
   user?: InventoryUser;
   purchaseOrder?: InventoryPurchaseOrder;
-  status: InventoryStatus;
+  status: LoteStatus;
   createdAt: string;
   updatedAt: string;
 }
@@ -102,6 +101,8 @@ export interface FindAllLoteQuery {
   userId?: string;
   page?: number;
   limit?: number;
+  status?: LoteStatus;
+  search?: string;
 }
 
 // ── Lote (batch) model ───────────────────────────────────────────────

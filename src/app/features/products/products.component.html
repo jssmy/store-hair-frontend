@@ -8,18 +8,29 @@
         (newItem)="createNewBatch()">
     </stp-section-header>
 
-    <!-- ── Sticky search ──────────────────────────────────────── -->
+    <!-- ── Sticky search + filtros ───────────────────────── -->
     <div class="inv-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
         <stp-search placeholder="Buscar por ID, estado o producto..." size="md" [value]="searchQuery()"
             (valueChange)="onSearchInput($event)" (cleared)="clearSearch()">
         </stp-search>
+
+        <section class="inv-status-bar" aria-label="Filtrar por estado">
+            <div class="inv-status-bar__scroll">
+                @for (s of statusFilterOptions; track s) {
+                <button class="inv-status-chip" [class.inv-status-chip--active]="activeStatus() === s"
+                    [attr.data-status]="s" (click)="setStatus(s)">
+                    {{ statusFilterLabel(s) }}
+                </button>
+                }
+            </div>
+        </section>
     </div>
 
     <!-- ── Results list ───────────────────────────────────────── -->
     @if (filteredInventories().length > 0) {
     <div class="inv-bar">
         <span class="inv-bar__label">
-            @if (searchQuery()) {
+            @if (isFiltered()) {
             <i stp-icon name="funnel" class="icon--xs"></i>
             {{ filteredInventories().length }} resultado{{ filteredInventories().length !== 1 ? 's' : '' }}
             } @else {
@@ -39,8 +50,7 @@
                     [attr.aria-expanded]="selectedInventoryId() === inventory.id">
 
                     <span class="inv-card__strip" [class.inv-card__strip--ok]="inventory.status === 'completed'"
-                        [class.inv-card__strip--warn]="inventory.status === 'pending'"
-                        [class.inv-card__strip--out]="inventory.status === 'cancelled'">
+                        [class.inv-card__strip--warn]="inventory.status === 'pending'">
                     </span>
 
                     <span class="inv-card__icon" aria-hidden="true">
@@ -58,7 +68,6 @@
                     <span class="inv-card__status inv-card__status--{{ inventory.status }}">
                         @switch (inventory.status) {
                             @case ('completed') { <i stp-icon name="check-circle" class="icon--xs"></i> Completado }
-                            @case ('cancelled') { <i stp-icon name="x-circle" class="icon--xs"></i> Cancelado }
                             @default { <i stp-icon name="clock" class="icon--xs"></i> Pendiente }
                         }
                     </span>

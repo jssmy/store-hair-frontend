@@ -1,4 +1,5 @@
-import { AfterViewInit, Component, ElementRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { AfterViewInit, Component, DestroyRef, OnDestroy, computed, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { ButtonComponent } from '../../shared/components/button/button.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
@@ -8,8 +9,11 @@ import {
   HAIR_COLOR_LABELS,
   Inventory,
   InventoryProduct,
+  FindAllLoteQuery,
+  LoteStatus,
 } from './products.data';
 import { PaginatedResponse } from '../../core/models/pagination.model';
+import { debounceTime, skip } from 'rxjs';
 
 import { InventoryService } from '../../core/services/inventory.service';
 import { MatBottomSheet } from '@angular/material/bottom-sheet';
@@ -36,6 +40,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
 
   private readonly inventoryService = inject(InventoryService);
   private readonly bottomSheet = inject(MatBottomSheet);
+  private readonly destroyRef = inject(DestroyRef);
 
   private readonly productHeader = viewChild<SectionHeaderComponent>('productHeader');
   protected readonly isStuck = signal(false);
@@ -46,38 +51,83 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   protected readonly assets = environment.assets;
 
   // ── Main list state ──────────────────────────────────────────────
-  
+
   protected readonly resource = signal<PaginatedResponse<Inventory> | null>(null);
   protected readonly inventories = computed(() => this.resource()?.data ?? []);
   protected readonly searchQuery = signal('');
+  protected readonly activeStatus = signal<LoteStatus | 'todos'>('todos');
   protected readonly selectedInventoryId = signal<string | null>(null);
+  protected readonly loading = signal(false);
   protected readonly isLoadingMore = signal(false);
 
   // ── Computed ─────────────────────────────────────────────────────
-  protected readonly filteredInventories = computed(() => {
-    const query = this.searchQuery().trim().toLowerCase();
-    return this.inventories()?.filter(inv => {
-      const matchesId = inv.id.toLowerCase().includes(query);
-      const matchesProduct = inv.products.some(product =>
-        product.name.toLowerCase().includes(query),
-      );
-      return !query || matchesId || matchesProduct;
-    });
-  });
+  protected readonly filteredInventories = computed(() => this.inventories());
 
   protected readonly selectedInventory = computed(() =>
     this.filteredInventories()?.find(inv => inv.id === this.selectedInventoryId()) ?? null,
   );
 
+  protected readonly isFiltered = computed(() =>
+    this.searchQuery().trim().length > 0 || this.activeStatus() !== 'todos',
+  );
+
+  protected readonly inventoryTotal = computed(() => this.resource()?.meta.total ?? 0);
+
+  protected readonly statusFilterOptions: (LoteStatus | 'todos')[] = [
+    'todos', LoteStatus.PENDING, LoteStatus.COMPLETED,
+  ];
+
+  protected readonly statusFilterLabels: Record<LoteStatus | 'todos', string> = {
+    todos: 'Todos',
+    [LoteStatus.PENDING]: 'Pendiente',
+    [LoteStatus.COMPLETED]: 'Completado',
+  };
+
   constructor() {
-    this.loadAll();
+    this.loadInventories(this.buildQueryParams(1));
+
+    toObservable(computed(() => ({ search: this.searchQuery().trim() }))).pipe(
+      skip(1),
+      debounceTime(600),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadInventories(this.buildQueryParams(1)));
+
+    toObservable(computed(() => ({ status: this.activeStatus() }))).pipe(
+      skip(1),
+      takeUntilDestroyed(this.destroyRef),
+    ).subscribe(() => this.loadInventories(this.buildQueryParams(1)));
   }
 
   // ── Data loading ─────────────────────────────────────────────────
-  private loadAll(): void {
-    this.inventoryService.getAll({ page: 1, limit: 8 }).subscribe(
-      (resource) => this.resource.set(resource),
-    );
+  private buildQueryParams(page: number): FindAllLoteQuery {
+    const status = this.activeStatus() === 'todos' ? undefined : this.activeStatus() as LoteStatus;
+    const search = this.searchQuery().trim() || undefined;
+    return { page, limit: 8, status, search };
+  }
+
+  private loadInventories(query: FindAllLoteQuery): void {
+    if (query.page === 1) {
+      this.loading.set(true);
+    } else {
+      this.isLoadingMore.set(true);
+    }
+
+    this.inventoryService.getAll(query).subscribe({
+      next: (resource) => {
+        if (query.page === 1) {
+          this.resource.set(resource);
+          this.selectedInventoryId.set(null);
+        } else {
+          this.resource.update(prev => {
+            if (!prev) return resource;
+            return { data: [...prev.data, ...resource.data], meta: resource.meta };
+          });
+        }
+      },
+    }).add(() => {
+      this.loading.set(false);
+      this.isLoadingMore.set(false);
+    });
   }
 
   // ── Main search ──────────────────────────────────────────────────
@@ -87,6 +137,15 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
 
   protected clearSearch(): void {
     this.searchQuery.set('');
+    this.activeStatus.set('todos');
+  }
+
+  protected setStatus(status: LoteStatus | 'todos'): void {
+    this.activeStatus.set(status);
+  }
+
+  protected statusFilterLabel(s: LoteStatus | 'todos'): string {
+    return this.statusFilterLabels[s];
   }
 
   protected selectInventory(inventoryId: string): void {
@@ -95,15 +154,15 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     );
   }
 
-  protected statusLabel(status: Inventory['status']): string {
-    if (status === 'pending') return 'Pendiente';
-    if (status === 'completed') return 'Completado';
+  protected statusLabel(status: LoteStatus): string {
+    if (status === LoteStatus.PENDING) return 'Pendiente';
+    if (status === LoteStatus.COMPLETED) return 'Completado';
     return 'Cancelado';
   }
 
-  protected statusClass(status: Inventory['status']): string {
-    if (status === 'pending') return 'product-row__stock--low';
-    if (status === 'completed') return 'product-row__stock--ok';
+  protected statusClass(status: LoteStatus): string {
+    if (status === LoteStatus.PENDING) return 'product-row__stock--low';
+    if (status === LoteStatus.COMPLETED) return 'product-row__stock--ok';
     return 'product-row__stock--out';
   }
 
@@ -121,28 +180,17 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   }
 
   protected onScroll(index: number): void {
-
-    if (this.isLoadingMore()) return;
+    if (this.isLoadingMore() || this.loading()) return;
 
     const maxTotal = this.resource()?.meta.total ?? 0;
-    const totalItems = this.filteredInventories()?.length ?? 0;
-    const threshold = 7;
+    const loadedItems = this.inventories().length;
+    const threshold = 5;
 
-    if (totalItems >= maxTotal) return;
+    if (loadedItems >= maxTotal) return;
 
-    if (index + threshold >= totalItems) {
+    if (index + threshold >= loadedItems) {
       const currentPage = this.resource()?.meta.page ?? 1;
-      const nextPage = currentPage + 1;
-      this.isLoadingMore.set(true);
-      this.inventoryService.getAll({ page: nextPage, limit: 8 }).subscribe(
-        (resource) => this.resource.update((prev) => {
-          if (!prev) return resource;
-          return {
-            data: [...prev.data, ...resource.data],
-            meta: resource.meta,
-          };
-        }),
-      ).add(() => this.isLoadingMore.set(false));
+      this.loadInventories(this.buildQueryParams(currentPage + 1));
     }
   }
 
@@ -177,7 +225,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
         panelClass: 'stp-inventory-drawer-panel',
       })
       .afterDismissed()
-      .subscribe(() => this.loadAll());
+      .subscribe(() => this.loadInventories(this.buildQueryParams(1)));
   }
 
   protected createNewBatch(): void {
@@ -187,6 +235,6 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
         panelClass: 'stp-inventory-drawer-panel',
       })
       .afterDismissed()
-      .subscribe(() => this.loadAll());
+      .subscribe(() => this.loadInventories(this.buildQueryParams(1)));
   }
 }

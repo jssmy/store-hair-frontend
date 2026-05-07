@@ -20,6 +20,8 @@ export class InventoryService {
         if (query.page != null) params = params.set('page', query.page);
         if (query.limit != null) params = params.set('limit', query.limit);
         if (query.userId) params = params.set('userId', query.userId);
+        if (query.status) params = params.set('status', query.status);
+        if (query.search) params = params.set('search', query.search);
         return this.http.get<PaginatedResponse<Inventory>>(environment.endpoints.lote, { params });
     }
 

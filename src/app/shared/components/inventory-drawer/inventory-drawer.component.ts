@@ -85,21 +85,18 @@ export class InventoryDrawerComponent {
   protected readonly isEditMode = !!this.data.inventory;
   protected readonly editInventory = this.data.inventory ?? null;
   protected readonly isCompleted = this.data.inventory?.status === LoteStatus.COMPLETED;
-  protected readonly isReadOnly = this.data.inventory?.status === LoteStatus.COMPLETED
-    || this.data.inventory?.status === 'cancelled';
+  protected readonly isReadOnly = this.data.inventory?.status === LoteStatus.COMPLETED;
 
   protected get statusIcon(): string {
     switch (this.editInventory?.status) {
-      case 'completed': return 'check-circle';
-      case 'cancelled': return 'x-circle';
+      case LoteStatus.COMPLETED: return 'check-circle';
       default: return 'clock';
     }
   }
 
   protected get statusLabel(): string {
     switch (this.editInventory?.status) {
-      case 'completed': return 'Completado';
-      case 'cancelled': return 'Cancelado';
+      case LoteStatus.COMPLETED: return 'Completado';
       default: return 'Pendiente';
     }
   }
@@ -107,7 +104,6 @@ export class InventoryDrawerComponent {
   protected get statusDesc(): string {
     switch (this.editInventory?.status) {
       case 'completed': return 'Este lote fue completado y no puede modificarse.';
-      case 'cancelled': return 'Este lote fue cancelado.';
       default: return 'Este lote está en proceso. Puedes editarlo y completarlo cuando esté listo.';
     }
   }

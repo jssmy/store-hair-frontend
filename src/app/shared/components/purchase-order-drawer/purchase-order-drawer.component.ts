@@ -1,5 +1,5 @@
 import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
-import { AbstractControl, FormBuilder, ReactiveFormsModule, ValidationErrors, Validators } from '@angular/forms';
+import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { debounceTime, map, startWith } from 'rxjs';
@@ -105,12 +105,13 @@ export class PurchaseOrderDrawerComponent {
   readonly form = this.fb.group({
     supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null, Validators.required),
     supplierSearch: this.fb.control(this.data.purchaseOrder?.supplier.fullName || this.data.purchaseOrder?.supplier.businessName || ''),
+    exchangeRate: this.fb.control(this.data.purchaseOrder?.exchangeRate?.toString() ?? ''),
     details: this.fb.array(
       (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
         id: d.id,
         color: isHairColor(d.color) ? d.color : null,
-        type: isHairTypeOption(d.type) ? d.type : 'lasio',
-        length: d.length,
+        type: isHairTypeOption(d.type) ? d.type : 'golden',
+        length: d.length ?? 18,
         kilo: d.weight,
         pricePerGram: d.price,
       })),
@@ -126,8 +127,8 @@ export class PurchaseOrderDrawerComponent {
     return this.fb.group({
       id: this.fb.control(data?.id ?? 0),
       color: this.fb.control<HairColor | null>(data?.color ?? null, Validators.required),
-      type: this.fb.control<HairType>(data?.type ?? 'lasio', Validators.required),
-      length: this.fb.control(data?.length?.toString() ?? '', Validators.required),
+      type: this.fb.control<HairType>(data?.type ?? 'golden', Validators.required),
+      length: this.fb.control(data?.length?.toString() ?? '18', Validators.required),
       kilo: this.fb.control(data?.kilo?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
       pricePerGram: this.fb.control(data?.pricePerGram?.toString() ?? '', [Validators.required, Validators.min(0.001)]),
     });
@@ -157,6 +158,15 @@ export class PurchaseOrderDrawerComponent {
     this.form.statusChanges.pipe(startWith(this.form.status)),
     { initialValue: this.form.status },
   );
+
+  protected readonly supplierCurrencyName = computed(() => {
+    if (this.isEdit) {
+      return this.editSupplier?.country?.currencyName
+        ?? this.data.purchaseOrder?.exchangeCurrency
+        ?? null;
+    }
+    return this.selectedSupplier()?.country?.currencyName ?? null;
+  });
 
   protected readonly filteredSuppliers = computed(() => {
     const v = this.formValue();
@@ -191,6 +201,7 @@ export class PurchaseOrderDrawerComponent {
     if (!this.formValue().supplierId) return false;
     if ((this.formValue().details ?? []).length === 0) return false;
     if (this.duplicateIndexes().size > 0) return false;
+    if (this.supplierCurrencyName() && !(+(this.formValue().exchangeRate ?? 0) > 0)) return false;
     return this.formStatus() === 'VALID';
   });
 
@@ -361,8 +372,13 @@ export class PurchaseOrderDrawerComponent {
     if (!this.canSubmit()) return;
     this.submitting.set(true);
 
+    const currencyName = this.supplierCurrencyName();
     const dto = {
       supplierId: this.form.value.supplierId!,
+      ...(currencyName && {
+        exchangeRate: +(this.form.value.exchangeRate ?? 0),
+        exchangeCurrency: currencyName,
+      }),
       details: this.detailsArray.controls.map(ctrl => ({
         color: ctrl.value.color!,
         type: ctrl.value.type!,

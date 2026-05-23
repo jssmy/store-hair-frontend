@@ -2,17 +2,24 @@
 
 
 export type HairType =
-  | 'lasio'
-  | 'ondulada';
+  'lote'
+  | 'viethanmita'
+  | 'golden'
+  | 'premium'
 
 export const HAIR_TYPE_LABELS: Record<HairType, string> = {
-  lasio: 'Lasio',
-  ondulada: 'Ondulada',
+  lote: 'Lote',
+  viethanmita: 'Viethanmita',
+  golden: 'Golden',
+  premium: 'Premium',
+
 };
 
 export const HAIR_TYPE_ICONS: Record<HairType, string> = {
-  lasio: '📏',
-  ondulada: '〰️',
+  lote: '📦',
+  viethanmita: '📏',
+  golden: '✨',
+  premium: '🌟',
 };
 
 // ── Hair colors ──────────────────────────────────────────────────────
@@ -32,7 +39,7 @@ export const HAIR_COLOR_LABELS: Record<HairColor, string> = {
 };
 
 export const HAIR_TYPE_OPTIONS: Exclude<HairType, 'todos'>[] = [
-  'lasio', 'ondulada',
+  'lote', 'viethanmita', 'golden', 'premium',
 ];
 
 export const HAIR_LENGTH_OPTIONS: number[] = [
@@ -88,7 +95,8 @@ export interface InventoryPurchaseOrder {
 }
 
 export interface Inventory {
-  id: string;
+  id: number;
+  lt: string
   products: InventoryProduct[];
   user?: InventoryUser;
   purchaseOrder?: InventoryPurchaseOrder;
@@ -119,6 +127,7 @@ export interface LoteProduct {
 }
 
 export interface CreateProductDto {
+    id?: string;
     type: string;
     color: string;
     price: number;

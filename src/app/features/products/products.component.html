@@ -58,7 +58,7 @@
                     </span>
 
                     <span class="inv-card__info">
-                        <span class="inv-card__id">{{ inventory.id.slice(0, 8).toUpperCase() }}</span>
+                        <span class="inv-card__id">{{ inventory.lt }}</span>
                         <span class="inv-card__meta">
                             {{ inventory.products.length }} producto{{ inventory.products.length !== 1 ? 's' : '' }}
                             &nbsp;·&nbsp;{{ inventoryDateLabel(inventory.createdAt) }}
@@ -154,19 +154,19 @@
     }
 
     <!-- ── Empty state ────────────────────────────────────────── -->
-    @if ((filteredInventories().length === 0) && searchQuery()) {
+    @if (filteredInventories().length === 0 && isFiltered() && !loading()) {
     <div class="inv-empty" aria-live="polite">
-        <span class="inv-empty__icon" aria-hidden="true">
-            <i stp-icon name="magnifying-glass" class="icon--2xl"></i>
-        </span>
-        <h2 class="inv-empty__title">Sin resultados</h2>
-        <p class="inv-empty__text">
-            No se encontró <strong>"{{ searchQuery() }}"</strong> en la lista de inventarios.
-        </p>
-        <stp-button variant="primary" btnStyle="ghost" size="md" radius="full" (click)="clearSearch()">
-            <i stp-icon name="arrow-counter-clockwise" class="icon--sm"></i>
-            Limpiar filtros
-        </stp-button>
+        <stp-empty-state
+            [icon]="searchQuery() ? 'magnifying-glass' : 'funnel'"
+            title="Sin resultados"
+            [description]="searchQuery()
+                ? 'No se encontró \'' + searchQuery() + '\' en la lista de inventarios.'
+                : 'No hay lotes con estado \'' + statusFilterLabel(activeStatus()) + '\' registrados.'">
+            <stp-button variant="primary" btnStyle="ghost" size="md" radius="full" (click)="clearSearch()">
+                <i stp-icon name="arrow-counter-clockwise" class="icon--sm"></i>
+                Limpiar filtros
+            </stp-button>
+        </stp-empty-state>
     </div>
     }
 

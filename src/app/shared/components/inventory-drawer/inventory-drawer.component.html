@@ -7,7 +7,7 @@
         <div class="inv-drawer__header-content">
             @if (isEditMode && editInventory) {
             <p class="inv-drawer__eyebrow">Lote</p>
-            <h2 class="inv-drawer__title">{{ editInventory.id.slice(0, 8).toUpperCase() }}</h2>
+            <h2 class="inv-drawer__title">{{ editInventory.lt }}</h2>
             } @else {
             <h2 class="inv-drawer__title">Registrar lote</h2>
             }
@@ -17,7 +17,7 @@
         </button>
     </div>
 
-    @if (isEditMode && editInventory) {
+    @if (isEditMode && editInventory && !invSuccess()) {
     <!-- ── Tarjeta de estado ── -->
     <div class="inv-status-card inv-status-card--{{ editInventory.status }}">
         <div class="inv-status-card__icon">

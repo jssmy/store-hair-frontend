@@ -87,6 +87,12 @@ export class InventoryDrawerComponent {
   protected readonly isCompleted = this.data.inventory?.status === LoteStatus.COMPLETED;
   protected readonly isReadOnly = this.data.inventory?.status === LoteStatus.COMPLETED;
 
+  /** IDs que vienen del servidor — se envían en el payload de actualización.
+   *  Los productos creados durante la sesión de edición NO estarán aquí. */
+  private readonly existingProductIds = new Set<string>(
+    this.data.inventory?.products.map(p => p.id) ?? [],
+  );
+
   protected get statusIcon(): string {
     switch (this.editInventory?.status) {
       case LoteStatus.COMPLETED: return 'check-circle';
@@ -551,6 +557,9 @@ export class InventoryDrawerComponent {
     const rawProducts = this.productsArray.value as RawProduct[];
 
     const products: CreateProductDto[] = rawProducts.map(p => ({
+      // Incluir id solo si el producto ya existía en el servidor;
+      // los productos nuevos agregados en esta sesión van sin id.
+      ...(this.existingProductIds.has(p.id) ? { id: p.id } : {}),
       type:   p.type,
       color:  p.color,
       price:  Number(p.price),

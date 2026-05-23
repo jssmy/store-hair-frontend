@@ -23,6 +23,8 @@ export interface PurchaseOrder {
   };
   supplier: Supplier;
   details: PurchaseOrderDetail[];
+  exchangeRate?: number;
+  exchangeCurrency?: string;
   createdAt: string;
   updatedAt: string;
 }
@@ -38,11 +40,15 @@ export interface CreatePurchaseOrderDetailDto {
 export interface CreatePurchaseOrderDto {
   supplierId: number;
   details: CreatePurchaseOrderDetailDto[];
+  exchangeRate?: number;
+  exchangeCurrency?: string;
 }
 
 export interface UpdatePurchaseOrderDto {
   supplierId?: number;
   details?: CreatePurchaseOrderDetailDto[];
+  exchangeRate?: number;
+  exchangeCurrency?: string;
 }
 
 export interface PurchaseOrderQueryParams {

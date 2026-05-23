@@ -20,6 +20,7 @@ import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { InventoryDrawerComponent } from '../../shared/components/inventory-drawer/inventory-drawer.component';
 import { environment } from '../../../environments/environment';
 import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@angular/cdk/scrolling';
+import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 
 
 @Component({
@@ -32,6 +33,7 @@ import { CdkVirtualForOf, CdkVirtualScrollViewport, ScrollingModule } from '@ang
     CdkVirtualForOf,
     ScrollingModule,
     SectionHeaderComponent,
+    EmptyStateComponent,
   ],
   templateUrl: './products.component.html',
   styleUrl: './products.component.scss',
@@ -56,7 +58,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   protected readonly inventories = computed(() => this.resource()?.data ?? []);
   protected readonly searchQuery = signal('');
   protected readonly activeStatus = signal<LoteStatus | 'todos'>('todos');
-  protected readonly selectedInventoryId = signal<string | null>(null);
+  protected readonly selectedInventoryId = signal<number | null>(null);
   protected readonly loading = signal(false);
   protected readonly isLoadingMore = signal(false);
 
@@ -148,7 +150,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
     return this.statusFilterLabels[s];
   }
 
-  protected selectInventory(inventoryId: string): void {
+  protected selectInventory(inventoryId: number): void {
     this.selectedInventoryId.update(current =>
       current === inventoryId ? null : inventoryId,
     );

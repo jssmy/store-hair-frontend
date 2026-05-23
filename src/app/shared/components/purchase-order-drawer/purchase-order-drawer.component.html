@@ -126,6 +126,22 @@
             </div>
         </div>
 
+        <!-- Tipo de cambio -->
+        <div class="po-section">
+            <div class="po-section__label">
+                <i stp-icon name="currency-circle-dollar" class="icon--sm"></i>
+                Tipo de cambio
+            </div>
+            <div class="po-field">
+                <stp-input
+                    [label]="supplierCurrencyName() ? 'Tipo de cambio (' + supplierCurrencyName() + ')' : 'Tipo de cambio'"
+                    stpNumeric [allowDecimal]="true"
+                    type="text"
+                    formControlName="exchangeRate">
+                </stp-input>
+            </div>
+        </div>
+
         <!-- Detalles del lote -->
         <div class="po-section po-section--details" formArrayName="details">
             <div class="po-section__header">
@@ -222,7 +238,7 @@
                             </stp-input>
                         </div>
                         <div class="po-field">
-                            <stp-input label="Precio x gramo (USD)" stpNumeric [allowDecimal]="true" type="text"
+                            <stp-input [label]="'Precio x gramo USD'" stpNumeric [allowDecimal]="true" type="text"
                                 formControlName="pricePerGram"
                                 [error]="detailControlErrorMessage(idx, 'pricePerGram')">
                             </stp-input>

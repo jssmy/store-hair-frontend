@@ -2,6 +2,8 @@ export interface Country {
   id: string;
   name: string;
   prefix: string;
+  currency: string;
+  currencyName: string;
   active: boolean;
 }
 

@@ -45,7 +45,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
   protected readonly hairTypeLabels = HAIR_TYPE_LABELS;
 
   protected readonly searchQuery = signal('');
-  protected readonly activeHairType = signal<HairType>('lasio');
+  protected readonly activeHairType = signal<HairType>('golden');
   protected readonly hasSearched = signal(false);
 
   // ── Quantity per product (before adding to cart) ─────────

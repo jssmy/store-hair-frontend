@@ -25,19 +25,19 @@ export class InventoryService {
         return this.http.get<PaginatedResponse<Inventory>>(environment.endpoints.lote, { params });
     }
 
-    getById(id: string) {
+    getById(id: number) {
         return this.http.get<Inventory>(`${environment.endpoints.lote}/${id}`);
     }
 
-    update(id: string, products: CreateProductDto[]) {
+    update(id: number, products: CreateProductDto[]) {
         return this.http.patch(`${environment.endpoints.lote}/${id}`, { products });
     }
 
-    updateStatus(id: string, status: LoteStatus) {
+    updateStatus(id: number, status: LoteStatus) {
         return this.http.patch(`${environment.endpoints.lote}/${id}/status`, { status });
     }
 
-    delete(id: string) {
+    delete(id: number) {
         return this.http.delete(`${environment.endpoints.lote}/${id}`);
     }
 

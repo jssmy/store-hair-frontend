@@ -1,11 +1,27 @@
+<!-- ── Header ──────────────────────────────────────────────────── -->
 <div class="step__header">
-    <h2 class="step__title">Carrito</h2>
-    <button class="close" type="button" aria-label="Cerrar carrito" (click)="close.emit()">
-        <i stp-icon [autofill]="false" name="x" style="font-size: 1.25rem"></i>
+    <div class="cs-title-row">
+        <h2 class="step__title">Carrito</h2>
+        @if (count() > 0) {
+        <span class="cs-badge">{{ count() }}</span>
+        }
+    </div>
+    <button class="icon-btn" type="button" aria-label="Cerrar carrito" (click)="close.emit()">
+        <i stp-icon name="x" class="icon--sm"></i>
     </button>
 </div>
 
-<ul class="step__list">
+<!-- ── Lista de productos ─────────────────────────────────────── -->
+<ul class="step__list" role="list">
+    @if (items().length === 0) {
+    <li class="cs-empty">
+        <stp-empty-state
+            icon="shopping-cart"
+            title="Tu carrito está vacío"
+            description="Agrega productos para continuar con la venta">
+        </stp-empty-state>
+    </li>
+    } @else {
     @for (item of items(); track item.product.id) {
     <stp-swipe-item
         [options]="swipeOptions()"
@@ -17,23 +33,34 @@
             (salePriceChange)="salePriceChange.emit($event)" />
     </stp-swipe-item>
     }
+    }
 </ul>
 
+<!-- ── Resumen (sólo con productos) ─────────────────────────── -->
+@if (items().length > 0) {
 <div class="step__summary">
     <div class="step__summary-row">
-        <span>Subtotal ({{ count() }} {{ count() === 1 ? 'producto' : 'productos' }})</span>
+        <span class="icon-row">
+            <i stp-icon name="package" class="icon--xs"></i>
+            Subtotal — {{ count() }} {{ count() === 1 ? 'producto' : 'productos' }}
+        </span>
         <span>$ {{ total() | number:'1.2-2' }} USD</span>
     </div>
     <div class="step__summary-row step__summary-row--total">
         <strong>Total</strong>
-        <strong>$ {{ total() | number:'1.2-2' }} USD</strong>
+        <strong class="cs-total-amount">$ {{ total() | number:'1.2-2' }} USD</strong>
     </div>
 </div>
+}
 
+<!-- ── Acciones ───────────────────────────────────────────────── -->
 <div class="step__actions">
-    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="clear.emit()">
-        Limpiar carrito
+    @if (items().length > 0) {
+    <stp-button variant="danger" btnStyle="ghost" radius="md" size="md"
+        (click)="clear.emit()">
+        Limpiar
     </stp-button>
+    }
     <stp-button
         [disabled]="items().length === 0"
         variant="primary"
@@ -41,6 +68,10 @@
         radius="md"
         size="md"
         (click)="checkout.emit()">
-        Cobrar $ {{ total() | number:'1.2-2' }} USD
+        @if (items().length === 0) {
+            Agregar productos
+        } @else {
+            Cobrar &nbsp;$ {{ total() | number:'1.2-2' }} USD
+        }
     </stp-button>
 </div>

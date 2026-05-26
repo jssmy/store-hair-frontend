@@ -2,9 +2,9 @@ import { Component, computed, input, output, signal } from '@angular/core';
 import { IconComponent } from '../../icon/icon.component';
 import { DecimalPipe } from '@angular/common';
 import { ButtonComponent } from '../../button/button.component';
+import { AlertComponent } from '../../alert/alert.component';
 
 export type PaymentMethod = 'cash' | 'credit';
-export type PaymentFrequency = 'semanal' | 'quincenal' | 'mensual';
 
 export interface CashPaymentData {
   method: 'cash';
@@ -17,16 +17,13 @@ export interface CreditPaymentData {
   initialAmount: number;
   creditEfectivo: number;
   creditDigital: number;
-  installments: number;
-  frequency: PaymentFrequency;
-  firstPaymentDate: string;
 }
 
 export type PaymentData = CashPaymentData | CreditPaymentData;
 
 @Component({
   selector: 'stp-payment-step',
-  imports: [DecimalPipe, ButtonComponent, IconComponent],
+  imports: [DecimalPipe, ButtonComponent, IconComponent, AlertComponent],
   templateUrl: './payment-step.component.html',
   styleUrl: './payment-step.component.scss',
 })
@@ -43,40 +40,16 @@ export class PaymentStepComponent {
   protected readonly totalPaid = computed(() => this.efectivo() + this.digital());
   protected readonly change = computed(() => Math.max(0, this.totalPaid() - this.total()));
   protected readonly remaining = computed(() => Math.max(0, this.total() - this.totalPaid()));
+  protected readonly progressPercent = computed(() =>
+    this.total() > 0 ? Math.min(100, (this.totalPaid() / this.total()) * 100) : 0,
+  );
 
   protected readonly creditEfectivo = signal<number>(0);
   protected readonly creditDigital = signal<number>(0);
   protected readonly initialAmount = computed(() =>
     Math.min(this.creditEfectivo() + this.creditDigital(), this.total())
   );
-  protected readonly installments = signal<number>(1);
-  protected readonly frequency = signal<PaymentFrequency>('mensual');
-  protected readonly firstPaymentDate = computed(() => {
-    const d = new Date();
-    const freq = this.frequency();
-    if (freq === 'semanal') d.setDate(d.getDate() + 7);
-    else if (freq === 'quincenal') d.setDate(d.getDate() + 15);
-    else d.setMonth(d.getMonth() + 1);
-    return d;
-  });
-  protected readonly firstPaymentDateLabel = computed(() => {
-    const label = new Intl.DateTimeFormat('es-PE', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
-    }).format(this.firstPaymentDate());
-    return label[0].toUpperCase() + label.slice(1);
-  });
   protected readonly financed = computed(() => Math.max(0, this.total() - this.initialAmount()));
-  protected readonly installmentAmount = computed(() => {
-    const count = this.installments();
-    return count > 0 ? this.financed() / count : 0;
-  });
-
-  protected readonly FREQUENCIES: { value: PaymentFrequency; label: string }[] = [
-    { value: 'semanal', label: 'Semanal' },
-    { value: 'quincenal', label: 'Quincenal' },
-    { value: 'mensual', label: 'Mensual' },
-  ];
-  protected readonly INSTALLMENT_OPTIONS = [1, 2, 3, 4, 6, 8, 12];
 
   protected readonly canConfirm = computed(() => {
     const method = this.paymentMethod();
@@ -118,7 +91,7 @@ export class PaymentStepComponent {
 
     const payment: PaymentData = method === 'cash'
       ? { method: 'cash', efectivo: this.efectivo(), digital: this.digital() }
-      : { method: 'credit', initialAmount: this.initialAmount(), creditEfectivo: this.creditEfectivo(), creditDigital: this.creditDigital(), installments: this.installments(), frequency: this.frequency(), firstPaymentDate: this.firstPaymentDate().toISOString().slice(0, 10) };
+      : { method: 'credit', initialAmount: this.initialAmount(), creditEfectivo: this.creditEfectivo(), creditDigital: this.creditDigital() };
 
     this.confirm.emit(payment);
   }

@@ -1,4 +1,5 @@
 import { Component, computed, inject, signal } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { CartItem } from '../../../features/products/products.data';
 import { CartStepComponent } from './cart-step/cart-step.component';
@@ -9,7 +10,7 @@ import { IconComponent } from '../icon/icon.component';
 import type { PaymentData } from './payment-step/payment-step.component';
 import type { Customer } from '../../../core/services/customer.service';
 
-export type { PaymentData, PaymentMethod, PaymentFrequency, CashPaymentData, CreditPaymentData } from './payment-step/payment-step.component';
+export type { PaymentData, PaymentMethod, CashPaymentData, CreditPaymentData } from './payment-step/payment-step.component';
 export type { Customer } from '../../../core/services/customer.service';
 
 export interface CartBottomSheetData {
@@ -25,7 +26,7 @@ export interface CartDismissResult {
 
 @Component({
   selector: 'stp-cart-drawer',
-  imports: [CartStepComponent, PaymentStepComponent, CustomerStepComponent, ButtonComponent, IconComponent],
+  imports: [DecimalPipe, CartStepComponent, PaymentStepComponent, CustomerStepComponent, ButtonComponent, IconComponent],
   templateUrl: './cart-drawer.component.html',
   styleUrl: './cart-drawer.component.scss',
 })

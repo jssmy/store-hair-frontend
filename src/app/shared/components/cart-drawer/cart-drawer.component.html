@@ -1,45 +1,111 @@
 <div class="cart-drawer"
-         role="dialog"
-         aria-modal="true"
-         aria-label="Carrito de venta"
-         (click)="$event.stopPropagation()">
+     role="dialog"
+     aria-modal="true"
+     aria-label="Carrito de venta"
+     (click)="$event.stopPropagation()">
 
-        <div class="cart-drawer__handle" aria-hidden="true"></div>
+    <div class="cart-drawer__handle" aria-hidden="true"></div>
 
+    <!-- ── Progress stepper (oculto en pantalla de éxito) ──────────── -->
+    @if (step() !== 'confirmation') {
+    <nav class="cart-drawer__stepper" aria-label="Progreso de venta">
 
-        @if (step() === 'listItems') {
-        <stp-cart-step
-            [items]="items()"
-            [swipeOptions]="swipeOptions"
-            (remove)="removeItem($event)"
-            (salePriceChange)="updateSalePrice($event.productId, $event.salePrice)"
-            (close)="close()"
-            (clear)="clear()"
-            (checkout)="goToPayment()" />
-        } @else if (step() === 'paymentMethod') {
-        <stp-payment-step
-            [total]="total()"
-            (back)="goBack()"
-            (confirm)="onPaymentConfirmed($event)" />
-        } @else if (step() === 'customerInformation') {
-        <stp-customer-step
-            [items]="items()"
-            [payment]="pendingPayment()!"
-            [total]="total()"
-            (back)="goBackFromCustomer()"
-            (confirm)="onCustomerConfirmed($event)" />
-        } @else {
-        <div class="cart-drawer__success">
-            <div class="cart-drawer__success-icon">
-                <i stp-icon name="check-circle" [autofill]="false" style="font-size: 4rem"></i>
+        <div class="cart-drawer__step"
+             [class.cart-drawer__step--active]="step() === 'listItems'"
+             [class.cart-drawer__step--done]="step() === 'paymentMethod' || step() === 'customerInformation'">
+            <div class="cart-drawer__step-circle">
+                @if (step() === 'paymentMethod' || step() === 'customerInformation') {
+                    <i stp-icon name="check-bold" class="icon--xs"></i>
+                } @else { 1 }
             </div>
-            <h2 class="cart-drawer__success-title">¡Operación registrada!</h2>
-            <p class="cart-drawer__success-sub">La venta fue registrada con éxito.</p>
-            <stp-button variant="primary" btnStyle="solid" radius="md" size="md"
-                (click)="done()">
-                Listo
-            </stp-button>
+            <span class="cart-drawer__step-label">Carrito</span>
         </div>
-        }
+
+        <div class="cart-drawer__step-track">
+            <div class="cart-drawer__step-fill"
+                 [class.cart-drawer__step-fill--active]="step() === 'paymentMethod' || step() === 'customerInformation'">
+            </div>
+        </div>
+
+        <div class="cart-drawer__step"
+             [class.cart-drawer__step--active]="step() === 'paymentMethod'"
+             [class.cart-drawer__step--done]="step() === 'customerInformation'">
+            <div class="cart-drawer__step-circle">
+                @if (step() === 'customerInformation') {
+                    <i stp-icon name="check-bold" class="icon--xs"></i>
+                } @else { 2 }
+            </div>
+            <span class="cart-drawer__step-label">Pago</span>
+        </div>
+
+        <div class="cart-drawer__step-track">
+            <div class="cart-drawer__step-fill"
+                 [class.cart-drawer__step-fill--active]="step() === 'customerInformation'">
+            </div>
+        </div>
+
+        <div class="cart-drawer__step"
+             [class.cart-drawer__step--active]="step() === 'customerInformation'">
+            <div class="cart-drawer__step-circle">3</div>
+            <span class="cart-drawer__step-label">Cliente</span>
+        </div>
+
+    </nav>
+    }
+
+    <!-- ── Steps ────────────────────────────────────────────────────── -->
+    @if (step() === 'listItems') {
+    <stp-cart-step
+        [items]="items()"
+        [swipeOptions]="swipeOptions"
+        (remove)="removeItem($event)"
+        (salePriceChange)="updateSalePrice($event.productId, $event.salePrice)"
+        (close)="close()"
+        (clear)="clear()"
+        (checkout)="goToPayment()" />
+
+    } @else if (step() === 'paymentMethod') {
+    <stp-payment-step
+        [total]="total()"
+        (back)="goBack()"
+        (confirm)="onPaymentConfirmed($event)" />
+
+    } @else if (step() === 'customerInformation') {
+    <stp-customer-step
+        [items]="items()"
+        [payment]="pendingPayment()!"
+        [total]="total()"
+        (back)="goBackFromCustomer()"
+        (confirm)="onCustomerConfirmed($event)" />
+
+    } @else {
+    <!-- ── Pantalla de éxito ─────────────────────────────────────── -->
+    <div class="cart-drawer__success">
+
+        <div class="cart-drawer__success-burst" aria-hidden="true">
+            <span class="cart-drawer__success-ring cart-drawer__success-ring--1"></span>
+            <span class="cart-drawer__success-ring cart-drawer__success-ring--2"></span>
+            <span class="icon-badge icon-badge--success icon-badge--xl">
+                <i stp-icon name="check-circle" class="icon--xl icon--success"></i>
+            </span>
+        </div>
+
+        <div class="cart-drawer__success-text">
+            <h2 class="cart-drawer__success-title">¡Venta registrada!</h2>
+            <p class="cart-drawer__success-sub">La operación fue completada con éxito.</p>
+        </div>
+
+        <div class="cart-drawer__success-total">
+            <span class="cart-drawer__success-total-label">Total cobrado</span>
+            <span class="cart-drawer__success-total-amount">$ {{ total() | number:'1.2-2' }} USD</span>
+        </div>
+
+        <stp-button variant="success" btnStyle="solid" radius="full" size="lg"
+            (click)="done()">
+            Listo, cerrar
+        </stp-button>
 
     </div>
+    }
+
+</div>

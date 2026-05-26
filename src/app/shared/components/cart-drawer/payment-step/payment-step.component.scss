@@ -1,6 +1,5 @@
 @use '../_step-shared';
 
-
 :host {
     display: flex;
     flex-direction: column;
@@ -10,176 +9,216 @@
     animation: step-enter 0.22s ease;
 }
 
-.step__payment {
-    max-height: 475px;
+// ── Scroll container ───────────────────────────────────────────
+.ps-body {
+    flex: 1;
     overflow-y: auto;
     display: flex;
     flex-direction: column;
+    gap: var(--p-1);
+    min-height: 0;
+    max-height: 475px;
 }
 
-.step__methods {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0.75rem;
-    padding: var(--p-4) var(--p-5);
+// ── Tarjetas de método ─────────────────────────────────────────
+.ps-methods {
+    display: flex;
+    flex-direction: column;
+    gap: var(--p-2);
+    padding: var(--p-4) var(--p-5) var(--p-2);
     flex-shrink: 0;
 }
 
-.step__method-card {
+.ps-method {
     display: flex;
-    flex-direction: column;
     align-items: center;
-    gap: var(--gap-1);
-    padding: var(--p-4);
+    gap: var(--p-3);
+    padding: var(--p-3) var(--p-4);
     border-radius: var(--radius-md);
-    border: 2px solid var(--color-border);
+    border: 1.5px solid var(--color-border);
     background: var(--color-surface);
-    color: var(--color-text-disabled);
     cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease;
+    text-align: left;
+    transition:
+        border-color var(--duration-base) var(--ease-out),
+        background   var(--duration-base) var(--ease-out),
+        box-shadow   var(--duration-base) var(--ease-out);
 
-    &__label {
-        font-size: 0.875rem;
-        font-weight: 600;
-        color: var(--color-text-primary);
+    &:hover:not(&--active) {
+        border-color: var(--color-text-disabled);
+        background: var(--color-surface-alt);
     }
 
     &--active {
         border-color: var(--color-primary);
         background: var(--color-primary-light);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 15%, transparent);
+    }
+
+    &__icon-wrap {
+        width: 2.5rem;
+        height: 2.5rem;
+        border-radius: var(--radius-sm);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        color: var(--color-text-secondary);
+        background: var(--color-surface-alt);
+        transition: background var(--duration-base) var(--ease-out),
+                    color     var(--duration-base) var(--ease-out);
+
+        &--cash   { background: var(--color-success-light); color: var(--color-success); }
+        &--credit { background: var(--color-warning-light); color: var(--color-warning); }
+    }
+
+    &__body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        gap: 0.1rem;
+        min-width: 0;
+    }
+
+    &__title {
+        font-size: var(--text-base);
+        font-weight: var(--font-semibold);
         color: var(--color-text-primary);
     }
 
-    &--active:has(.step__method-label) {
-        .step__method-label {
-            color: var(--color-text-primary);
-            font-weight: 700;
-        }
-
+    &__sub {
+        font-size: var(--text-xs);
+        color: var(--color-text-secondary);
     }
 
-
-    &:hover:not(&--active) {
-        border-color: var(--color-text-secondary);
-        background: var(--color-surface-alt);
+    &__check {
+        flex-shrink: 0;
+        display: flex;
+        align-items: center;
     }
 }
 
-.step__method-icon {
-    font-size: 1.75rem;
-    line-height: 1;
-}
-
-
-.step__form {
+// ── Formulario de importes ─────────────────────────────────────
+.ps-form {
     display: flex;
     flex-direction: column;
-    gap: var(--p-4);
+    gap: var(--p-3);
     padding: var(--p-2) var(--p-5) var(--p-4);
 }
 
-.step__field {
+.ps-field {
     display: flex;
     flex-direction: column;
-    gap: var(--p-2);
+    gap: var(--p-1);
 }
 
-.step__field-label {
-    font-size: 0.875rem;
-    font-weight: 500;
+.ps-field__label {
+    display: flex;
+    align-items: center;
+    gap: var(--p-1);
+    font-size: var(--text-sm);
+    font-weight: var(--font-medium);
     color: var(--color-text-secondary);
 }
 
-.step__field-input {
+.ps-field__input {
     display: flex;
     align-items: center;
     border: 1.5px solid var(--color-border);
     border-radius: var(--radius-sm);
-    overflow: hidden;
     background: var(--color-bg);
-    transition: border-color 0.15s ease;
+    overflow: hidden;
+    transition: border-color var(--duration-base) var(--ease-out),
+                box-shadow   var(--duration-base) var(--ease-out);
 
     &:focus-within {
         border-color: var(--color-primary);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--color-primary) 12%, transparent);
     }
 }
 
-.step__field-prefix {
-    padding: 0.625rem 0.625rem 0.625rem var(--p-3);
-    font-size: 0.9rem;
+.ps-field__prefix {
+    padding: 0.6875rem 0.625rem 0.6875rem var(--p-3);
+    font-size: var(--text-sm);
+    font-weight: var(--font-semibold);
     color: var(--color-text-secondary);
     background: var(--color-surface);
     border-right: 1.5px solid var(--color-border);
     flex-shrink: 0;
 }
 
-.step__field-control {
+.ps-field__control {
     flex: 1;
-    padding: 0.625rem var(--p-3);
+    padding: 0.6875rem var(--p-3);
     border: none;
     outline: none;
     background: transparent;
-    font-size: 0.9rem;
+    font-size: var(--text-base);
+    font-weight: var(--font-medium);
     color: var(--color-text-primary);
 
     &::-webkit-inner-spin-button,
-    &::-webkit-outer-spin-button {
-        -webkit-appearance: none;
-        margin: 0;
-    }
-
+    &::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 }
 
-.step__field-suffix {
-    padding: 0.625rem var(--p-3) 0.625rem 0.5rem;
-    font-size: 0.75rem;
-    font-weight: 600;
+.ps-field__suffix {
+    padding: 0.6875rem var(--p-3) 0.6875rem 0.5rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-bold);
     color: var(--color-text-disabled);
     background: var(--color-surface);
     border-left: 1.5px solid var(--color-border);
     flex-shrink: 0;
-    letter-spacing: 0.03em;
+    letter-spacing: var(--tracking-wider);
 }
 
-.step__chips {
+// ── Barra de progreso del pago ─────────────────────────────────
+.ps-progress {
     display: flex;
-    flex-wrap: wrap;
-    gap: var(--p-2);
+    flex-direction: column;
+    gap: var(--p-1);
 }
 
-.step__chip {
-    padding: var(--p-2) var(--p-3);
+.ps-progress__bar {
+    height: 0.375rem;
+    background: var(--color-surface-alt);
     border-radius: var(--radius-full);
-    border: 1.5px solid var(--color-border);
-    background: var(--color-surface);
-    font-size: 0.875rem;
-    font-weight: 500;
-    color: var(--color-text-secondary);
-    cursor: pointer;
-    transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
-
-    &--active {
-        border-color: var(--color-primary);
-        background: var(--color-primary-light);
-        color: var(--color-primary);
-        font-weight: 600;
-    }
-
-    &:hover:not(&--active) {
-        border-color: var(--color-text-disabled);
-        background: var(--color-surface-alt);
-    }
+    overflow: hidden;
 }
 
-.step__info-row {
+.ps-progress__fill {
+    height: 100%;
+    background: var(--color-primary);
+    border-radius: var(--radius-full);
+    transition: width 0.3s var(--ease-out), background 0.2s ease;
+
+    &--over { background: var(--color-success); }
+}
+
+.ps-progress__labels {
     display: flex;
     justify-content: space-between;
+    font-size: var(--text-xs);
+    color: var(--color-text-secondary);
+}
+
+// ── Fila informativa (vuelto / faltante) ──────────────────────
+.ps-info {
+    display: flex;
     align-items: center;
+    gap: var(--p-2);
     padding: var(--p-2) var(--p-3);
     border-radius: var(--radius-sm);
-    font-size: 0.875rem;
-    background: var(--color-surface);
-    color: var(--color-text-secondary);
+    font-size: var(--text-sm);
+
+    strong {
+        margin-left: auto;
+        font-weight: var(--font-bold);
+    }
+
+    span:not(strong) {
+        flex: 1;
+    }
 
     &--success {
         background: var(--color-success-light);
@@ -190,10 +229,52 @@
         background: var(--color-warning-light);
         color: var(--color-warning);
     }
+}
 
-    &--highlight {
-        background: var(--color-primary-light);
-        color: var(--color-primary);
-        font-weight: 600;
+// ── Resumen crédito ────────────────────────────────────────────
+.ps-credit-summary {
+    display: flex;
+    flex-direction: column;
+    border-radius: var(--radius-md);
+    border: 1.5px solid var(--color-border);
+    overflow: hidden;
+}
+
+.ps-credit-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--p-3) var(--p-4);
+    font-size: var(--text-sm);
+
+    strong { font-weight: var(--font-bold); }
+
+    &--paid {
+        background: var(--color-success-light);
+        color: var(--color-success);
+        border-bottom: 1px solid var(--color-border);
+    }
+
+    &--pending {
+        background: var(--color-warning-light);
+        color: var(--color-warning);
+    }
+}
+
+// ── Hint "selecciona método" ───────────────────────────────────
+.ps-hint {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--p-3);
+    padding: var(--p-6) var(--p-5);
+    text-align: center;
+    color: var(--color-text-disabled);
+
+    p {
+        margin: 0;
+        font-size: var(--text-sm);
     }
 }

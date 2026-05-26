@@ -5,10 +5,11 @@ import { CartItem } from '../../../../features/products/products.data';
 import { ButtonComponent } from '../../button/button.component';
 import { CartItemComponent } from '../../cart-item/cart-item.component';
 import { SwipeItemComponent, SwipeOption } from '../../swipe-item/swipe-item.component';
+import { EmptyStateComponent } from '../../empty-state/empty-state.component';
 
 @Component({
   selector: 'stp-cart-step',
-  imports: [DecimalPipe, ButtonComponent, CartItemComponent, SwipeItemComponent, IconComponent],
+  imports: [DecimalPipe, ButtonComponent, CartItemComponent, SwipeItemComponent, IconComponent, EmptyStateComponent],
   templateUrl: './cart-step.component.html',
   styleUrl: './cart-step.component.scss',
 })

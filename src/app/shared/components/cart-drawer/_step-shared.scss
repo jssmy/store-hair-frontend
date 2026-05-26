@@ -2,56 +2,65 @@
 @use '../../styles/breakpoints' as bp;
 
 @keyframes step-enter {
-    from { opacity: 0; transform: translateY(0.375rem); }
+    from { opacity: 0; transform: translateY(0.3rem); }
     to   { opacity: 1; transform: translateY(0); }
 }
 
+// ── Header ─────────────────────────────────────────────────────
 .step__header {
     display: flex;
     align-items: center;
     justify-content: space-between;
     padding: var(--p-4) var(--p-5) var(--p-3);
     flex-shrink: 0;
+    border-bottom: 1px solid var(--color-border);
 }
 
 .step__header-spacer {
-    width: 2rem;
+    width: 2.25rem;
     flex-shrink: 0;
 }
 
 .step__title {
     margin: 0;
-    font-size: 1.125rem;
-    font-weight: 700;
+    font-size: var(--text-lg);
+    font-weight: var(--font-bold);
     color: var(--color-text-primary);
+    letter-spacing: var(--tracking-tight);
 }
 
+// ── Summary bar ────────────────────────────────────────────────
 .step__summary {
-    padding: var(--p-4) var(--p-5);
+    padding: var(--p-3) var(--p-5);
     border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
     display: flex;
     flex-direction: column;
-    gap: var(--gap-1);
+    gap: var(--p-1);
     flex-shrink: 0;
 }
 
 .step__summary-row {
     display: flex;
     justify-content: space-between;
-    font-size: 0.9rem;
+    align-items: center;
+    font-size: var(--text-sm);
     color: var(--color-text-secondary);
 
     &--total {
-        font-size: 1rem;
+        font-size: var(--text-base);
+        font-weight: var(--font-semibold);
         color: var(--color-text-primary);
     }
 }
 
+// ── Actions bar ────────────────────────────────────────────────
 .step__actions {
-    padding: 0.75rem 1.25rem calc(1.5rem + env(safe-area-inset-bottom));
+    padding: var(--p-3) var(--p-5) calc(var(--p-5) + env(safe-area-inset-bottom));
     display: flex;
-    gap: 0.75rem;
+    gap: var(--p-3);
     flex-shrink: 0;
+    background: var(--color-surface);
 
     stp-button {
         flex: 1;

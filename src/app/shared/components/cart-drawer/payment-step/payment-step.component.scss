@@ -130,6 +130,17 @@
 
 }
 
+.step__field-suffix {
+    padding: 0.625rem var(--p-3) 0.625rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-disabled);
+    background: var(--color-surface);
+    border-left: 1.5px solid var(--color-border);
+    flex-shrink: 0;
+    letter-spacing: 0.03em;
+}
+
 .step__chips {
     display: flex;
     flex-wrap: wrap;

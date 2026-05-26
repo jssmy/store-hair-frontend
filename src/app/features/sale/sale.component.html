@@ -3,92 +3,179 @@
     <!-- ── Header ───────────────────────────────────────────── -->
     <stp-section-header #saleHeader
         title="Nueva Venta"
-        subtitle="Selecciona productos para agregar al carrito">
+        subtitle="Selecciona los productos para agregar al carrito">
     </stp-section-header>
 
-    <!-- ── Sticky search + categories ──────────────────────── -->
-    <div class="sale-sticky-bar sticky-bar" [class.sale-sticky-bar--stuck]="isStuck()" [class.sticky-bar--stuck]="isStuck()">
+    <!-- ── Sticky search + filters ──────────────────────────── -->
+    <div class="sale-sticky-bar sticky-bar"
+        [class.sale-sticky-bar--stuck]="isStuck()"
+        [class.sticky-bar--stuck]="isStuck()">
 
+        <!-- Search -->
         <section class="sale-search" aria-label="Buscar productos">
             <div class="sale-search__field">
                 <span class="sale-search__icon" aria-hidden="true">
                     <i stp-icon name="magnifying-glass" style="font-size: 1.125rem"></i>
                 </span>
-                <input class="sale-search__input" type="search" placeholder="Buscar producto..." autocomplete="off"
-                    aria-label="Buscar productos" [value]="searchQuery()"
+                <input class="sale-search__input" type="search" placeholder="Buscar producto..."
+                    autocomplete="off" aria-label="Buscar productos"
+                    [value]="searchQuery()"
                     (input)="onSearchInput($any($event.target).value)" />
                 @if (searchQuery()) {
-                <button class="sale-search__clear" type="button" aria-label="Limpiar búsqueda"
-                    (click)="clearSearch()">
-                    <i stp-icon name="x" style="font-size: 1rem"></i>
-                </button>
+                    <button class="sale-search__clear" type="button" aria-label="Limpiar búsqueda"
+                        (click)="clearSearch()">
+                        <i stp-icon name="x" style="font-size: 1rem"></i>
+                    </button>
                 }
             </div>
         </section>
 
-        <section class="sale-categories" aria-label="Filtrar por categoría">
-            <div class="sale-categories__scroll" role="tablist">
-                @for (hairType of hairTypes; track hairType) {
-                <stp-button class="sale-category-chip"
-                    [class.sale-category-chip--active]="activeHairType() === hairType" role="tab" size="sm" radius="full"
-                    [variant]="activeHairType() === hairType ? 'primary' : 'surface'"
-                    [btnStyle]="activeHairType() === hairType ? 'solid' : 'outlined'"
-                    [attr.aria-selected]="activeHairType() === hairType" [attr.aria-label]="hairTypeLabels[hairType]"
-                    (click)="setHairType(hairType)">
-                    <span aria-hidden="true">{{ hairTypeIcon(hairType) }}</span>
-                    {{ hairTypeLabels[hairType] }}
-                </stp-button>
+        <!-- Type filter chips -->
+        <section class="sale-filter-row" aria-label="Filtrar por tipo">
+            <div class="sale-filter-row__scroll" role="tablist">
+                @for (t of hairTypes; track t) {
+                    <stp-button class="sale-chip"
+                        [class.sale-chip--active]="activeHairType() === t"
+                        role="tab" size="sm" radius="full"
+                        [variant]="activeHairType() === t ? 'primary' : 'surface'"
+                        [btnStyle]="activeHairType() === t ? 'solid' : 'outlined'"
+                        [attr.aria-selected]="activeHairType() === t"
+                        [attr.aria-label]="hairTypeLabels[t]"
+                        (click)="setHairType(t)">
+                        <span aria-hidden="true">{{ hairTypeIcons[t] }}</span>
+                        {{ hairTypeLabels[t] }}
+                    </stp-button>
+                }
+            </div>
+        </section>
+
+        <!-- Color filter chips -->
+        <section class="sale-filter-row sale-filter-row--compact" aria-label="Filtrar por color">
+            <div class="sale-filter-row__scroll" role="tablist">
+                @for (c of colors; track c) {
+                    <button class="sale-color-chip"
+                        [class.sale-color-chip--active]="activeColor() === c"
+                        role="tab" type="button"
+                        [attr.aria-selected]="activeColor() === c"
+                        [attr.aria-label]="colorLabels[c]"
+                        (click)="setColor(c)">
+                        @if (c !== 'all') {
+                            <span class="sale-color-chip__dot"
+                                [style.background-color]="colorHex[c]"
+                                aria-hidden="true">
+                            </span>
+                        }
+                        {{ colorLabels[c] }}
+                    </button>
                 }
             </div>
         </section>
 
     </div><!-- /sale-sticky-bar -->
 
-    <!-- ── Empty state (before search) ─────────────────────── -->
-    @if (!hasSearched()) {
-    <div class="sale-empty-state" aria-live="polite">
-        <span class="sale-empty-state__icon" aria-hidden="true">🛒</span>
-        <p class="sale-empty-state__text">Busca o filtra por categoría para ver productos</p>
-    </div>
-    } @else if (filteredProducts().length === 0) {
-    <!-- ── Empty state (no results) ──────────────────────── -->
-    <div class="sale-empty-state sale-empty-state--no-results" aria-live="polite">
-        <span class="sale-empty-state__icon" aria-hidden="true">🔍</span>
-        <p class="sale-empty-state__text">Sin resultados para "<strong>{{ searchQuery() }}</strong>"</p>
-    </div>
-    } @else {
-
-    <!-- ── Product grid ───────────────────────────────────── -->
-    <ul class="sale-grid" aria-label="Productos">
-        
-        @for (product of filteredProducts(); track product.id) {
-            
-            @defer(on viewport) {
-                <li stp-sale-product-card
-                    [product]="product"
-                    [inCart]="isInCart(product.id)"
-                    (addToCart)="addToCart(product, $event)"
-                    (touchstart)="onTouchStart($event)"
-                    (touchend)="onTouchEnd($event, product.id)">
-                </li>
-            } @placeholder {
-                <li class="sale-grid__placeholder"><stp-shimmer radius="md"></stp-shimmer></li>
+    <!-- ── Results bar ────────────────────────────────────────── -->
+    @if (!loading() && !hasError()) {
+        <div class="sale-results-bar">
+            @if (products().length > 0) {
+                <span class="sale-results-bar__count">
+                    {{ totalCount() }} producto{{ totalCount() !== 1 ? 's' : '' }}
+                </span>
             }
-        }
-    </ul>
+            @if (isFilterActive()) {
+                <button class="sale-results-bar__clear-link" type="button" (click)="clearFilters()">
+                    <i stp-icon name="x-circle" style="font-size: 0.875rem"></i>
+                    Limpiar filtros
+                </button>
+            }
+        </div>
+    }
+
+    <!-- ── Loading skeleton ───────────────────────────────────── -->
+    @if (loading()) {
+        <ul class="sale-grid" aria-label="Cargando productos" aria-busy="true">
+            @for (_ of placeholders; track $index) {
+                <li class="sale-grid__placeholder">
+                    <stp-shimmer radius="md"></stp-shimmer>
+                </li>
+            }
+        </ul>
+    }
+
+    <!-- ── Error state ────────────────────────────────────────── -->
+    @else if (hasError()) {
+        <div class="sale-feedback-state">
+            <stp-alert variant="error"
+                title="No se pudieron cargar los productos"
+                message="Verifica tu conexión e intenta de nuevo.">
+            </stp-alert>
+            <stp-button variant="primary" btnStyle="outlined" size="sm" radius="md"
+                (click)="retry()">
+                <i stp-icon name="arrow-clockwise" style="font-size: 1rem"></i>
+                Reintentar
+            </stp-button>
+        </div>
+    }
+
+    <!-- ── Empty state ────────────────────────────────────────── -->
+    @else if (products().length === 0) {
+        <stp-empty-state
+            icon="magnifying-glass"
+            title="Sin resultados"
+            [description]="searchQuery() ? 'No hay productos para «' + searchQuery() + '»' : 'Ajusta los filtros para ver productos'"
+            aria-live="polite">
+            @if (isFilterActive()) {
+                <stp-button variant="surface" btnStyle="outlined" size="sm" radius="full"
+                    (click)="clearFilters()">
+                    Limpiar filtros
+                </stp-button>
+            }
+        </stp-empty-state>
+    }
+
+    <!-- ── Product grid con scroll virtual ───────────────────── -->
+    @else {
+        <section class="sale-results" aria-label="Lista de productos" aria-live="polite">
+            <cdk-virtual-scroll-viewport [itemSize]="260" (scrolledIndexChange)="onScroll($event)">
+
+                <ul class="sale-grid" aria-label="Productos disponibles">
+                    @for (product of products(); track product.id) {
+                        <li stp-sale-product-card
+                            [product]="product"
+                            [inCart]="isInCart(product.id)"
+                            (addToCart)="addToCart(product, $event)">
+                        </li>
+                    }
+                </ul>
+
+                @if (isLoadingMore()) {
+                    <p class="sale-list-state text-sm text-secondary">
+                        Cargando más productos...
+                    </p>
+                }
+
+                @if (!isLoadingMore() && products().length >= totalCount() && products().length > 0) {
+                    <div class="sale-list-end">
+                        <span class="icon-badge icon-badge--success icon-badge--sm">
+                            <i stp-icon name="check" class="icon--sm"></i>
+                        </span>
+                        <span class="text-sm text-secondary">Has visto todos los productos</span>
+                    </div>
+                }
+
+            </cdk-virtual-scroll-viewport>
+        </section>
     }
 
 </div><!-- /sale-page -->
 
 <!-- ── Cart sticky bar ──────────────────────────────────────── -->
 @if (cartItems().length > 0) {
-<div class="sale-cart-bar" role="status" aria-live="polite">
-    <stp-button variant="info" btnStyle="solid"  radius="md" size="md"
-        (click)="openCart()" aria-label="Ver carrito">
-        <span class="sale-cart-bar__count">{{ cartCount() }}</span>
-        <span class="sale-cart-bar__label">Ver carrito</span>
-        <span class="sale-cart-bar__total">S/ {{ cartTotal() | number:'1.2-2' }}</span>
-    </stp-button>
-</div>
+    <div class="sale-cart-bar" role="status" aria-live="polite">
+        <stp-button variant="info" btnStyle="solid" radius="md" size="md"
+            (click)="openCart()" aria-label="Ver carrito">
+            <span class="sale-cart-bar__count">{{ cartCount() }}</span>
+            <span class="sale-cart-bar__label">Ver carrito</span>
+            <span class="sale-cart-bar__total">S/ {{ cartTotal() | number:'1.2-2' }}</span>
+        </stp-button>
+    </div>
 }
-

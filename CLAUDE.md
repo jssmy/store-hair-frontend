@@ -57,6 +57,12 @@ npm run cap:android    # Build + sync + open Android Studio
 
 `src/environments/` has `environment.ts` (dev), `environment.dev.ts`, `environment.prod.ts`. Each exports `{ production, appName, whatsappUrl, websiteUrl, logoUrl }`. `angular.json` swaps files at build time. Access via `AppConfigService`.
 
+### Currency
+
+- **Default currency: USD (US Dollar)**
+- Always display the `$` icon **and** the label `USD` together on any monetary value (e.g. `$ 12.50 USD`)
+- Never hardcode another currency unless explicitly required
+
 ### Incomplete Features (TODOs in code)
 
 - Auth service integration (`login.component.ts`, `main-layout.component.ts`)
@@ -409,7 +415,7 @@ Defined globally in `src/styles.scss` — usable in any template without imports
 <!-- sizes: (default 36px) | --sm 28px | --lg 48px | --xl 64px -->
 <!-- colors: --primary --success --warning --error --info --surface -->
 
-<!-- Icon button — ghost button for icon-only actions -->
+phosphor-icons<!-- Icon button — ghost button for icon-only actions -->
 <button class="icon-btn" aria-label="Eliminar">
   <i stp-icon name="trash" class="icon--sm"></i>
 </button>

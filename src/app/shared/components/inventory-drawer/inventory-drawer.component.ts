@@ -90,7 +90,7 @@ export class InventoryDrawerComponent {
   /** IDs que vienen del servidor — se envían en el payload de actualización.
    *  Los productos creados durante la sesión de edición NO estarán aquí. */
   private readonly existingProductIds = new Set<string>(
-    this.data.inventory?.products.map(p => p.id) ?? [],
+    this.data.inventory?.products.map(p => String(p.id)) ?? [],
   );
 
   protected get statusIcon(): string {
@@ -118,8 +118,8 @@ export class InventoryDrawerComponent {
   private readonly productImages = signal<Map<string, ProductImage[]>>(
     new Map(
       this.data.inventory?.products.map(p => [
-        p.id,
-        p.imageUrls.map(url => ({ file: null, dataUrl: `${this.assets}/${url}` })),
+        String(p.id),
+        (p.imageUrls ?? []).map(url => ({ file: null, dataUrl: `${this.assets}/${url}` })),
       ]) ?? [],
     ),
   );
@@ -138,12 +138,12 @@ export class InventoryDrawerComponent {
   }
 
   private buildProductGroup(p?: {
-    id?: string; po?: string; name?: string; type?: string;
+    id?: string | number; po?: string; name?: string; type?: string;
     color?: HairColor | null; weight?: number | null;
     length?: number | null; price?: number | null;
   }): FormGroup {
     return this.fb.group({
-      id:     [p?.id ?? crypto.randomUUID()],
+      id:     [p?.id != null ? String(p.id) : crypto.randomUUID()],
       po:     [p?.po ?? ''],
       name:   [p?.name ?? ''],
       type:   [p?.type ?? '', Validators.required],

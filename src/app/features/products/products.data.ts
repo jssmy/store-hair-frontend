@@ -46,40 +46,44 @@ export const HAIR_LENGTH_OPTIONS: number[] = [
   18, 20, 21, 22, 24, 25, 26, 28, 29, 30, 32, 33, 37,
 ];
 
-// ── Product model ────────────────────────────────────────────────────
+// ── Product model (única interfaz) ───────────────────────────────────
 
 export interface Product {
+  // Identificación
   id: number;
   name: string;
-  imageUrl?: string;
-  images?: string[];
-  price: number;
-  unit: string;
-  supplier?: string;
+  price: number;       // API devuelve string → parseFloat en ProductService
+
+  // Imágenes
+  imageUrl?: string;    // singular — backward compat (cart-item)
+  imageUrls?: string[]; // array   — respuesta de API ([] cuando no tiene)
+
+  // Atributos físicos
   color?: HairColor;
-  weight?: number;    // grams
-  length?: number;    // cm
+  weight?: number;  // gramos  — API devuelve string → parseFloat
+  length?: number;  // cm      — API devuelve string → parseFloat
+  type?: string;    // tipo de cabello: lote, golden, viethanmita, premium
+
+  // Estado
+  active?: boolean;  // API: true/false
+
+  // Comercio
+  unit?: string;
+  supplier?: string;
+
+  // Inventario / lote
+  po?: string;  // número de orden de compra
+
+  // Timestamps
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 export interface CartItem {
   product: Product;
   quantity: number;
-}
-
-
-export interface InventoryProduct {
-  id: string;
-  po: string;
-  type: string;
-  color: HairColor;
-  name: string;
-  price: number;
-  length: number;
-  weight: number;
-  status: LoteStatus;
-  imageUrls: string[];
-  createdAt: string;
-  updatedAt: string;
+  /** Precio real de venta definido por el usuario. Por defecto = price × weight. */
+  salePrice: number;
 }
 
 export interface InventoryUser {
@@ -97,7 +101,7 @@ export interface InventoryPurchaseOrder {
 export interface Inventory {
   id: number;
   lt: string
-  products: InventoryProduct[];
+  products: Product[];
   user?: InventoryUser;
   purchaseOrder?: InventoryPurchaseOrder;
   status: LoteStatus;

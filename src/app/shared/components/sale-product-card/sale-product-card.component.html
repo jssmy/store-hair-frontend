@@ -1,31 +1,76 @@
-<!-- Image / placeholder -->
+<!-- ── Image ────────────────────────────────────────────────────── -->
 <div class="product-card__image">
 
-    <img [src]="product().imageUrl" [alt]="product().name" loading="lazy" />
-
-
-    <!-- In-cart badge -->
-    @if (inCart()) {
-    <span class="product-card__cart-badge" aria-label="En el carrito">
-        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
-            stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-            <polyline points="20 6 9 17 4 12" />
-        </svg>
-    </span>
+    @if (imageUrl()) {
+        <img [src]="imageUrl()" [alt]="product().name" loading="lazy" />
+    } @else {
+        <div class="product-card__placeholder">
+            <i stp-icon [name]="typeIcon()" class="icon--2xl"></i>
+        </div>
     }
+
+    <!-- Type badge — bottom left, pill + phosphor icon -->
+    <span class="product-card__type-badge" aria-hidden="true">
+        <i stp-icon [name]="typeIcon()" class="icon--xs"></i>
+        {{ typeLabel() }}
+    </span>
+
+    <!-- In-cart check — top right -->
+    @if (inCart()) {
+        <span class="product-card__cart-badge" aria-label="En el carrito">
+            <i stp-icon name="check" class="icon--xs"></i>
+        </span>
+    }
+
 </div>
 
-<!-- Info -->
+<!-- ── Body ─────────────────────────────────────────────────────── -->
 <div class="product-card__body">
+
+    <!-- Code chip -->
+    <span class="product-card__code">
+        <i stp-icon name="hash" class="icon--xs"></i>{{ productCode() }}
+    </span>
+
     <p class="product-card__name">{{ product().name }}</p>
-    <p class="product-card__price">S/ {{ product().price | number:'1.2-2' }}</p>
-    
+
+    <!-- Specs -->
+    <div class="product-card__specs">
+        @if (product().length) {
+            <span class="product-card__spec">
+                <i stp-icon name="ruler" class="icon--xs"></i>
+                {{ product().length }}cm
+            </span>
+        }
+        @if (product().weight) {
+            <span class="product-card__spec">
+                <i stp-icon name="scales" class="icon--xs"></i>
+                {{ product().weight }}g
+            </span>
+        }
+        @if (product().color) {
+            <span
+                class="product-card__color-dot"
+                [style.background-color]="colorHex()"
+                [attr.title]="colorTitle()"
+                aria-hidden="true">
+            </span>
+        }
+    </div>
+
 </div>
 
-<!-- Quantity + Add -->
-<div class="product-card__actions">
-    <stp-button class="product-card__add-btn" size="md" variant="primary" btnStyle="solid" radius="md"
-         (click)="add()">
-        Agregar
+<!-- ── Footer ───────────────────────────────────────────────────── -->
+<div class="product-card__footer">
+    <p class="product-card__price">$ {{ totalPrice() | number:'1.2-2' }}</p>
+
+    <stp-button
+        size="sm"
+        [variant]="inCart() ? 'success' : 'primary'"
+        [btnStyle]="inCart() ? 'outlined' : 'solid'"
+        radius="full"
+        [disabled]="inCart()"
+        (click)="add()">
+        {{ inCart() ? 'En carrito' : 'Agregar' }}
     </stp-button>
 </div>

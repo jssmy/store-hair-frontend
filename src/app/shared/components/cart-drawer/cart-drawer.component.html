@@ -11,8 +11,8 @@
         <stp-cart-step
             [items]="items()"
             [swipeOptions]="swipeOptions"
-            (quantityChange)="updateQty($event.productId, $event.quantity)"
             (remove)="removeItem($event)"
+            (salePriceChange)="updateSalePrice($event.productId, $event.salePrice)"
             (close)="close()"
             (clear)="clear()"
             (checkout)="goToPayment()" />

@@ -8,7 +8,7 @@ import {
   HAIR_COLOR_HEX,
   HAIR_COLOR_LABELS,
   Inventory,
-  InventoryProduct,
+  Product,
   FindAllLoteQuery,
   LoteStatus,
 } from './products.data';
@@ -212,7 +212,7 @@ export class ProductsComponent implements AfterViewInit, OnDestroy {
   }
 
   // ── Helpers ──────────────────────────────────────────────────────
-  protected productInitials(product: InventoryProduct): string {
+  protected productInitials(product: Product): string {
     return product.name.split(' ').slice(0, 2).map(word => word[0]).join('').toUpperCase();
   }
 

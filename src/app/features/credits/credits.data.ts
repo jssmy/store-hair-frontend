@@ -100,10 +100,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-10',
     status:           'active',
     items: [
-      { product: p(1, 'Coleta Lacio 30cm',     45.00, 'golden',      'unidad'), quantity: 4 },
-      { product: p(2, 'Coleta Lacio 40cm',     58.00, 'golden',      'unidad'), quantity: 6 },
-      { product: p(3, 'Coleta Ondulada 35cm', 55.00, 'premium',  'unidad'), quantity: 8 },
-      { product: p(4, 'Coleta Lacio 30cm',   50.00, 'golden',    'unidad'), quantity: 10},
+      { product: p(1, 'Coleta Lacio 30cm',     45.00, 'golden',      'unidad'), quantity: 4,  salePrice: 45.00 },
+      { product: p(2, 'Coleta Lacio 40cm',     58.00, 'golden',      'unidad'), quantity: 6,  salePrice: 58.00 },
+      { product: p(3, 'Coleta Ondulada 35cm', 55.00, 'premium',  'unidad'), quantity: 8,  salePrice: 55.00 },
+      { product: p(4, 'Coleta Lacio 30cm',   50.00, 'golden',    'unidad'), quantity: 10, salePrice: 50.00 },
     ],
   },
   {
@@ -121,10 +121,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-04-10',
     status:           'active',
     items: [
-      { product: p(10, 'Extensión Lacio 60cm',  95.00, 'golden', 'unidad'), quantity: 5 },
-      { product: p(11, 'Extensión Lacio 50cm',  85.00, 'golden', 'unidad'), quantity: 10},
-      { product: p(12, 'Peluca Natural Corta', 180.00,'premium',      'unidad'), quantity: 2 },
-      { product: p(13, 'Coleta Lacio 25cm',  35.00, 'golden',     'unidad'), quantity: 4 },
+      { product: p(10, 'Extensión Lacio 60cm',  95.00, 'golden',  'unidad'), quantity: 5,  salePrice:  95.00 },
+      { product: p(11, 'Extensión Lacio 50cm',  85.00, 'golden',  'unidad'), quantity: 10, salePrice:  85.00 },
+      { product: p(12, 'Peluca Natural Corta', 180.00, 'premium', 'unidad'), quantity: 2,  salePrice: 180.00 },
+      { product: p(13, 'Coleta Lacio 25cm',    35.00, 'golden',   'unidad'), quantity: 4,  salePrice:  35.00 },
     ],
   },
   {
@@ -143,9 +143,9 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-20',
     status:           'completed',
     items: [
-      { product: p(20, 'Coleta Lacio 50cm',     72.00, 'golden',     'unidad'), quantity: 12},
-      { product: p(21, 'Coleta Ondulada 45cm', 68.00, 'premium', 'unidad'), quantity: 6 },
-      { product: p(22, 'Coleta Lacio 40cm',   65.00, 'golden',   'unidad'), quantity: 4 },
+      { product: p(20, 'Coleta Lacio 50cm',     72.00, 'golden',  'unidad'), quantity: 12, salePrice: 72.00 },
+      { product: p(21, 'Coleta Ondulada 45cm',  68.00, 'premium', 'unidad'), quantity: 6,  salePrice: 68.00 },
+      { product: p(22, 'Coleta Lacio 40cm',     65.00, 'golden',  'unidad'), quantity: 4,  salePrice: 65.00 },
     ],
   },
   {
@@ -164,10 +164,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-15',
     status:           'overdue',
     items: [
-      { product: p(30, 'Peluca Natural Larga',  250.00, 'premium',      'unidad'), quantity: 1 },
-      { product: p(31, 'Extensión Lacio 60cm',    95.00, 'golden', 'unidad'), quantity: 3 },
-      { product: p(32, 'Coleta Ondulada 35cm',   55.00, 'premium',    'unidad'), quantity: 4 },
-      { product: p(33, 'Coleta Lacio 25cm',    35.00, 'golden',     'unidad'), quantity: 5 },
+      { product: p(30, 'Peluca Natural Larga',  250.00, 'premium', 'unidad'), quantity: 1, salePrice: 250.00 },
+      { product: p(31, 'Extensión Lacio 60cm',   95.00, 'golden',  'unidad'), quantity: 3, salePrice:  95.00 },
+      { product: p(32, 'Coleta Ondulada 35cm',   55.00, 'premium', 'unidad'), quantity: 4, salePrice:  55.00 },
+      { product: p(33, 'Coleta Lacio 25cm',      35.00, 'golden',  'unidad'), quantity: 5, salePrice:  35.00 },
     ],
   },
   {
@@ -185,9 +185,9 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-01-01',
     status:           'active',
     items: [
-      { product: p(40, 'Coleta Lacio 30cm',     45.00, 'golden',        'unidad'), quantity: 10},
-      { product: p(41, 'Coleta Lacio 30cm',   50.00, 'golden',      'unidad'), quantity: 8 },
-      { product: p(42, 'Extensión Lacio 50cm',  85.00, 'golden', 'unidad'), quantity: 6 },
+      { product: p(40, 'Coleta Lacio 30cm',    45.00, 'golden', 'unidad'), quantity: 10, salePrice: 45.00 },
+      { product: p(41, 'Coleta Lacio 30cm',    50.00, 'golden', 'unidad'), quantity: 8,  salePrice: 50.00 },
+      { product: p(42, 'Extensión Lacio 50cm', 85.00, 'golden', 'unidad'), quantity: 6,  salePrice: 85.00 },
     ],
   },
   {
@@ -206,8 +206,8 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-03-01',
     status:           'active',
     items: [
-      { product: p(60, 'Coleta Lacio 40cm',     58.00, 'golden',     'unidad'), quantity: 2 },
-      { product: p(61, 'Coleta Ondulada 45cm', 68.00, 'premium', 'unidad'), quantity: 2 },
+      { product: p(60, 'Coleta Lacio 40cm',    58.00, 'golden',  'unidad'), quantity: 2, salePrice: 58.00 },
+      { product: p(61, 'Coleta Ondulada 45cm', 68.00, 'premium', 'unidad'), quantity: 2, salePrice: 68.00 },
     ],
   },
   {
@@ -225,10 +225,10 @@ export const MOCK_CREDITS: Credit[] = [
     createdAt:        '2026-04-20',
     status:           'active',
     items: [
-      { product: p(50, 'Coleta Lacio 30cm',     45.00, 'golden',        'unidad'), quantity: 5 },
-      { product: p(51, 'Coleta Lacio 50cm',     72.00, 'golden',        'unidad'), quantity: 3 },
-      { product: p(52, 'Extensión Lacio 60cm',  95.00, 'golden', 'unidad'), quantity: 2 },
-      { product: p(53, 'Coleta Lacio 40cm',   65.00, 'golden',      'unidad'), quantity: 4 },
+      { product: p(50, 'Coleta Lacio 30cm',    45.00, 'golden', 'unidad'), quantity: 5, salePrice:  45.00 },
+      { product: p(51, 'Coleta Lacio 50cm',    72.00, 'golden', 'unidad'), quantity: 3, salePrice:  72.00 },
+      { product: p(52, 'Extensión Lacio 60cm', 95.00, 'golden', 'unidad'), quantity: 2, salePrice:  95.00 },
+      { product: p(53, 'Coleta Lacio 40cm',    65.00, 'golden', 'unidad'), quantity: 4, salePrice:  65.00 },
     ],
   },
 ];

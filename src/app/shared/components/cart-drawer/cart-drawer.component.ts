@@ -37,7 +37,7 @@ export class CartDrawerComponent {
   private readonly sheetRef = inject<MatBottomSheetRef<CartDrawerComponent, CartDismissResult | null>>(MatBottomSheetRef);
   protected readonly items = signal<CartItem[]>(inject<CartBottomSheetData>(MAT_BOTTOM_SHEET_DATA).items);
   protected readonly total = computed(() =>
-    this.items().reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    this.items().reduce((sum, item) => sum + item.salePrice, 0),
   );
   protected readonly step = signal<'listItems' | 'paymentMethod' | 'customerInformation' | 'confirmation'>('listItems');
   protected readonly pendingPayment = signal<PaymentData | null>(null);
@@ -59,6 +59,12 @@ export class CartDrawerComponent {
 
   protected removeItem(productId: number): void {
     this.items.update(items => items.filter(item => item.product.id !== productId));
+  }
+
+  protected updateSalePrice(productId: number, salePrice: number): void {
+    this.items.update(items =>
+      items.map(item => item.product.id === productId ? { ...item, salePrice } : item),
+    );
   }
 
   protected clear(): void {

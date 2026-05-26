@@ -1,29 +1,79 @@
-<div class="cart-item__header cart-item__header--mobile">
-    @if (item().product.imageUrl) {
-    <img class="cart-item__img" [src]="item().product.imageUrl" [alt]="item().product.name" />
+<!-- ── Media ──────────────────────────────────────────────────────── -->
+<div class="cart-item__media">
+    @if (imageUrl()) {
+        <img class="cart-item__img" [src]="imageUrl()" [alt]="item().product.name" loading="lazy" />
+    } @else {
+        <div class="cart-item__placeholder">
+            <i stp-icon [name]="typeIcon()" class="icon--md"></i>
+        </div>
     }
+    <span class="cart-item__type-badge" aria-hidden="true">
+        <i stp-icon [name]="typeIcon()" class="icon--xs"></i>
+        {{ typeLabel() }}
+    </span>
 </div>
-<div class="cart-item__info cart-item__info--mobile">
+
+<!-- ── Body ──────────────────────────────────────────────────────── -->
+<div class="cart-item__body">
+    <span class="cart-item__code">
+        <i stp-icon name="hash" class="icon--xs"></i>{{ productCode() }}
+    </span>
     <p class="cart-item__name">{{ item().product.name }}</p>
-    <p class="cart-item__unit-price">S/ {{ item().product.price | number:'1.2-2' }} c/u</p>
-    <p class="cart-item__subtotal-value">Subtotal S/ {{ subtotal() | number:'1.2-2' }}</p>
-    <stp-input-numeric class="cart-item__qt" [value]="item().quantity" [min]="0" size="md" radius="full"
-        (valueChange)="quantityChange.emit($event)" />
-</div>
-
-<div class="cart-item__header cart-item__header--desktop">
-
-    <img class="cart-item__img" [src]="item().product.imageUrl" [alt]="item().product.name" />
-
-    <div class="cart-item__info cart-item__info--desktop">
-        <p class="cart-item__name">{{ item().product.name }}</p>
-        <p class="cart-item__unit-price">S/ {{ item().product.price | number:'1.2-2' }} c/u</p>
+    <div class="cart-item__specs">
+        @if (item().product.length) {
+            <span class="cart-item__spec">
+                <i stp-icon name="ruler" class="icon--xs"></i>{{ item().product.length }}cm
+            </span>
+        }
+        @if (item().product.weight) {
+            <span class="cart-item__spec">
+                <i stp-icon name="scales" class="icon--xs"></i>{{ item().product.weight }}g
+            </span>
+        }
+        @if (item().product.color) {
+            <span
+                class="cart-item__color-dot"
+                [style.background-color]="colorHex()"
+                [attr.title]="colorTitle()"
+                aria-hidden="true">
+            </span>
+        }
     </div>
 </div>
-<div class="cart-item__subtotal cart-item__subtotal--desktop">
-    <p class="cart-item__subtotal-value">S/ {{ subtotal() | number:'1.2-2' }}</p>
-    <stp-button variant="danger" btnStyle="ghost" size="sm" radius="md" aria-label="Eliminar"
+
+<!-- ── End: precio de venta + eliminar ───────────────────────────── -->
+<div class="cart-item__end">
+
+    <!-- Trash -->
+    <button
+        class="icon-btn icon-btn--danger"
+        type="button"
+        aria-label="Eliminar producto"
         (click)="remove.emit(item().product.id)">
-        <i stp-icon name="trash" style="font-size: 1rem"></i>
-    </stp-button>
+        <i stp-icon name="trash" class="icon--sm"></i>
+    </button>
+
+    <!-- Precio de venta -->
+    <div class="cart-item__price">
+        <div
+            class="cart-item__price-ctrl"
+            [class.cart-item__price-ctrl--focused]="priceFocused()">
+            <span class="cart-item__price-sym">$</span>
+            <input
+                class="cart-item__price-fld"
+                type="number"
+                inputmode="decimal"
+                min="0"
+                step="0.01"
+                aria-label="Precio de venta en USD"
+                [value]="localSalePrice()"
+                (focus)="priceFocused.set(true)"
+                (blur)="onPriceBlur($event)"
+                (input)="onPriceInput($event)" />
+        </div>
+        <span class="cart-item__price-hint">
+            USD · Ref. ${{ expectedPrice() | number:'1.2-2' }}
+        </span>
+    </div>
+
 </div>

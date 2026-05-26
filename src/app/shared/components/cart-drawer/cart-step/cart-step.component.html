@@ -7,11 +7,14 @@
 
 <ul class="step__list">
     @for (item of items(); track item.product.id) {
-    <stp-swipe-item [options]="swipeOptions()" (optionSelected)="remove.emit(item.product.id)"
+    <stp-swipe-item
+        [options]="swipeOptions()"
+        (optionSelected)="remove.emit(item.product.id)"
         class="step__swipe-item">
-        <stp-cart-item [item]="item"
-            (quantityChange)="quantityChange.emit({ productId: item.product.id, quantity: $event })"
-            (remove)="remove.emit(item.product.id)" />
+        <stp-cart-item
+            [item]="item"
+            (remove)="remove.emit(item.product.id)"
+            (salePriceChange)="salePriceChange.emit($event)" />
     </stp-swipe-item>
     }
 </ul>
@@ -19,11 +22,11 @@
 <div class="step__summary">
     <div class="step__summary-row">
         <span>Subtotal ({{ count() }} {{ count() === 1 ? 'producto' : 'productos' }})</span>
-        <span>S/ {{ total() | number:'1.2-2' }}</span>
+        <span>$ {{ total() | number:'1.2-2' }} USD</span>
     </div>
     <div class="step__summary-row step__summary-row--total">
         <strong>Total</strong>
-        <strong>S/ {{ total() | number:'1.2-2' }}</strong>
+        <strong>$ {{ total() | number:'1.2-2' }} USD</strong>
     </div>
 </div>
 
@@ -31,8 +34,13 @@
     <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="clear.emit()">
         Limpiar carrito
     </stp-button>
-    <stp-button [disabled]="items().length === 0" variant="primary" btnStyle="solid" radius="md" size="md"
+    <stp-button
+        [disabled]="items().length === 0"
+        variant="primary"
+        btnStyle="solid"
+        radius="md"
+        size="md"
         (click)="checkout.emit()">
-        Cobrar S/ {{ total() | number:'1.2-2' }}
+        Cobrar $ {{ total() | number:'1.2-2' }} USD
     </stp-button>
 </div>

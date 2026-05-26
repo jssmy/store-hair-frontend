@@ -13,19 +13,19 @@ import { SwipeItemComponent, SwipeOption } from '../../swipe-item/swipe-item.com
   styleUrl: './cart-step.component.scss',
 })
 export class CartStepComponent {
-  readonly items = input.required<CartItem[]>();
+  readonly items        = input.required<CartItem[]>();
   readonly swipeOptions = input<SwipeOption[]>([]);
 
-  readonly quantityChange = output<{ productId: number; quantity: number | undefined }>();
-  readonly remove = output<number>();
-  readonly close = output<void>();
-  readonly clear = output<void>();
-  readonly checkout = output<void>();
+  readonly remove          = output<number>();
+  readonly salePriceChange = output<{ productId: number; salePrice: number }>();
+  readonly close           = output<void>();
+  readonly clear           = output<void>();
+  readonly checkout        = output<void>();
 
+  /** Total usa el precio de venta definido por el usuario */
   protected readonly total = computed(() =>
-    this.items().reduce((sum, item) => sum + item.product.price * item.quantity, 0),
+    this.items().reduce((sum, item) => sum + item.salePrice, 0),
   );
-  protected readonly count = computed(() =>
-    this.items().reduce((sum, item) => sum + item.quantity, 0),
-  );
+
+  protected readonly count = computed(() => this.items().length);
 }

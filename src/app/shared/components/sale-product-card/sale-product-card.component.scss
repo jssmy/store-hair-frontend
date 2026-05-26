@@ -1,52 +1,157 @@
 @use '../../styles/product-card' as pc;
 
+/* ── Host ──────────────────────────────────────────────────────── */
+
 :host {
     @include pc.base();
     touch-action: pan-y;
+    cursor: pointer;
+    transition:
+        box-shadow  var(--duration-slow) var(--ease-out),
+        transform   var(--duration-slow) var(--ease-out),
+        border-color var(--duration-slow) var(--ease-out);
+
+    &:hover {
+        box-shadow: var(--shadow-md);
+        transform: translateY(-2px);
+    }
+
+    &:active {
+        transform: translateY(0);
+        box-shadow: var(--shadow-sm);
+    }
 }
 
 :host(.product-card--in-cart) {
     border-color: var(--color-primary);
-    box-shadow: 0 0 0 2px color-mix(in srgb, var(--color-primary) 25%, transparent);
+    box-shadow: 0 0 0 2.5px color-mix(in srgb, var(--color-primary) 22%, transparent);
 }
 
-:host(.product-card--out-of-stock) {
-    opacity: 0.55;
-    pointer-events: none;
-}
+/* ── Image placeholder ─────────────────────────────────────────── */
 
 .product-card {
-    &__cart-badge {
-        position: absolute;
-        top: 0.4rem;
-        right: 0.4rem;
-        width: 1.375rem;
-        height: 1.375rem;
-        border-radius: 50%;
-        background-color: var(--color-primary);
-        color: var(--color-primary-fg);
+    &__placeholder {
+        width: 100%;
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: center;
+        background: linear-gradient(
+            145deg,
+            color-mix(in srgb, var(--color-primary) 10%, var(--color-surface-alt)),
+            var(--color-surface-alt) 80%
+        );
+        color: color-mix(in srgb, var(--color-primary) 55%, var(--color-text-secondary));
     }
 
-    &__stock {
-        margin: 0;
-        font-size: 0.7rem;
-        color: var(--color-text-secondary);
+    /* ── Badges ─────────────────────────────────────────────────── */
 
-        &--low { color: var(--color-warning, #d97706); }
-        &--out { color: var(--color-error, #dc2626); font-weight: 600; }
+    &__type-badge {
+        position: absolute;
+        bottom: 0.5rem;
+        left: 0.5rem;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        padding: 0.2rem 0.5rem 0.2rem 0.35rem;
+        font-size: 0.6rem;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        line-height: 1;
+        background: rgba(0, 0, 0, 0.52);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        color: #fff;
+        border-radius: var(--radius-full);
     }
 
-    &__actions {
-        padding: 0.5rem 0.625rem 0.625rem;
+    &__cart-badge {
+        position: absolute;
+        top: 0.5rem;
+        right: 0.5rem;
+        width: 1.375rem;
+        height: 1.375rem;
+        border-radius: 50%;
+        background: var(--color-success);
+        color: var(--color-success-fg);
         display: flex;
-        flex-direction: column;
-        gap: var(--gap-1);
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.22);
+        animation: badge-pop var(--duration-slow) var(--ease-spring) both;
     }
 
-    &__add-btn {
-        width: 100%;
+    /* ── Body overrides ─────────────────────────────────────────── */
+
+    &__body {
+        gap: 0.3rem;
+        padding-bottom: 0.25rem;
     }
+
+    /* ── Code chip ──────────────────────────────────────────────── */
+
+    &__code {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.1rem;
+        padding: 0.1rem 0.4rem 0.1rem 0.3rem;
+        font-size: 0.6rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+        line-height: 1.7;
+        background: var(--color-surface-alt);
+        color: var(--color-text-disabled);
+        border-radius: var(--radius-full);
+        border: 1px solid var(--color-border);
+        align-self: flex-start;
+    }
+
+    /* ── Specs ──────────────────────────────────────────────────── */
+
+    &__specs {
+        display: flex;
+        align-items: center;
+        gap: 0.35rem;
+        flex-wrap: wrap;
+        margin-top: 0.125rem;
+    }
+
+    &__spec {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.2rem;
+        font-size: 0.6875rem;
+        font-weight: 500;
+        color: var(--color-text-secondary);
+        line-height: 1;
+    }
+
+    &__color-dot {
+        width: 0.625rem;
+        height: 0.625rem;
+        border-radius: 50%;
+        border: 1.5px solid rgba(0, 0, 0, 0.18);
+        flex-shrink: 0;
+    }
+
+    /* ── Footer ─────────────────────────────────────────────────── */
+
+    &__footer {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.5rem;
+        padding: 0 0.625rem 0.625rem;
+        margin-top: auto;
+    }
+}
+
+/* ── Badge entrance animation ───────────────────────────────────── */
+
+@keyframes badge-pop {
+    from { transform: scale(0.4); opacity: 0; }
+    70%  { transform: scale(1.2); }
+    to   { transform: scale(1);   opacity: 1; }
 }

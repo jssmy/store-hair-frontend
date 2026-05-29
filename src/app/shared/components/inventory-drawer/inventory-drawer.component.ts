@@ -79,6 +79,33 @@ export class InventoryDrawerComponent {
     value: l.toString(), label: `${l}`,
   }));
   protected readonly hairColors = HAIR_COLORS;
+
+  /** Colors in the selected PO; all colors when no PO is selected */
+  protected readonly poAllowedColors = computed<HairColor[]>(() => {
+    const po = this.loteSelectedPO();
+    if (!po?.details?.length) return this.hairColors;
+    const seen = new Set<HairColor>();
+    return po.details.reduce<HairColor[]>((acc, d) => {
+      if (!seen.has(d.color)) { seen.add(d.color); acc.push(d.color); }
+      return acc;
+    }, []);
+  });
+
+  /** Types in the selected PO; all types when no PO is selected */
+  protected readonly poFilteredTypeOptions = computed<SelectOption[]>(() => {
+    const po = this.loteSelectedPO();
+    if (!po?.details?.length) return this.productHairTypeSelectOptions;
+    const types = new Set(po.details.map(d => String(d.type)));
+    return this.productHairTypeSelectOptions.filter(o => types.has(String(o.value)));
+  });
+
+  /** Lengths in the selected PO; all lengths when no PO is selected */
+  protected readonly poFilteredLengthOptions = computed<SelectOption[]>(() => {
+    const po = this.loteSelectedPO();
+    if (!po?.details?.length) return this.productHairLengthSelectOptions;
+    const lengths = new Set(po.details.map(d => Number(d.length)));
+    return this.productHairLengthSelectOptions.filter(o => lengths.has(Number(o.value)));
+  });
   protected readonly hairColorLabels = HAIR_COLOR_LABELS;
   protected readonly hairColorHex = HAIR_COLOR_HEX;
 
@@ -438,8 +465,13 @@ export class InventoryDrawerComponent {
   // ── Detail list actions ───────────────────────────────────────────
 
   protected startAdd(): void {
+    if (!this.isEditMode && !this.loteSelectedPO()) return;
     const id = crypto.randomUUID();
-    this.productsArray.push(this.buildProductGroup({ id }));
+    const defaultColor  = this.poAllowedColors()[0] ?? null;
+    const defaultType   = String(this.poFilteredTypeOptions()[0]?.value  ?? '');
+    const defaultLength = this.poFilteredLengthOptions()[0]?.value != null
+      ? Number(this.poFilteredLengthOptions()[0].value) : null;
+    this.productsArray.push(this.buildProductGroup({ id, color: defaultColor, type: defaultType, length: defaultLength }));
     this.productImages.update(m => new Map(m).set(id, []));
     this.editingIdx.set(this.productsArray.length - 1);
     this.isAddingNew.set(true);

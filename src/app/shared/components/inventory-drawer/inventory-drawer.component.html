@@ -165,10 +165,19 @@
                     }
                 </div>
                 @if (editingIdx() === null && !isReadOnly) {
-                <button type="button" class="inv-add-btn" (click)="startAdd()">
+                <button type="button" class="inv-add-btn"
+                    [class.inv-add-btn--disabled]="!isEditMode && !loteSelectedPO()"
+                    [disabled]="!isEditMode && !loteSelectedPO() || null"
+                    (click)="startAdd()">
                     <i stp-icon name="plus" class="icon--xs"></i>
                     Agregar
                 </button>
+                }
+                @if (!isEditMode && !loteSelectedPO() && editingIdx() === null && !isReadOnly) {
+                <p class="inv-section__hint">
+                    <i stp-icon name="arrow-up" class="icon--xs"></i>
+                    Selecciona una OC primero
+                </p>
                 }
             </div>
 
@@ -210,7 +219,7 @@
                         }
                     </label>
                     <div class="inv-color-row">
-                        @for (color of hairColors; track color) {
+                        @for (color of poAllowedColors(); track color) {
                         <button type="button" class="inv-color-swatch"
                             [class.inv-color-swatch--selected]="ctrl.value['color'] === color"
                             [style.background]="hairColorHex[color]" [title]="hairColorLabels[color]"
@@ -223,12 +232,12 @@
                 <!-- Tipo + Largo -->
                 <div class="inv-field-row">
                     <div class="inv-field">
-                        <stp-select label="Tipo" [options]="productHairTypeSelectOptions" formControlName="type"
+                        <stp-select label="Tipo" [options]="poFilteredTypeOptions()" formControlName="type"
                             [hasError]="asGroup(ctrl).get('type')!.invalid && asGroup(ctrl).get('type')!.touched">
                         </stp-select>
                     </div>
                     <div class="inv-field">
-                        <stp-select label="Largo (cm)" [options]="productHairLengthSelectOptions"
+                        <stp-select label="Largo (pulgadas)" [options]="poFilteredLengthOptions()"
                             formControlName="length"
                             [hasError]="asGroup(ctrl).get('length')!.invalid && asGroup(ctrl).get('length')!.touched">
                         </stp-select>

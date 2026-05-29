@@ -261,6 +261,16 @@
   }
 
   &--products { gap: 0.875rem; }
+
+  &__hint {
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-medium);
+    color: var(--color-text-disabled);
+    margin-top: 0.125rem;
+  }
 }
 
 /* ── Form fields ──────────────────────────────────────────── */
@@ -486,6 +496,15 @@
   transition: background var(--duration-base);
 
   &:hover { background: color-mix(in srgb, var(--color-primary) 15%, transparent); }
+
+  &--disabled,
+  &:disabled {
+    border-color: var(--color-border);
+    background: transparent;
+    color: var(--color-text-disabled);
+    cursor: not-allowed;
+    pointer-events: none;
+  }
 }
 
 /* ── Empty state ──────────────────────────────────────────── */

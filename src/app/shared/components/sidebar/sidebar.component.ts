@@ -24,9 +24,9 @@ export class SidebarComponent {
     { label: 'Orden de compra',    route: '/purchase-order',      icon: 'handbag'    },
     { label: 'Inventario', route: '/products',  icon: 'products'  },
     { label: 'Proveedores', route: '/suppliers',  icon: 'suppliers'  },
-    { label: 'Créditos', route: '/credits',  icon: 'piggy-bank'  },
-    { label: 'Caja',      route: '/caja',      icon: 'caja'      },
-    { label: 'Noticias',  route: '/notices',   icon: 'notices'   },
-    { label: 'Demo UI',   route: '/demo',      icon: 'demo'      },
+    // { label: 'Créditos', route: '/credits',  icon: 'piggy-bank'  },
+    // { label: 'Caja',      route: '/caja',      icon: 'caja'      },
+    // { label: 'Noticias',  route: '/notices',   icon: 'notices'   },
+    // { label: 'Demo UI',   route: '/demo',      icon: 'demo'      },
   ];
 }

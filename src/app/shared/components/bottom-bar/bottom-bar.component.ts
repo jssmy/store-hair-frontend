@@ -20,7 +20,7 @@ export class BottomBarComponent {
     { label: 'Dashboard',  route: '/dashboard', icon: 'dashboard' },
     { label: 'Productos',  route: '/products',  icon: 'products'  },
     { label: 'Vender',     route: '/sale',      icon: 'camera', fab: true },
-    { label: 'Caja',       route: '/caja',      icon: 'caja'      },
+    // { label: 'Caja',       route: '/caja',      icon: 'caja'      },
     { label: 'Noticias',   route: '/notices',   icon: 'notices'   },
   ];
 }

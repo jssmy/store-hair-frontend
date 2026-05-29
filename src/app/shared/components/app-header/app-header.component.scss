@@ -46,6 +46,13 @@
     flex-shrink: 0;
   }
 
+  &__brand-logo {
+    width: 1.375rem;
+    height: 1.375rem;
+    object-fit: contain;
+    display: block;
+  }
+
   &__brand-name {
     font-size: 1.0625rem;
     font-weight: 700;

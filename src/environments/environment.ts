@@ -2,7 +2,7 @@ const API = 'http://localhost:3000';
 
 export const environment = {
   production: false,
-  appName: 'StorePoint',
+  appName: 'Louvre Extensiones',
   apiUrl: API,
   endpoints: {
     auth: {

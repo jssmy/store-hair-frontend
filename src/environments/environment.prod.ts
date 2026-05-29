@@ -2,7 +2,7 @@ const API = 'https://storehair.api.bugzilo.com';
 
 export const environment = {
   production: true,
-  appName: 'StorePoint',
+  appName: 'Louvre Extensiones',
   apiUrl: API,
   endpoints: {
     auth: {

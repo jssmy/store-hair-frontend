@@ -116,7 +116,20 @@
                 (cleared)="clearSearch()">
             </stp-search>
 
-            @if (searchResults().length > 0) {
+            @if (searching()) {
+            <ul class="cus-results" aria-busy="true">
+                @for (_ of [1, 2, 3]; track $index) {
+                <li class="cus-skeleton__row">
+                    <stp-shimmer radius="full" class="cus-skeleton__avatar"></stp-shimmer>
+                    <div class="cus-skeleton__lines">
+                        <stp-shimmer radius="sm" class="cus-skeleton__name"></stp-shimmer>
+                        <stp-shimmer radius="sm" class="cus-skeleton__meta"></stp-shimmer>
+                    </div>
+                </li>
+                }
+            </ul>
+
+            } @else if (searchResults().length > 0) {
             <ul class="cus-results" role="listbox">
                 @for (c of searchResults(); track c.id) {
                 <li class="cus-result" role="option" (click)="selectCustomer(c)">
@@ -192,7 +205,7 @@
         </stp-input>
 
         <stp-input
-            label="DNI (opcional)"
+            label="DNI *"
             type="text"
             autocomplete="off"
             [(value)]="newDni"
@@ -208,11 +221,19 @@
     ════════════════════════════════════════════════════════════ -->
     @if (view() === 'update-confirm') {
     <div class="cus-update-confirm">
+        @if (conflictType() === 'dni') {
+        <stp-alert
+            variant="warning"
+            title="DNI ya registrado"
+            [message]="'El DNI ' + newDni() + ' ya está asociado a ' + (phoneCollision()?.names ?? '') + '. ¿Actualizar sus datos con los ingresados?'">
+        </stp-alert>
+        } @else {
         <stp-alert
             variant="warning"
             title="Teléfono ya registrado"
             [message]="'El teléfono ' + newPhone() + ' ya está asociado a ' + (phoneCollision()?.names ?? '') + '. ¿Actualizar sus datos?'">
         </stp-alert>
+        }
     </div>
     }
 
@@ -240,15 +261,18 @@
     <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="cancelNewForm()">
         Cancelar
     </stp-button>
-    <stp-button variant="primary" btnStyle="solid" radius="md" size="md" (click)="saveNewCustomer()">
+    <stp-button variant="primary" btnStyle="solid" radius="md" size="md"
+        [loading]="saving()" (click)="saveNewCustomer()">
         Guardar cliente
     </stp-button>
     }
     @if (view() === 'update-confirm') {
-    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md" (click)="cancelUpdate()">
+    <stp-button variant="surface" btnStyle="outlined" radius="md" size="md"
+        [disabled]="saving()" (click)="cancelUpdate()">
         No, volver
     </stp-button>
-    <stp-button variant="warning" btnStyle="solid" radius="md" size="md" (click)="confirmUpdate()">
+    <stp-button variant="warning" btnStyle="solid" radius="md" size="md"
+        [loading]="saving()" [disabled]="!phoneCollision()?.dni" (click)="confirmUpdate()">
         Sí, actualizar
     </stp-button>
     }

@@ -6,8 +6,8 @@
 
     <div class="cart-drawer__handle" aria-hidden="true"></div>
 
-    <!-- ── Progress stepper (oculto en pantalla de éxito) ──────────── -->
-    @if (step() !== 'confirmation') {
+    <!-- ── Progress stepper (oculto en pantallas finales) ─────────── -->
+    @if (step() !== 'confirmation' && step() !== 'saleError') {
     <nav class="cart-drawer__stepper" aria-label="Progreso de venta">
 
         <div class="cart-drawer__step"
@@ -71,15 +71,59 @@
         (confirm)="onPaymentConfirmed($event)" />
 
     } @else if (step() === 'customerInformation') {
+    @if (saving()) {
+    <div class="cart-drawer__saving">
+        <div class="cart-drawer__saving-icon">
+            <span class="icon-badge icon-badge--primary icon-badge--xl">
+                <i stp-icon name="circle-notch" class="icon--xl icon-spin"></i>
+            </span>
+        </div>
+        <div class="cart-drawer__saving-text">
+            <h2 class="cart-drawer__saving-title">Registrando venta…</h2>
+            <p class="cart-drawer__saving-sub">Por favor espera un momento.</p>
+        </div>
+    </div>
+    } @else {
     <stp-customer-step
         [items]="items()"
         [payment]="pendingPayment()!"
         [total]="total()"
         (back)="goBackFromCustomer()"
         (confirm)="onCustomerConfirmed($event)" />
+    }
+
+    } @else if (step() === 'saleError') {
+    <!-- ── Pantalla de error ───────────────────────────────────────── -->
+    <div class="cart-drawer__sale-error">
+
+        <div class="cart-drawer__sale-error-burst" aria-hidden="true">
+            <span class="cart-drawer__sale-error-ring cart-drawer__sale-error-ring--1"></span>
+            <span class="cart-drawer__sale-error-ring cart-drawer__sale-error-ring--2"></span>
+            <span class="icon-badge icon-badge--error icon-badge--xl">
+                <i stp-icon name="warning-circle" class="icon--xl icon--error"></i>
+            </span>
+        </div>
+
+        <div class="cart-drawer__sale-error-text">
+            <h2 class="cart-drawer__sale-error-title">Error al registrar</h2>
+            <p class="cart-drawer__sale-error-sub">No se pudo completar la venta.<br>¿Deseas volver a intentarlo?</p>
+        </div>
+
+        <div class="cart-drawer__sale-error-actions">
+            <stp-button variant="danger" btnStyle="solid" radius="full" size="lg"
+                (click)="retryFromError()">
+                Reintentar
+            </stp-button>
+            <stp-button variant="surface" btnStyle="ghost" radius="full" size="md"
+                (click)="close()">
+                Cerrar
+            </stp-button>
+        </div>
+
+    </div>
 
     } @else {
-    <!-- ── Pantalla de éxito ─────────────────────────────────────── -->
+    <!-- ── Pantalla de éxito ───────────────────────────────────────── -->
     <div class="cart-drawer__success">
 
         <div class="cart-drawer__success-burst" aria-hidden="true">

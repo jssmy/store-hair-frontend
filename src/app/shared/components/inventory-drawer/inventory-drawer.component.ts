@@ -346,7 +346,7 @@ export class InventoryDrawerComponent {
 
     const makeKey = (type: string, color: string, length: number) => `${type}|${color}|${length}`;
     const makeLabel = (type: string, color: string, length: number) =>
-      `${HAIR_TYPE_LABELS[type as HairType] ?? type} ${HAIR_COLOR_LABELS[color as HairColor] ?? color} ${length} cm`;
+      `${HAIR_TYPE_LABELS[type as HairType] ?? type} ${HAIR_COLOR_LABELS[color as HairColor] ?? color} ${length} pulgadas`;
 
     const expectedMap = new Map<string, { label: string; weight: number }>();
     for (const d of po.details) {
@@ -372,6 +372,7 @@ export class InventoryDrawerComponent {
       const key = makeKey(type, color, length);
       receivedMap.set(key, (receivedMap.get(key) ?? 0) + (Number(p['weight']) || 0));
     }
+
 
     const alerts: ComplianceAlert[] = [];
 

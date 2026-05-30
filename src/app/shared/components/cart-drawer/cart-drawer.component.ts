@@ -1,5 +1,6 @@
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { CartItem } from '../../../features/products/products.data';
 import { CartStepComponent } from './cart-step/cart-step.component';
@@ -9,6 +10,7 @@ import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import type { PaymentData } from './payment-step/payment-step.component';
 import type { Customer } from '../../../core/services/customer.service';
+import { SaleService } from '../../../core/services/sale.service';
 
 export type { PaymentData, PaymentMethod, CashPaymentData, CreditPaymentData } from './payment-step/payment-step.component';
 export type { Customer } from '../../../core/services/customer.service';
@@ -22,6 +24,7 @@ export interface CartDismissResult {
   confirmed: boolean;
   payment?: PaymentData;
   customer?: Customer;
+  saleId?: number;
 }
 
 @Component({
@@ -36,12 +39,15 @@ export class CartDrawerComponent {
   ];
 
   private readonly sheetRef = inject<MatBottomSheetRef<CartDrawerComponent, CartDismissResult | null>>(MatBottomSheetRef);
+  private readonly saleService = inject(SaleService);
+  private readonly destroyRef = inject(DestroyRef);
   protected readonly items = signal<CartItem[]>(inject<CartBottomSheetData>(MAT_BOTTOM_SHEET_DATA).items);
   protected readonly total = computed(() =>
     this.items().reduce((sum, item) => sum + item.salePrice, 0),
   );
-  protected readonly step = signal<'listItems' | 'paymentMethod' | 'customerInformation' | 'confirmation'>('listItems');
+  protected readonly step = signal<'listItems' | 'paymentMethod' | 'customerInformation' | 'confirmation' | 'saleError'>('listItems');
   protected readonly pendingPayment = signal<PaymentData | null>(null);
+  protected readonly saving = signal(false);
   private pendingResult: CartDismissResult | null = null;
 
   protected close(): void {
@@ -90,13 +96,45 @@ export class CartDrawerComponent {
   }
 
   protected onCustomerConfirmed(customer: Customer | undefined): void {
-    this.pendingResult = {
-      items: [],
-      confirmed: true,
-      payment: this.pendingPayment() ?? undefined,
-      customer,
-    };
-    this.step.set('confirmation');
+    if (!customer) return;
+    const payment = this.pendingPayment()!;
+    this.saving.set(true);
+
+    this.saleService.create(this.buildSalePayload(payment, customer.id))
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (sale) => {
+          this.pendingResult = {
+            items: this.items(),
+            confirmed: true,
+            payment,
+            customer,
+            saleId: sale.id,
+          };
+          this.saving.set(false);
+          this.step.set('confirmation');
+        },
+        error: () => {
+          this.saving.set(false);
+          this.step.set('saleError');
+        },
+      });
+  }
+
+  private buildSalePayload(payment: PaymentData, customerId: number) {
+    const details = this.items().map(item => ({
+      productId: item.product.id,
+      salePrice: item.salePrice,
+    }));
+
+    if (payment.method === 'cash') {
+      return { paymentMethod: 'cash' as const, customerId, details, cashAmount: payment.efectivo, transferAmount: payment.digital };
+    }
+    return { paymentMethod: 'credit' as const, customerId, details, cashAmount: payment.creditEfectivo, transferAmount: payment.creditDigital };
+  }
+
+  protected retryFromError(): void {
+    this.step.set('customerInformation');
   }
 
   protected done(): void {

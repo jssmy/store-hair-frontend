@@ -242,6 +242,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
         if (result) {
           this.cartItems.set(result.items);
           if (result.confirmed) {
+            this.loadProducts(this.buildQueryParams(1)); // Recarga para actualizar stock, precios, etc. —
             // TODO: conectar al backend — POST /sale
           }
         }

@@ -1,52 +1,54 @@
-import { Injectable, signal } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { map, Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
+import { PaginatedResponse } from '../models/pagination.model';
 
 export interface Customer {
   id: number;
   names: string;
   phone: string;
-  dni?: string;
+  dni: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
+
+export type CreateCustomerDto = Pick<Customer, 'names' | 'phone'> & { dni?: string };
+export type UpdateCustomerDto = Partial<Pick<Customer, 'names' | 'phone' | 'dni'>>;
 
 @Injectable({ providedIn: 'root' })
 export class CustomerService {
-  private nextId = 4;
-  private readonly _customers = signal<Customer[]>([
-    { id: 1, names: 'María García López', phone: '987654321', dni: '12345678' },
-    { id: 2, names: 'Juan Pérez Torres', phone: '976543210', dni: '87654321' },
-    { id: 3, names: 'Ana Rodríguez Silva', phone: '965432109' },
-  ]);
+  private readonly http = inject(HttpClient);
+  private readonly url = environment.endpoints.customer;
 
-  readonly customers = this._customers.asReadonly();
-
-  search(query: string): Customer[] {
-    const q = query.trim().toLowerCase();
-    if (!q) return [];
-    return this._customers()
-      .filter(c =>
-        c.names.toLowerCase().includes(q) ||
-        c.phone.includes(q) ||
-        (c.dni?.includes(q) ?? false),
-      )
-      .slice(0, 6);
+  search(query: string): Observable<Customer[]> {
+    const params = new HttpParams()
+      .set('search', query)
+      .set('active', 'true')
+      .set('limit', '5');
+    return this.http
+      .get<PaginatedResponse<Customer>>(this.url, { params })
+      .pipe(map(res => res.data ?? []));
   }
 
-  findByPhone(phone: string): Customer | undefined {
-    return this._customers().find(c => c.phone === phone.trim());
-  }
-
-  findById(id: number): Customer | undefined {
-    return this._customers().find(c => c.id === id);
-  }
-
-  add(data: Omit<Customer, 'id'>): Customer {
-    const customer: Customer = { ...data, id: this.nextId++ };
-    this._customers.update(list => [...list, customer]);
-    return customer;
-  }
-
-  update(id: number, data: Partial<Omit<Customer, 'id'>>): void {
-    this._customers.update(list =>
-      list.map(c => (c.id === id ? { ...c, ...data } : c)),
+  findByPhone(phone: string): Observable<Customer | undefined> {
+    return this.search(phone).pipe(
+      map(customers => customers.find(c => c.phone === phone)),
     );
+  }
+
+  findByDni(dni: string): Observable<Customer | undefined> {
+    return this.search(dni).pipe(
+      map(customers => customers.find(c => c.dni === dni)),
+    );
+  }
+
+  add(data: CreateCustomerDto): Observable<Customer> {
+    return this.http.post<Customer>(this.url, data);
+  }
+
+  update(dni: string, data: UpdateCustomerDto): Observable<Customer> {
+    return this.http.patch<Customer>(`${this.url}/${dni}`, data);
   }
 }

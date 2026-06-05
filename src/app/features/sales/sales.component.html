@@ -1,0 +1,314 @@
+<div class="sales-page">
+
+    <!-- ── Hero header ──────────────────────────────────────────── -->
+    <stp-section-header #salesHeader
+        title="Ventas"
+        subtitle="Historial de ventas realizadas">
+    </stp-section-header>
+
+    <!-- ── Loading shimmer stats ─────────────────────────────────── -->
+    @if (loading()) {
+    <div class="sales-stats">
+        @for (_ of [1, 2, 3]; track $index) {
+        <div class="sales-stats__card">
+            <stp-shimmer radius="md" style="width:40px;height:40px;flex-shrink:0"></stp-shimmer>
+            <div class="sales-stats__info">
+                <stp-shimmer radius="sm" style="width:70px;height:12px"></stp-shimmer>
+                <stp-shimmer radius="sm" style="width:90px;height:18px"></stp-shimmer>
+            </div>
+        </div>
+        }
+    </div>
+    }
+
+    <!-- ── Sticky filter bar ─────────────────────────────────────── -->
+    <div class="sales-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
+        <stp-search
+            placeholder="Buscar por cliente o número de venta..."
+            size="md"
+            [value]="searchQuery()"
+            (valueChange)="onSearchInput($event)"
+            (cleared)="clearSearch()"
+            aria-label="Buscar ventas">
+        </stp-search>
+
+        <div class="sales-sticky__inner">
+            <div class="sales-filter-pills" role="group" aria-label="Filtrar por método de pago">
+                <button class="sales-filter-pill"
+                    [class.sales-filter-pill--active]="paymentFilter() === 'all'"
+                    (click)="setPaymentFilter('all')">
+                    Todos
+                </button>
+                @for (method of paymentMethods; track method) {
+                <button class="sales-filter-pill"
+                    [class.sales-filter-pill--cash]="method === SalePaymentMethod.CASH"
+                    [class.sales-filter-pill--credit]="method === SalePaymentMethod.CREDIT"
+                    [class.sales-filter-pill--active]="paymentFilter() === method"
+                    (click)="setPaymentFilter(method)">
+                    <i stp-icon [name]="paymentIcon(method)" class="icon--xs"></i>
+                    {{ paymentLabel(method) }}
+                </button>
+                }
+            </div>
+
+            @if (!loading() && resource()?.meta?.total) {
+            <span class="sales-sticky__count text-sm text-secondary">
+                {{ resource()!.meta.total }} registro{{ resource()!.meta.total !== 1 ? 's' : '' }}
+            </span>
+            }
+        </div>
+    </div>
+
+    <!-- ── Sales list ─────────────────────────────────────────────── -->
+    @if (sales().length > 0 || loading()) {
+    <section class="sales-results" aria-label="Lista de ventas" aria-live="polite"
+        (scroll)="onContainerScroll($event)">
+
+        <!-- Skeleton -->
+        @if (loading()) {
+        <ul class="sales-list" aria-hidden="true">
+            @for (_ of [1, 2, 3, 4, 5]; track $index) {
+            <li class="sale-row sale-row--skeleton bg-base">
+                <div class="sale-row__header">
+                    <stp-shimmer radius="md" style="width:44px;height:44px;flex-shrink:0"></stp-shimmer>
+                    <div class="sale-row__info">
+                        <stp-shimmer radius="sm" style="width:130px;height:14px"></stp-shimmer>
+                        <stp-shimmer radius="sm" style="width:90px;height:12px"></stp-shimmer>
+                        <stp-shimmer radius="sm" style="width:100%;height:4px;margin-top:4px"></stp-shimmer>
+                    </div>
+                    <div class="sale-row__amount">
+                        <stp-shimmer radius="sm" style="width:60px;height:16px"></stp-shimmer>
+                    </div>
+                </div>
+            </li>
+            }
+        </ul>
+        }
+
+        <!-- Real list -->
+        @if (!loading()) {
+        <ul class="sales-list" role="list">
+            @for (sale of sales(); track sale.id) {
+            <li class="sale-row bg-base"
+                [class.sale-row--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
+                [class.sale-row--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT"
+                [class.sale-row--expanded]="isExpanded(sale.id)"
+                (click)="toggleSale(sale.id)"
+                role="button"
+                [attr.aria-expanded]="isExpanded(sale.id)">
+
+                <!-- ── Collapsed header ──────────────────────────── -->
+                <div class="sale-row__header">
+
+                    <!-- Payment icon -->
+                    <span class="sale-row__icon-wrap"
+                        [class.sale-row__icon-wrap--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
+                        [class.sale-row__icon-wrap--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT"
+                        aria-hidden="true">
+                        <i stp-icon
+                            [name]="sale.paymentMethod === SalePaymentMethod.CASH ? 'money' : 'hand-coins'"
+                            class="icon--md">
+                        </i>
+                    </span>
+
+                    <!-- Info -->
+                    <div class="sale-row__info">
+                        <div class="sale-row__top">
+                            <span class="sale-row__id font-semibold">Venta #{{ sale.vt }}</span>
+                            <span class="sale-row__badge"
+                                [class.sale-row__badge--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
+                                [class.sale-row__badge--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT">
+                                {{ paymentLabel(sale.paymentMethod) }}
+                            </span>
+                        </div>
+
+                        <span class="sale-row__customer text-sm text-secondary">
+                            <i stp-icon name="user" class="icon--xs"></i>
+                            {{ customerName(sale) }}
+                        </span>
+
+                        <!-- Payment progress bar -->
+                        <div class="sale-row__progress">
+                            <div class="sale-row__progress-bar">
+                                <div class="sale-row__progress-fill"
+                                    [class.sale-row__progress-fill--full]="isPaidFull(sale)"
+                                    [style.width.%]="paymentPercent(sale)">
+                                </div>
+                            </div>
+                            <span class="sale-row__progress-label text-xs">
+                                @if (isPaidFull(sale)) {
+                                    <i stp-icon name="check-circle" class="icon--xs icon--success"></i>
+                                    <span class="text-success">Pagado</span>
+                                } @else {
+                                    <span class="text-warning">{{ paymentPercent(sale) | number:'1.0-0' }}% abonado</span>
+                                    <span class="text-secondary">· Pend. $ {{ (sale.totalAmount - saleTotal(sale)) | number:'1.2-2' }}</span>
+                                }
+                            </span>
+                        </div>
+
+                        <div class="sale-row__bottom">
+                            <span class="sale-row__meta text-xs text-secondary">
+                                <i stp-icon name="shopping-bag" class="icon--xs"></i>
+                                {{ sale.details.length }} producto{{ sale.details.length !== 1 ? 's' : '' }}
+                                · {{ firstProductName(sale) | slice:0:20 }}{{ sale.details.length > 1 ? '…' : '' }}
+                            </span>
+                            <span class="sale-row__date text-xs text-secondary">
+                                <i stp-icon name="clock" class="icon--xs"></i>
+                                {{ sale.createdAt | date:'d MMM, h:mm a' : '' : 'es-PE' }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <!-- Amount + chevron -->
+                    <div class="sale-row__amount">
+                        <span class="sale-row__total font-bold">$ {{ saleTotal(sale) | number:'1.2-2' }}</span>
+                        <span class="sale-row__currency text-xs text-secondary">
+                            / $ {{ sale.totalAmount | number:'1.2-2' }} USD
+                        </span>
+                        <i stp-icon name="caret-down" class="icon--xs sale-row__chevron" aria-hidden="true"></i>
+                    </div>
+
+                </div><!-- /sale-row__header -->
+
+                <!-- ── Expandable detail ──────────────────────────── -->
+                <div class="sale-row__detail" [class.sale-row__detail--open]="isExpanded(sale.id)">
+                <div class="sale-row__detail-inner" (click)="$event.stopPropagation()">
+
+                    <!-- Products -->
+                    @if (sale.details.length > 0) {
+                    <div class="sale-detail__section">
+                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Productos</span>
+                        <ul class="sale-detail__items">
+                            @for (d of sale.details; track d.id) {
+                            <li class="sale-detail__item">
+                                <strong>#{{ d.product.po }} </strong>
+                                <span class="sale-detail__item-name text-sm">
+
+                                    {{ d.product.name }}
+                                </span>
+                                <span class="sale-detail__item-price text-sm font-semibold">
+                                    $ {{ +d.salePrice | number:'1.2-2' }}
+                                </span>
+                            </li>
+                            }
+                        </ul>
+                    </div>
+                    }
+
+                    <!-- Payment breakdown -->
+                    <div class="sale-detail__section">
+                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Detalle de pago</span>
+                        <div class="sale-detail__payment">
+                            @if (sale.cashAmount > 0) {
+                            <div class="sale-detail__payment-row">
+                                <span class="icon-row text-sm text-secondary">
+                                    <i stp-icon name="money" class="icon--xs"></i>
+                                    Efectivo
+                                </span>
+                                <span class="text-sm font-medium">$ {{ sale.cashAmount | number:'1.2-2' }}</span>
+                            </div>
+                            }
+                            @if (sale.transferAmount > 0) {
+                            <div class="sale-detail__payment-row">
+                                <span class="icon-row text-sm text-secondary">
+                                    <i stp-icon name="device-mobile" class="icon--xs"></i>
+                                    Transferencia
+                                </span>
+                                <span class="text-sm font-medium">$ {{ sale.transferAmount | number:'1.2-2' }}</span>
+                            </div>
+                            }
+                            <div class="sale-detail__payment-row sale-detail__payment-row--total">
+                                <span class="text-sm font-semibold">Total cobrado</span>
+                                <span class="text-sm font-bold">$ {{ saleTotal(sale) | number:'1.2-2' }} USD</span>
+                            </div>
+                            @if (!isPaidFull(sale)) {
+                            <div class="sale-detail__payment-row sale-detail__payment-row--pending">
+                                <span class="icon-row text-sm">
+                                    <i stp-icon name="clock" class="icon--xs"></i>
+                                    Saldo pendiente
+                                </span>
+                                <span class="text-sm font-bold">
+                                    $ {{ (sale.totalAmount - saleTotal(sale)) | number:'1.2-2' }} USD
+                                </span>
+                            </div>
+                            }
+                        </div>
+                    </div>
+
+                    <!-- Notes -->
+                    @if (sale.notes) {
+                    <div class="sale-detail__section">
+                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Notas</span>
+                        <p class="sale-detail__notes text-sm text-secondary">{{ sale.notes }}</p>
+                    </div>
+                    }
+
+                    <!-- Footer de acciones -->
+                    <div class="sale-detail__footer">
+                        <span class="sale-detail__footer-meta icon-row text-xs text-secondary">
+                            <i stp-icon name="clock" class="icon--xs"></i>
+                            {{ sale.createdAt | date:'d MMM yyyy, h:mm a' : '' : 'es-PE' }}
+                        </span>
+                        <span class="sale-detail__footer-total text-sm">
+                            Total: <strong>$ {{ saleTotal(sale) | number:'1.2-2' }} USD</strong>
+                        </span>
+                        <stp-button
+                            variant="info"
+                            btnStyle="ghost"
+                            size="sm"
+                            radius="md"
+                            [loading]="downloadingId() === sale.id"
+                            [disabled]="downloadingId() !== null"
+                            (click)="downloadReceipt(sale, $event)">
+                            <i stp-icon name="file-pdf" style="font-size:0.875rem"></i>
+                            Descargar boleta
+                        </stp-button>
+                    </div>
+
+                </div>
+                </div><!-- /sale-row__detail -->
+
+            </li>
+            }
+
+            <!-- Loading more -->
+            @if (isLoadingMore()) {
+            <li class="sales-list__state">
+                <stp-shimmer radius="md" style="width:100%;height:80px"></stp-shimmer>
+            </li>
+            }
+
+            <!-- End of list -->
+            @if (allLoaded() && !isLoadingMore()) {
+            <li class="sales-list__end-state">
+                <span class="icon-badge icon-badge--success icon-badge--sm">
+                    <i stp-icon name="check" class="icon--sm"></i>
+                </span>
+                <span class="text-sm text-secondary">Has llegado al final del historial</span>
+            </li>
+            }
+
+        </ul>
+        }
+
+    </section>
+    }
+
+    <!-- ── Empty state ────────────────────────────────────────────── -->
+    @if (!loading() && sales().length === 0) {
+        @if (isFiltered()) {
+        <stp-empty-state
+            icon="funnel-simple-x"
+            title="Sin resultados"
+            description="No hay ventas con el filtro seleccionado. Intenta con otro.">
+        </stp-empty-state>
+        } @else {
+        <stp-empty-state
+            icon="receipt"
+            title="Sin ventas registradas"
+            description="Las ventas que realices aparecerán aquí.">
+        </stp-empty-state>
+        }
+    }
+
+</div>

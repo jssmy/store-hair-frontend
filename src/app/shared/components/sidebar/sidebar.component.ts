@@ -5,7 +5,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 interface NavItem {
   label: string;
   route: string;
-  icon: 'notices' | 'products' | 'caja' | 'dashboard' | 'camera' | 'suppliers' | 'piggy-bank' | 'demo' | 'handbag';
+  icon: 'notices' | 'products' | 'caja' | 'dashboard' | 'camera' | 'suppliers' | 'piggy-bank' | 'demo' | 'handbag' | 'receipt';
 }
 
 @Component({
@@ -21,6 +21,7 @@ export class SidebarComponent {
   protected readonly navItems: NavItem[] = [
     { label: 'Dashboard', route: '/dashboard', icon: 'dashboard' },
     { label: 'Vender',    route: '/sale',      icon: 'camera'    },
+    { label: 'Ventas realizadas',    route: '/sales',      icon: 'receipt'   },
     { label: 'Orden de compra',    route: '/purchase-order',      icon: 'handbag'    },
     { label: 'Inventario', route: '/products',  icon: 'products'  },
     { label: 'Proveedores', route: '/suppliers',  icon: 'suppliers'  },

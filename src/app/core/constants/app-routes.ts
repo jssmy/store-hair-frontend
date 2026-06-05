@@ -4,6 +4,7 @@ export const AppRoutes = {
   notices:       'notices',
   products:      'products',
   sale:          'sale',
+  sales:         'sales',
   caja:          'caja',
   profile:       'profile',
   suppliers:     'suppliers',

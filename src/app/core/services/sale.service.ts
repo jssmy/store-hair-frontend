@@ -49,6 +49,10 @@ export class SaleService {
     return this.http.post<SaleResponse>(this.url, payload);
   }
 
+  registerPayment(saleId: number, payment: { amount: number; type: 'cash' | 'transfer'; imageUrl?: string }): Observable<void> {
+    return this.http.post(`${this.url}/${saleId}/payments`, payment).pipe(map(() => void 0));
+  }
+
   downloadPdf(id: number): Observable<Blob> {
     return this.http.get(`${this.url}/${id}/pdf`, { responseType: 'blob' });
   }

@@ -205,4 +205,12 @@
         white-space: nowrap;
         text-align: right;
     }
+
+    &__price-total {
+        font-size: var(--text-xs);
+        font-weight: var(--font-bold);
+        color: var(--color-success);
+        white-space: nowrap;
+        text-align: right;
+    }
 }

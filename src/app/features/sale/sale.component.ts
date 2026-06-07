@@ -92,7 +92,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
 
   // ── Cart derived ─────────────────────────────────────────
   protected readonly cartTotal = computed(() =>
-    this.cartItems().reduce((sum, item) => sum + item.salePrice, 0),
+    this.cartItems().reduce((sum, item) => sum + item.salePrice * (item.product.weight ?? 0), 0),
   );
   protected readonly cartCount = computed(() =>
     this.cartItems().reduce((sum, item) => sum + item.quantity, 0),
@@ -220,7 +220,7 @@ export class SaleComponent implements AfterViewInit, OnDestroy {
 
   protected addToCart(product: Product, qty: number): void {
     const cartProduct: Product = { ...product, imageUrl: product.imageUrls?.[0] };
-    const defaultSalePrice = cartProduct.price * (cartProduct.weight ?? 1);
+    const defaultSalePrice = cartProduct.price;
 
     this.cartItems.update(items => {
       // Producto único: si ya está en el carrito no se duplica

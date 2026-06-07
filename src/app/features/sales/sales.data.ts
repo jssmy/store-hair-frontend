@@ -3,6 +3,11 @@ export enum SalePaymentMethod {
   CREDIT = 'credit',
 }
 
+export enum SalePaymentType {
+  CASH     = 'cash',
+  TRANSFER = 'transfer',
+}
+
 export interface SaleProduct {
   id: number;
   po: string;
@@ -23,10 +28,24 @@ export interface SaleDetail {
 
 export interface SaleCustomer {
   id: number;
-  fullName?: string;
-  businessName?: string;
+  names: string;
   phone?: string;
+  dni?: string;
   email?: string;
+}
+
+export interface SaleUser {
+  id: string;
+  email: string;
+  name: string;
+}
+
+export interface SalePayment {
+  id: number;
+  amount: string | number;
+  type: SalePaymentType;
+  imageUrl: string | null;
+  createdAt: string;
 }
 
 export interface Sale {
@@ -35,10 +54,13 @@ export interface Sale {
   paymentMethod: SalePaymentMethod;
   customerId?: number;
   customer?: SaleCustomer;
+  user?: SaleUser;
   details: SaleDetail[];
-  totalAmount: number;
-  cashAmount: number;
-  transferAmount: number;
-  notes?: string;
+  payments: SalePayment[];
+  totalAmount: string | number;
+  cashAmount: string | number;
+  transferAmount: string | number;
+  notes?: string | null;
   createdAt: string;
+  updatedAt: string;
 }

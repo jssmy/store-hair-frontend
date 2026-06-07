@@ -49,7 +49,7 @@
                                 ×{{ item.quantity }}
                             </stp-badge>
                             <span class="cus-summary__item-amount">
-                                $ {{ (item.salePrice) | number:'1.2-2' }}
+                                $ {{ (item.salePrice * (item.product.weight ?? 0)) | number:'1.2-2' }}
                             </span>
                         </span>
                     </li>

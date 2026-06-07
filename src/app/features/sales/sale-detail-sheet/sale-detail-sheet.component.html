@@ -1,0 +1,261 @@
+<div class="sds">
+
+    <!-- ── Hero ──────────────────────────────────────────────────── -->
+    <div class="sds__hero"
+        [class.sds__hero--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
+        [class.sds__hero--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT">
+
+        <div class="sds__hero-top">
+            <div class="sds__hero-icon-wrap">
+                <i stp-icon
+                    [name]="sale.paymentMethod === SalePaymentMethod.CASH ? 'money' : 'hand-coins'"
+                    class="icon--lg">
+                </i>
+            </div>
+
+            <div class="sds__hero-info">
+                <span class="sds__hero-vt">{{ sale.vt }}</span>
+                <span class="sds__hero-badge"
+                    [class.sds__hero-badge--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
+                    [class.sds__hero-badge--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT">
+                    {{ paymentLabel() }}
+                </span>
+            </div>
+
+            <button class="icon-btn sds__close-btn" (click)="close()" aria-label="Cerrar detalle">
+                <i stp-icon name="x" class="icon--sm"></i>
+            </button>
+        </div>
+
+        <div class="sds__hero-meta">
+            <span class="icon-row text-sm">
+                <i stp-icon name="user-circle" class="icon--sm"></i>
+                <strong>{{ customerName() }}</strong>
+            </span>
+            <div class="sds__hero-amount">
+                <span class="sds__hero-amount-paid">$ {{ saleTotal() | number:'1.2-2' }}</span>
+                <span class="sds__hero-amount-total">/ $ {{ +sale.totalAmount | number:'1.2-2' }} USD</span>
+            </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="sds__progress">
+            <div class="sds__progress-track">
+                <div class="sds__progress-fill"
+                    [class.sds__progress-fill--full]="isPaidFull()"
+                    [style.width.%]="paymentPercent()">
+                </div>
+            </div>
+            <div class="sds__progress-label">
+                @if (isPaidFull()) {
+                    <span class="sds__progress-chip sds__progress-chip--paid">
+                        <i stp-icon name="check-circle" class="icon--xs"></i>
+                        Pagado completo
+                    </span>
+                } @else {
+                    <span class="sds__progress-chip sds__progress-chip--partial">
+                        {{ paymentPercent() | number:'1.0-0' }}% abonado
+                    </span>
+                    <span class="text-xs">
+                        Pendiente <strong>$ {{ (+sale.totalAmount - saleTotal()) | number:'1.2-2' }}</strong>
+                    </span>
+                }
+            </div>
+        </div>
+
+    </div><!-- /sds__hero -->
+
+    <!-- ── Body ──────────────────────────────────────────────────── -->
+    <div class="sds__body">
+
+        <!-- Products -->
+        @if (sale.details.length > 0) {
+        <div class="sds__section">
+            <div class="sds__section-label">
+                <span class="sds__section-icon-wrap">
+                    <i stp-icon name="shopping-bag" class="icon--xs"></i>
+                </span>
+                Productos
+                <span class="sds__section-count">{{ sale.details.length }}</span>
+            </div>
+            <ul class="sds__products">
+                @for (d of sale.details; track d.id) {
+                <li class="sds__product">
+                    <div class="sds__product-body">
+                        <span class="sds__product-name text-sm font-semibold">{{ d.product.name }}</span>
+                        <div class="sds__product-chips">
+                            <span class="sds__chip">{{ d.product.po }}</span>
+                            <span class="sds__chip sds__chip--type">{{ d.product.type }}</span>
+                            <span class="sds__chip">{{ d.product.color }}</span>
+                        </div>
+                    </div>
+                    <span class="sds__product-price font-bold">$ {{ +d.salePrice | number:'1.2-2' }}</span>
+                </li>
+                }
+            </ul>
+        </div>
+        }
+
+        <!-- Payment timeline -->
+        <div class="sds__section">
+            <div class="sds__section-label">
+                <span class="sds__section-icon-wrap">
+                    <i stp-icon name="receipt" class="icon--xs"></i>
+                </span>
+                Pagos registrados
+                <span class="sds__section-count">{{ payments().length }}</span>
+            </div>
+
+            @if (payments().length > 0) {
+            <div class="sds__timeline">
+                @for (p of payments(); track p.id; let last = $last) {
+                <div class="sds__timeline-entry" [class.sds__timeline-entry--last]="last">
+                    <span class="sds__timeline-dot"
+                        [class.sds__timeline-dot--cash]="p.type === SalePaymentType.CASH"
+                        [class.sds__timeline-dot--transfer]="p.type !== SalePaymentType.CASH">
+                        <i stp-icon [name]="paymentTypeIcon(p.type)" class="icon--xs"></i>
+                    </span>
+                    <div class="sds__timeline-info">
+                        <span class="text-sm font-medium">{{ paymentTypeLabel(p.type) }}</span>
+                        <span class="text-xs text-secondary">
+                            {{ p.createdAt | date:'d MMM yyyy, h:mm a' : '' : 'es-PE' }}
+                        </span>
+                    </div>
+                    <span class="sds__timeline-amount font-bold">$ {{ +p.amount | number:'1.2-2' }}</span>
+                </div>
+                }
+            </div>
+            } @else {
+            <p class="text-sm text-secondary">Sin pagos registrados aún.</p>
+            }
+
+            <div class="sds__pay-summary">
+                <div class="sds__pay-summary-row">
+                    <span class="text-sm text-secondary">Total cobrado</span>
+                    <span class="text-sm font-bold">$ {{ saleTotal() | number:'1.2-2' }} USD</span>
+                </div>
+                @if (!isPaidFull()) {
+                <div class="sds__pay-summary-row sds__pay-summary-row--pending">
+                    <span class="icon-row text-sm font-medium">
+                        <i stp-icon name="clock" class="icon--xs"></i>
+                        Saldo pendiente
+                    </span>
+                    <span class="text-sm font-bold">
+                        $ {{ (+sale.totalAmount - saleTotal()) | number:'1.2-2' }} USD
+                    </span>
+                </div>
+                }
+            </div>
+        </div>
+
+        <!-- Register payment — only for credit sales with a pending balance -->
+        @if (sale.paymentMethod === SalePaymentMethod.CREDIT && !isPaidFull()) {
+        <div class="sds__section sds__section--abono">
+            <button class="sds__abono-trigger" (click)="togglePaymentForm()"
+                [class.sds__abono-trigger--open]="showPaymentForm()">
+                <span class="sds__abono-trigger-left">
+                    <span class="sds__abono-trigger-icon">
+                        <i stp-icon [name]="showPaymentForm() ? 'minus' : 'plus'" class="icon--sm"></i>
+                    </span>
+                    <span class="text-sm font-semibold">Registrar abono</span>
+                    <span class="sds__abono-pending-hint text-xs">
+                        Pend. $ {{ (+sale.totalAmount - saleTotal()) | number:'1.2-2' }}
+                    </span>
+                </span>
+                <i stp-icon [name]="showPaymentForm() ? 'caret-up' : 'caret-down'" class="icon--xs"></i>
+            </button>
+
+            @if (showPaymentForm()) {
+            <div class="sds__abono-form">
+                <div class="sds__type-cards" role="group" aria-label="Tipo de pago">
+                    <button class="sds__type-card"
+                        [class.sds__type-card--active]="paymentType() === SalePaymentType.CASH"
+                        (click)="paymentType.set(SalePaymentType.CASH)">
+                        <span class="sds__type-card-icon">
+                            <i stp-icon name="money" class="icon--md"></i>
+                        </span>
+                        <span class="text-sm font-medium">Efectivo</span>
+                    </button>
+                    <button class="sds__type-card"
+                        [class.sds__type-card--active]="paymentType() === SalePaymentType.TRANSFER"
+                        (click)="paymentType.set(SalePaymentType.TRANSFER)">
+                        <span class="sds__type-card-icon">
+                            <i stp-icon name="device-mobile" class="icon--md"></i>
+                        </span>
+                        <span class="text-sm font-medium">Transferencia</span>
+                    </button>
+                </div>
+
+                <div class="sds__abono-amount-wrap">
+                    <stp-input-numeric
+                        size="md"
+                        radius="sm"
+                        [min]="0.01"
+                        [max]="+sale.totalAmount - saleTotal()"
+                        [value]="paymentAmount()"
+                        (valueChange)="paymentAmount.set($event ?? 0)"
+                        label="Monto a abonar">
+                    </stp-input-numeric>
+                    <span class="sds__abono-hint text-xs text-secondary">
+                        Máximo: $ {{ (+sale.totalAmount - saleTotal()) | number:'1.2-2' }} USD
+                    </span>
+                </div>
+
+                <stp-button
+                    variant="primary"
+                    size="md"
+                    radius="md"
+                    [loading]="submittingPayment()"
+                    [disabled]="paymentAmount() <= 0 || paymentAmount() > (+sale.totalAmount - saleTotal()) || submittingPayment()"
+                    (click)="submitPayment()">
+                    <i stp-icon name="check" class="icon--sm"></i>
+                    Guardar abono
+                </stp-button>
+            </div>
+            }
+        </div>
+        }
+
+        <!-- Notes -->
+        @if (sale.notes) {
+        <div class="sds__section">
+            <div class="sds__section-label">
+                <span class="sds__section-icon-wrap">
+                    <i stp-icon name="note" class="icon--xs"></i>
+                </span>
+                Notas
+            </div>
+            <p class="sds__notes text-sm text-secondary">{{ sale.notes }}</p>
+        </div>
+        }
+
+    </div><!-- /sds__body -->
+
+    <!-- ── Footer ────────────────────────────────────────────────── -->
+    <div class="sds__footer">
+        <div class="sds__footer-meta">
+            <span class="icon-row text-xs text-secondary">
+                <i stp-icon name="clock" class="icon--xs"></i>
+                {{ sale.createdAt | date:'d MMM yyyy, h:mm a' : '' : 'es-PE' }}
+            </span>
+            @if (sale.user) {
+            <span class="icon-row text-xs text-secondary">
+                <i stp-icon name="user" class="icon--xs"></i>
+                {{ sale.user.name }}
+            </span>
+            }
+        </div>
+        <stp-button
+            variant="info"
+            btnStyle="ghost"
+            size="sm"
+            radius="md"
+            [loading]="downloadingId() === sale.id"
+            [disabled]="downloadingId() !== null"
+            (click)="downloadReceipt()">
+            <i stp-icon name="file-pdf" class="icon--sm"></i>
+            Boleta PDF
+        </stp-button>
+    </div>
+
+</div>

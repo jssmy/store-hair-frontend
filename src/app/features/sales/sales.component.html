@@ -7,19 +7,7 @@
     </stp-section-header>
 
     <!-- ── Loading shimmer stats ─────────────────────────────────── -->
-    @if (loading()) {
-    <div class="sales-stats">
-        @for (_ of [1, 2, 3]; track $index) {
-        <div class="sales-stats__card">
-            <stp-shimmer radius="md" style="width:40px;height:40px;flex-shrink:0"></stp-shimmer>
-            <div class="sales-stats__info">
-                <stp-shimmer radius="sm" style="width:70px;height:12px"></stp-shimmer>
-                <stp-shimmer radius="sm" style="width:90px;height:18px"></stp-shimmer>
-            </div>
-        </div>
-        }
-    </div>
-    }
+
 
     <!-- ── Sticky filter bar ─────────────────────────────────────── -->
     <div class="sales-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
@@ -92,10 +80,8 @@
             <li class="sale-row bg-base"
                 [class.sale-row--cash]="sale.paymentMethod === SalePaymentMethod.CASH"
                 [class.sale-row--credit]="sale.paymentMethod === SalePaymentMethod.CREDIT"
-                [class.sale-row--expanded]="isExpanded(sale.id)"
-                (click)="toggleSale(sale.id)"
-                role="button"
-                [attr.aria-expanded]="isExpanded(sale.id)">
+                (click)="openSaleDetail(sale)"
+                role="button">
 
                 <!-- ── Collapsed header ──────────────────────────── -->
                 <div class="sale-row__header">
@@ -141,7 +127,7 @@
                                     <span class="text-success">Pagado</span>
                                 } @else {
                                     <span class="text-warning">{{ paymentPercent(sale) | number:'1.0-0' }}% abonado</span>
-                                    <span class="text-secondary">· Pend. $ {{ (sale.totalAmount - saleTotal(sale)) | number:'1.2-2' }}</span>
+                                    <span class="text-secondary">· Pend. $ {{ (+sale.totalAmount - saleTotal(sale)) | number:'1.2-2' }}</span>
                                 }
                             </span>
                         </div>
@@ -163,110 +149,12 @@
                     <div class="sale-row__amount">
                         <span class="sale-row__total font-bold">$ {{ saleTotal(sale) | number:'1.2-2' }}</span>
                         <span class="sale-row__currency text-xs text-secondary">
-                            / $ {{ sale.totalAmount | number:'1.2-2' }} USD
+                            / $ {{ +sale.totalAmount | number:'1.2-2' }} USD
                         </span>
-                        <i stp-icon name="caret-down" class="icon--xs sale-row__chevron" aria-hidden="true"></i>
+                        <i stp-icon name="caret-right" class="icon--xs sale-row__chevron" aria-hidden="true"></i>
                     </div>
 
                 </div><!-- /sale-row__header -->
-
-                <!-- ── Expandable detail ──────────────────────────── -->
-                <div class="sale-row__detail" [class.sale-row__detail--open]="isExpanded(sale.id)">
-                <div class="sale-row__detail-inner" (click)="$event.stopPropagation()">
-
-                    <!-- Products -->
-                    @if (sale.details.length > 0) {
-                    <div class="sale-detail__section">
-                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Productos</span>
-                        <ul class="sale-detail__items">
-                            @for (d of sale.details; track d.id) {
-                            <li class="sale-detail__item">
-                                <strong>#{{ d.product.po }} </strong>
-                                <span class="sale-detail__item-name text-sm">
-
-                                    {{ d.product.name }}
-                                </span>
-                                <span class="sale-detail__item-price text-sm font-semibold">
-                                    $ {{ +d.salePrice | number:'1.2-2' }}
-                                </span>
-                            </li>
-                            }
-                        </ul>
-                    </div>
-                    }
-
-                    <!-- Payment breakdown -->
-                    <div class="sale-detail__section">
-                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Detalle de pago</span>
-                        <div class="sale-detail__payment">
-                            @if (sale.cashAmount > 0) {
-                            <div class="sale-detail__payment-row">
-                                <span class="icon-row text-sm text-secondary">
-                                    <i stp-icon name="money" class="icon--xs"></i>
-                                    Efectivo
-                                </span>
-                                <span class="text-sm font-medium">$ {{ sale.cashAmount | number:'1.2-2' }}</span>
-                            </div>
-                            }
-                            @if (sale.transferAmount > 0) {
-                            <div class="sale-detail__payment-row">
-                                <span class="icon-row text-sm text-secondary">
-                                    <i stp-icon name="device-mobile" class="icon--xs"></i>
-                                    Transferencia
-                                </span>
-                                <span class="text-sm font-medium">$ {{ sale.transferAmount | number:'1.2-2' }}</span>
-                            </div>
-                            }
-                            <div class="sale-detail__payment-row sale-detail__payment-row--total">
-                                <span class="text-sm font-semibold">Total cobrado</span>
-                                <span class="text-sm font-bold">$ {{ saleTotal(sale) | number:'1.2-2' }} USD</span>
-                            </div>
-                            @if (!isPaidFull(sale)) {
-                            <div class="sale-detail__payment-row sale-detail__payment-row--pending">
-                                <span class="icon-row text-sm">
-                                    <i stp-icon name="clock" class="icon--xs"></i>
-                                    Saldo pendiente
-                                </span>
-                                <span class="text-sm font-bold">
-                                    $ {{ (sale.totalAmount - saleTotal(sale)) | number:'1.2-2' }} USD
-                                </span>
-                            </div>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Notes -->
-                    @if (sale.notes) {
-                    <div class="sale-detail__section">
-                        <span class="sale-detail__heading text-xs font-semibold text-secondary">Notas</span>
-                        <p class="sale-detail__notes text-sm text-secondary">{{ sale.notes }}</p>
-                    </div>
-                    }
-
-                    <!-- Footer de acciones -->
-                    <div class="sale-detail__footer">
-                        <span class="sale-detail__footer-meta icon-row text-xs text-secondary">
-                            <i stp-icon name="clock" class="icon--xs"></i>
-                            {{ sale.createdAt | date:'d MMM yyyy, h:mm a' : '' : 'es-PE' }}
-                        </span>
-                        <span class="sale-detail__footer-total text-sm">
-                            Total: <strong>$ {{ saleTotal(sale) | number:'1.2-2' }} USD</strong>
-                        </span>
-                        <stp-button
-                            variant="info"
-                            btnStyle="ghost"
-                            size="sm"
-                            radius="md"
-                            [loading]="downloadingId() === sale.id"
-                            [disabled]="downloadingId() !== null"
-                            (click)="downloadReceipt(sale, $event)">
-                            <i stp-icon name="file-pdf" style="font-size:0.875rem"></i>
-                            Descargar boleta
-                        </stp-button>
-                    </div>
-
-                </div>
-                </div><!-- /sale-row__detail -->
 
             </li>
             }

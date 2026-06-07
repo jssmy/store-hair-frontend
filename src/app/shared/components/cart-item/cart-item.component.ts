@@ -29,12 +29,19 @@ export class CartItemComponent {
 
     /** Precio esperado = precio_por_gramo × gramos */
     protected readonly expectedPrice = computed(() => {
-        const { price, weight } = this.item().product;
-        return price * (weight ?? 1);
+        const { price } = this.item().product;
+        return price ;
     });
 
-    /** Valor del input nativo — inicializado una vez desde item().salePrice */
+    /** Valor del input nativo — inicializado una vez desde item().product.price */
     protected readonly localSalePrice = signal<string>('');
+
+    /** Precio total = precio_por_gramo × peso */
+    protected readonly totalPrice = computed(() => {
+        const num = parseFloat(this.localSalePrice());
+        const weight = this.item().product.weight ?? 0;
+        return isNaN(num) ? 0 : num * weight;
+    });
 
     /** Estado de foco para el borde del control */
     protected readonly priceFocused = signal(false);
@@ -45,8 +52,7 @@ export class CartItemComponent {
         effect(() => {
             const it = this.item();
             if (!this.initialized) {
-                const init = it.salePrice ?? it.product.price * (it.product.weight ?? 1);
-                this.localSalePrice.set(init.toFixed(2));
+                this.localSalePrice.set(it.salePrice.toFixed(2));
                 this.initialized = true;
             }
         });
@@ -57,7 +63,7 @@ export class CartItemComponent {
         this.localSalePrice.set(value);
         const num = parseFloat(value);
         if (!isNaN(num) && num > 0) {
-            this.salePriceChange.emit({ productId: this.item().product.id, salePrice: num });
+            this.salePriceChange.emit({ productId: this.item().product.id, salePrice: num  });
         }
     }
 

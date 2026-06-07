@@ -11,15 +11,16 @@ import {
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { DecimalPipe, DatePipe, SlicePipe } from '@angular/common';
 import { debounceTime, skip } from 'rxjs';
+import { MatBottomSheet } from '@angular/material/bottom-sheet';
 import { SectionHeaderComponent } from '../../shared/components/section-header/section-header.component';
 import { IconComponent } from '../../shared/components/icon/icon.component';
 import { ShimmerComponent } from '../../shared/components/shimmer/shimmer.component';
 import { EmptyStateComponent } from '../../shared/components/empty-state/empty-state.component';
 import { SearchComponent } from '../../shared/components/search/search.component';
-import { ButtonComponent } from '../../shared/components/button/button.component';
 import { SaleService, SaleQueryParams } from '../../core/services/sale.service';
 import { Sale, SalePaymentMethod } from './sales.data';
 import { PaginatedResponse } from '../../core/models/pagination.model';
+import { SaleDetailSheetComponent } from './sale-detail-sheet/sale-detail-sheet.component';
 
 @Component({
   selector: 'stp-sales',
@@ -29,7 +30,6 @@ import { PaginatedResponse } from '../../core/models/pagination.model';
     ShimmerComponent,
     EmptyStateComponent,
     SearchComponent,
-    ButtonComponent,
     DecimalPipe,
     DatePipe,
     SlicePipe,
@@ -38,15 +38,14 @@ import { PaginatedResponse } from '../../core/models/pagination.model';
   styleUrl: './sales.component.scss',
 })
 export class SalesComponent implements AfterViewInit, OnDestroy {
-  private readonly salesHeader = viewChild<SectionHeaderComponent>('salesHeader');
-  private readonly saleApi     = inject(SaleService);
+  private readonly salesHeader  = viewChild<SectionHeaderComponent>('salesHeader');
+  private readonly saleApi      = inject(SaleService);
   private readonly destroyRef   = inject(DestroyRef);
+  private readonly bottomSheet  = inject(MatBottomSheet);
 
   protected readonly isStuck       = signal(false);
   protected readonly loading       = signal(false);
   protected readonly isLoadingMore = signal(false);
-  protected readonly downloadingId = signal<number | null>(null);
-  protected readonly expandedSaleId = signal<number | null>(null);
 
   protected readonly paymentFilter  = signal<'all' | SalePaymentMethod>('all');
   protected readonly searchQuery    = signal('');
@@ -80,19 +79,13 @@ export class SalesComponent implements AfterViewInit, OnDestroy {
     toObservable(this.paymentFilter).pipe(
       skip(1),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.expandedSaleId.set(null);
-      this.loadSales(this.buildQueryParams(1));
-    });
+    ).subscribe(() => this.loadSales(this.buildQueryParams(1)));
 
     toObservable(this.searchQuery).pipe(
       skip(1),
       debounceTime(400),
       takeUntilDestroyed(this.destroyRef),
-    ).subscribe(() => {
-      this.expandedSaleId.set(null);
-      this.loadSales(this.buildQueryParams(1));
-    });
+    ).subscribe(() => this.loadSales(this.buildQueryParams(1)));
   }
 
   private buildQueryParams(page: number): SaleQueryParams {
@@ -143,13 +136,11 @@ export class SalesComponent implements AfterViewInit, OnDestroy {
     }
   }
 
-  // ── Expand / collapse ─────────────────────────────────────────
-  protected toggleSale(id: number): void {
-    this.expandedSaleId.update(current => current === id ? null : id);
-  }
-
-  protected isExpanded(id: number): boolean {
-    return this.expandedSaleId() === id;
+  // ── Open detail sheet ─────────────────────────────────────────
+  protected openSaleDetail(sale: Sale): void {
+    this.bottomSheet.open(SaleDetailSheetComponent, { data: { sale } }).afterDismissed().pipe(takeUntilDestroyed(this.destroyRef)).subscribe(result => {
+      this.loadSales(this.buildQueryParams(1));
+    });
   }
 
   // ── Search ────────────────────────────────────────────────────
@@ -192,9 +183,7 @@ export class SalesComponent implements AfterViewInit, OnDestroy {
   }
 
   protected customerName(sale: Sale): string {
-    if (sale.customer?.fullName)     return sale.customer.fullName;
-    if (sale.customer?.businessName) return sale.customer.businessName;
-    return 'Cliente general';
+    return sale.customer?.names ?? 'Cliente general';
   }
 
   protected paymentLabel(method: SalePaymentMethod): string {
@@ -215,23 +204,6 @@ export class SalesComponent implements AfterViewInit, OnDestroy {
   }
 
   protected trackBySaleId(_: number, sale: Sale): number { return sale.id; }
-
-  protected downloadReceipt(sale: Sale, event: Event): void {
-    event.stopPropagation();
-    if (this.downloadingId() === sale.id) return;
-
-    this.downloadingId.set(sale.id);
-    this.saleApi.downloadPdf(sale.id).subscribe({
-      next: blob => {
-        const url = URL.createObjectURL(blob);
-        const a   = document.createElement('a');
-        a.href     = url;
-        a.download = `boleta-${sale.vt}.pdf`;
-        a.click();
-        URL.revokeObjectURL(url);
-      },
-    }).add(() => this.downloadingId.set(null));
-  }
 
   protected readonly SalePaymentMethod = SalePaymentMethod;
 }

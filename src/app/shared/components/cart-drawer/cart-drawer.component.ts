@@ -8,9 +8,10 @@ import { PaymentStepComponent } from './payment-step/payment-step.component';
 import { CustomerStepComponent } from './customer-step/customer-step.component';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
+import { BadgeComponent } from '../badge/badge.component';
 import type { PaymentData } from './payment-step/payment-step.component';
 import type { Customer } from '../../../core/services/customer.service';
-import { SaleService } from '../../../core/services/sale.service';
+import { SaleService, SaleResponse } from '../../../core/services/sale.service';
 
 export type { PaymentData, PaymentMethod, CashPaymentData, CreditPaymentData } from './payment-step/payment-step.component';
 export type { Customer } from '../../../core/services/customer.service';
@@ -29,7 +30,7 @@ export interface CartDismissResult {
 
 @Component({
   selector: 'stp-cart-drawer',
-  imports: [DecimalPipe, CartStepComponent, PaymentStepComponent, CustomerStepComponent, ButtonComponent, IconComponent],
+  imports: [DecimalPipe, CartStepComponent, PaymentStepComponent, CustomerStepComponent, ButtonComponent, IconComponent, BadgeComponent],
   templateUrl: './cart-drawer.component.html',
   styleUrl: './cart-drawer.component.scss',
 })
@@ -48,7 +49,20 @@ export class CartDrawerComponent {
   protected readonly step = signal<'listItems' | 'paymentMethod' | 'customerInformation' | 'confirmation' | 'saleError'>('listItems');
   protected readonly pendingPayment = signal<PaymentData | null>(null);
   protected readonly saving = signal(false);
-  private pendingResult: CartDismissResult | null = null;
+  protected readonly pendingSale = signal<SaleResponse | null>(null);
+  private pendingDismiss: CartDismissResult | null = null;
+
+  protected readonly paidAmount = computed(() => {
+    const sale = this.pendingSale();
+    if (!sale) return 0;
+    return sale.payments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+  });
+
+  protected readonly pendingBalance = computed(() => {
+    const sale = this.pendingSale();
+    if (!sale) return 0;
+    return parseFloat(sale.totalAmount) - this.paidAmount();
+  });
 
   protected close(): void {
     this.sheetRef.dismiss({ items: this.items(), confirmed: false });
@@ -105,7 +119,8 @@ export class CartDrawerComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (sale) => {
-          this.pendingResult = {
+          this.pendingSale.set(sale);
+          this.pendingDismiss = {
             items: this.items(),
             confirmed: true,
             payment,
@@ -139,6 +154,6 @@ export class CartDrawerComponent {
   }
 
   protected done(): void {
-    this.sheetRef.dismiss(this.pendingResult);
+    this.sheetRef.dismiss(this.pendingDismiss);
   }
 }

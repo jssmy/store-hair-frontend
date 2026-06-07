@@ -264,10 +264,22 @@
   }
 }
 
-.sds__product-price {
+.sds__product-price-col {
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 2px;
+}
+
+.sds__product-price {
   font-size: var(--text-md);
   color: var(--color-text-primary);
+}
+
+.sds__product-unit-price {
+  font-size: var(--text-xs);
+  color: var(--color-text-secondary);
 }
 
 // ── Payment timeline ──────────────────────────────────────────────

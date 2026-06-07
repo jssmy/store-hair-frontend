@@ -22,8 +22,26 @@ export interface CreateSalePayload {
   notes?: string;
 }
 
+export interface SalePayment {
+  id: number;
+  amount: string;
+  type: 'cash' | 'transfer';
+  imageUrl: string | null;
+  createdAt: string;
+}
+
 export interface SaleResponse {
   id: number;
+  vt: string;
+  paymentMethod: 'cash' | 'credit';
+  totalAmount: string;
+  cashAmount: string;
+  transferAmount: string;
+  notes: string | null;
+  customer: { id: number; names: string; phone: string; dni: string };
+  payments: SalePayment[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 @Injectable({ providedIn: 'root' })

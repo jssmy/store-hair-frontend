@@ -139,10 +139,51 @@
             <p class="cart-drawer__success-sub">La operación fue completada con éxito.</p>
         </div>
 
-        <div class="cart-drawer__success-total">
-            <span class="cart-drawer__success-total-label">Total cobrado</span>
-            <span class="cart-drawer__success-total-amount">$ {{ total() | number:'1.2-2' }} USD</span>
+        @if (pendingSale(); as sale) {
+        <div class="cart-drawer__success-meta">
+            <span class="cart-drawer__success-vt">
+                <i stp-icon name="receipt" class="icon--sm icon--muted"></i>
+                {{ sale.vt }}
+            </span>
+            <stp-badge
+                [variant]="sale.paymentMethod === 'cash' ? 'success' : 'warning'"
+                badgeStyle="light"
+                size="md">
+                {{ sale.paymentMethod === 'cash' ? 'Contado' : 'Crédito' }}
+            </stp-badge>
         </div>
+        }
+
+        <div class="cart-drawer__success-total">
+            <span class="cart-drawer__success-total-label">Total de venta</span>
+            <span class="cart-drawer__success-total-amount">
+                $ {{ pendingSale()?.totalAmount ?? (total() | number:'1.2-2') }} USD
+            </span>
+        </div>
+
+        @if (pendingSale()?.paymentMethod === 'credit') {
+        <div class="cart-drawer__success-credit">
+            <div class="cart-drawer__success-credit-row">
+                <span class="cart-drawer__success-credit-label">
+                    <i stp-icon name="check-circle" class="icon--xs icon--success"></i>
+                    Anticipo pagado
+                </span>
+                <span class="cart-drawer__success-credit-value text-success font-semibold">
+                    $ {{ paidAmount() | number:'1.2-2' }} USD
+                </span>
+            </div>
+            <div class="cart-drawer__success-credit-divider"></div>
+            <div class="cart-drawer__success-credit-row">
+                <span class="cart-drawer__success-credit-label">
+                    <i stp-icon name="clock" class="icon--xs icon--warning"></i>
+                    Saldo pendiente
+                </span>
+                <span class="cart-drawer__success-credit-value text-warning font-bold">
+                    $ {{ pendingBalance() | number:'1.2-2' }} USD
+                </span>
+            </div>
+        </div>
+        }
 
         <stp-button variant="success" btnStyle="solid" radius="full" size="lg"
             (click)="done()">

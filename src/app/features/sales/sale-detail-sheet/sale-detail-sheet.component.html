@@ -89,7 +89,10 @@
                             <span class="sds__chip">{{ d.product.color }}</span>
                         </div>
                     </div>
-                    <span class="sds__product-price font-bold">$ {{ +d.salePrice | number:'1.2-2' }}</span>
+                    <div class="sds__product-price-col">
+                        <span class="sds__product-price font-bold">$ {{ +d.salePrice * +d.product.weight | number:'1.2-2' }}</span>
+                        <span class="sds__product-unit-price text-secondary">$ {{ +d.salePrice | number:'1.2-2' }} / u</span>
+                    </div>
                 </li>
                 }
             </ul>

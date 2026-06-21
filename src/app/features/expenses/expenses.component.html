@@ -1,0 +1,222 @@
+<div class="expenses-page">
+
+    <!-- ── Hero header ──────────────────────────────────────────── -->
+    <stp-section-header #expensesHeader
+        title="Gastos"
+        subtitle="Registro de gastos operativos">
+    </stp-section-header>
+
+    <!-- ── Sticky filter bar ─────────────────────────────────────── -->
+    <div class="expenses-sticky sticky-bar" [class.sticky-bar--stuck]="isStuck()">
+
+        <stp-search
+            placeholder="Buscar por descripción..."
+            size="md"
+            [value]="searchQuery()"
+            (valueChange)="onSearchInput($event)"
+            (cleared)="clearSearch()"
+            aria-label="Buscar gastos">
+        </stp-search>
+
+        <div class="expenses-sticky__inner">
+
+            <!-- Category pills -->
+            <div class="expenses-filter-pills" role="group" aria-label="Filtrar por categoría">
+                <button class="expenses-filter-pill"
+                    [class.expenses-filter-pill--active]="categoryFilter() === 'all'"
+                    (click)="setCategoryFilter('all')">
+                    Todos
+                </button>
+                @for (cat of categories; track cat) {
+                <button class="expenses-filter-pill"
+                    [class.expenses-filter-pill--active]="categoryFilter() === cat"
+                    (click)="setCategoryFilter(cat)">
+                    <i stp-icon [name]="categoryIcon(cat)" class="icon--xs"></i>
+                    {{ categoryLabel(cat) }}
+                </button>
+                }
+            </div>
+
+            <!-- Status filter + count -->
+            <div class="expenses-sticky__right">
+                <div class="expenses-status-pills" role="group" aria-label="Filtrar por estado">
+                    <button class="expenses-status-pill"
+                        [class.expenses-status-pill--active]="statusFilter() === 'all'"
+                        (click)="setStatusFilter('all')">
+                        Todos
+                    </button>
+                    <button class="expenses-status-pill expenses-status-pill--paid"
+                        [class.expenses-status-pill--active]="statusFilter() === ExpenseStatus.PAID"
+                        (click)="setStatusFilter(ExpenseStatus.PAID)">
+                        <i stp-icon name="check-circle" class="icon--xs"></i>
+                        Pagado
+                    </button>
+                    <button class="expenses-status-pill expenses-status-pill--pending"
+                        [class.expenses-status-pill--active]="statusFilter() === ExpenseStatus.PENDING"
+                        (click)="setStatusFilter(ExpenseStatus.PENDING)">
+                        <i stp-icon name="clock" class="icon--xs"></i>
+                        Pendiente
+                    </button>
+                </div>
+
+                @if (!loading() && resource()?.meta?.total) {
+                <span class="expenses-sticky__count text-sm text-secondary">
+                    {{ resource()!.meta.total }} registro{{ resource()!.meta.total !== 1 ? 's' : '' }}
+                </span>
+                }
+            </div>
+
+        </div>
+    </div>
+
+    <!-- ── Totals card ───────────────────────────────────────────── -->
+    @if (!loading() && expenses().length > 0) {
+    <div class="expenses-totals">
+        <div class="expenses-totals__card">
+            <span class="expenses-totals__icon-wrap" aria-hidden="true">
+                <i stp-icon name="trend-down" class="icon--md"></i>
+            </span>
+            <div class="expenses-totals__info">
+                <span class="expenses-totals__label text-xs text-secondary">Total gastos</span>
+                <span class="expenses-totals__value font-bold">$ {{ totalAmount() | number:'1.2-2' }} USD</span>
+            </div>
+        </div>
+    </div>
+    }
+
+    <!-- ── Expenses list ─────────────────────────────────────────────── -->
+    @if (expenses().length > 0 || loading()) {
+    <section class="expenses-results" aria-label="Lista de gastos" aria-live="polite"
+        (scroll)="onContainerScroll($event)">
+
+        <!-- Skeleton -->
+        @if (loading()) {
+        <ul class="expenses-list" aria-hidden="true">
+            @for (_ of [1, 2, 3, 4, 5]; track $index) {
+            <li class="expense-row expense-row--skeleton bg-base">
+                <div class="expense-row__header">
+                    <stp-shimmer radius="md" style="width:44px;height:44px;flex-shrink:0"></stp-shimmer>
+                    <div class="expense-row__info">
+                        <stp-shimmer radius="sm" style="width:160px;height:14px"></stp-shimmer>
+                        <stp-shimmer radius="sm" style="width:90px;height:12px;margin-top:4px"></stp-shimmer>
+                    </div>
+                    <div class="expense-row__amount">
+                        <stp-shimmer radius="sm" style="width:72px;height:16px"></stp-shimmer>
+                    </div>
+                </div>
+            </li>
+            }
+        </ul>
+        }
+
+        <!-- Real list -->
+        @if (!loading()) {
+        <ul class="expenses-list" role="list">
+            @for (expense of expenses(); track expense.id) {
+            <li class="expense-row bg-base"
+                [class.expense-row--paid]="isPaid(expense)"
+                [class.expense-row--pending]="!isPaid(expense)"
+                (click)="openDetail(expense)"
+                role="button"
+                [attr.aria-label]="expense.description">
+
+                <div class="expense-row__header">
+
+                    <!-- Category icon -->
+                    <span class="expense-row__icon-wrap"
+                        [class.expense-row__icon-wrap--paid]="isPaid(expense)"
+                        [class.expense-row__icon-wrap--pending]="!isPaid(expense)"
+                        aria-hidden="true">
+                        <i stp-icon [name]="categoryIcon(expense.category)" class="icon--md"></i>
+                    </span>
+
+                    <!-- Info -->
+                    <div class="expense-row__info">
+                        <div class="expense-row__top">
+                            <span class="expense-row__desc font-semibold">{{ expense.description }}</span>
+                            <span class="expense-row__badge"
+                                [class.expense-row__badge--paid]="isPaid(expense)"
+                                [class.expense-row__badge--pending]="!isPaid(expense)">
+                                @if (isPaid(expense)) {
+                                    <i stp-icon name="check-circle" class="icon--xs"></i>
+                                }
+                                {{ statusLabel(expense.status) }}
+                            </span>
+                        </div>
+
+                        <div class="expense-row__bottom">
+                            <span class="expense-row__cat text-sm text-secondary">
+                                <i stp-icon [name]="categoryIcon(expense.category)" class="icon--xs"></i>
+                                {{ categoryLabel(expense.category) }}
+                            </span>
+                            <span class="expense-row__date text-xs text-secondary">
+                                <i stp-icon name="clock" class="icon--xs"></i>
+                                {{ expense.createdAt | date:'d MMM, h:mm a' : '' : 'es-PE' }}
+                            </span>
+                        </div>
+
+                        @if (expense.notes) {
+                        <span class="expense-row__notes text-xs text-secondary">
+                            <i stp-icon name="note" class="icon--xs"></i>
+                            {{ expense.notes | slice:0:60 }}{{ (expense.notes?.length ?? 0) > 60 ? '…' : '' }}
+                        </span>
+                        }
+                    </div>
+
+                    <!-- Amount + chevron -->
+                    <div class="expense-row__amount">
+                        <span class="expense-row__total font-bold">$ {{ +expense.amount | number:'1.2-2' }}</span>
+                        <span class="expense-row__currency text-xs text-secondary">USD</span>
+                        <i stp-icon name="caret-right" class="icon--xs expense-row__chevron" aria-hidden="true"></i>
+                    </div>
+
+                </div>
+            </li>
+            }
+
+            <!-- Loading more -->
+            @if (isLoadingMore()) {
+            <li class="expenses-list__state">
+                <stp-shimmer radius="md" style="width:100%;height:80px"></stp-shimmer>
+            </li>
+            }
+
+            <!-- End of list -->
+            @if (allLoaded() && !isLoadingMore()) {
+            <li class="expenses-list__end-state">
+                <span class="icon-badge icon-badge--success icon-badge--sm">
+                    <i stp-icon name="check" class="icon--sm"></i>
+                </span>
+                <span class="text-sm text-secondary">Has llegado al final del historial</span>
+            </li>
+            }
+
+        </ul>
+        }
+
+    </section>
+    }
+
+    <!-- ── Empty state ────────────────────────────────────────────── -->
+    @if (!loading() && expenses().length === 0) {
+        @if (isFiltered()) {
+        <stp-empty-state
+            icon="funnel-simple-x"
+            title="Sin resultados"
+            description="No hay gastos con el filtro seleccionado. Intenta con otro.">
+        </stp-empty-state>
+        } @else {
+        <stp-empty-state
+            icon="wallet"
+            title="Sin gastos registrados"
+            description="Los gastos que registres aparecerán aquí.">
+        </stp-empty-state>
+        }
+    }
+
+    <!-- ── FAB ───────────────────────────────────────────────────── -->
+    <button class="expenses-fab" (click)="openCreateForm()" aria-label="Registrar nuevo gasto">
+        <i stp-icon name="plus" class="icon--lg"></i>
+    </button>
+
+</div>

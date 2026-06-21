@@ -66,6 +66,11 @@ export const routes: Routes = [
                     import('./features/purchase-order/purchase-order.component').then(m => m.PurchaseOrderComponent),
             },
             {
+                path: AppRoutes.expenses,
+                loadComponent: () =>
+                    import('./features/expenses/expenses.component').then(m => m.ExpensesComponent),
+            },
+            {
                 path: AppRoutes.demo,
                 loadComponent: () =>
                     import('./features/demo/demo.component').then(m => m.DemoComponent),

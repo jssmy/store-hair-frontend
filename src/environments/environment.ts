@@ -17,6 +17,7 @@ export const environment = {
     country: `${API}/country`,
     customer: `${API}/customer`,
     sale: `${API}/sale`,
+    expense: `${API}/expense`,
   },
   assets: 'http://localhost:3000',
   whatsappUrl: 'https://wa.me/1234567890',

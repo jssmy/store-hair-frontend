@@ -1,0 +1,108 @@
+<div class="eds">
+
+    <!-- ── Hero ──────────────────────────────────────────────────── -->
+    <div class="eds__hero"
+        [class.eds__hero--paid]="isPaid()"
+        [class.eds__hero--pending]="!isPaid()">
+
+        <div class="eds__hero-top">
+            <div class="eds__hero-icon-wrap" aria-hidden="true">
+                <i stp-icon [name]="categoryIcon(expense.category)" class="icon--lg"></i>
+            </div>
+
+            <div class="eds__hero-info">
+                <span class="eds__hero-desc font-semibold">{{ expense.description }}</span>
+                <span class="eds__hero-badge"
+                    [class.eds__hero-badge--paid]="isPaid()"
+                    [class.eds__hero-badge--pending]="!isPaid()">
+                    @if (isPaid()) {
+                        <i stp-icon name="check-circle" class="icon--xs"></i>
+                    } @else {
+                        <i stp-icon name="clock" class="icon--xs"></i>
+                    }
+                    {{ isPaid() ? 'Pagado' : 'Pendiente' }}
+                </span>
+            </div>
+
+            <button class="icon-btn eds__close-btn" (click)="close()" aria-label="Cerrar detalle">
+                <i stp-icon name="x" class="icon--sm"></i>
+            </button>
+        </div>
+
+        <div class="eds__hero-amount">
+            <span class="eds__amount-value">$ {{ +expense.amount | number:'1.2-2' }}</span>
+            <span class="eds__amount-currency text-sm text-secondary">USD</span>
+        </div>
+
+    </div>
+
+    <!-- ── Body ──────────────────────────────────────────────────── -->
+    <div class="eds__body">
+
+        <!-- Category -->
+        <div class="eds__section">
+            <div class="eds__section-label">
+                <span class="eds__section-icon-wrap">
+                    <i stp-icon name="tag" class="icon--xs"></i>
+                </span>
+                Categoría
+            </div>
+            <span class="eds__category-chip">
+                <i stp-icon [name]="categoryIcon(expense.category)" class="icon--xs"></i>
+                {{ categoryLabel(expense.category) }}
+            </span>
+        </div>
+
+        <!-- Notes -->
+        @if (expense.notes) {
+        <div class="eds__section">
+            <div class="eds__section-label">
+                <span class="eds__section-icon-wrap">
+                    <i stp-icon name="note" class="icon--xs"></i>
+                </span>
+                Notas
+            </div>
+            <p class="eds__notes text-sm text-secondary">{{ expense.notes }}</p>
+        </div>
+        }
+
+        <!-- Mark as paid -->
+        @if (!isPaid()) {
+        <div class="eds__section eds__section--action">
+            <stp-button
+                variant="success"
+                size="md"
+                radius="md"
+                [loading]="markingPaid()"
+                [disabled]="markingPaid() || deleting()"
+                (click)="markAsPaid()">
+                <i stp-icon name="check-circle" class="icon--sm"></i>
+                Marcar como pagado
+            </stp-button>
+        </div>
+        }
+
+    </div>
+
+    <!-- ── Footer ────────────────────────────────────────────────── -->
+    <div class="eds__footer">
+        <div class="eds__footer-meta">
+            <span class="icon-row text-xs text-secondary">
+                <i stp-icon name="clock" class="icon--xs"></i>
+                {{ expense.createdAt | date:'d MMM yyyy, h:mm a' : '' : 'es-PE' }}
+            </span>
+        </div>
+        <stp-button
+            variant="danger"
+            btnStyle="ghost"
+            size="sm"
+            radius="md"
+            [loading]="deleting()"
+            [disabled]="deleting() || markingPaid()"
+            (click)="delete()">
+            <i stp-icon name="trash" class="icon--sm"></i>
+            Eliminar
+        </stp-button>
+    </div>
+
+</div>

@@ -5,7 +5,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
 interface NavItem {
   label: string;
   route: string;
-  icon: 'notices' | 'products' | 'caja' | 'dashboard' | 'camera' | 'suppliers' | 'piggy-bank' | 'demo' | 'handbag' | 'receipt';
+  icon: 'notices' | 'products' | 'caja' | 'dashboard' | 'camera' | 'suppliers' | 'piggy-bank' | 'demo' | 'handbag' | 'receipt' | 'wallet';
 }
 
 @Component({
@@ -25,6 +25,7 @@ export class SidebarComponent {
     { label: 'Orden de compra',    route: '/purchase-order',      icon: 'handbag'    },
     { label: 'Inventario', route: '/products',  icon: 'products'  },
     { label: 'Proveedores', route: '/suppliers',  icon: 'suppliers'  },
+    { label: 'Gastos',      route: '/expenses',   icon: 'wallet'     },
     // { label: 'Créditos', route: '/credits',  icon: 'piggy-bank'  },
     // { label: 'Caja',      route: '/caja',      icon: 'caja'      },
     // { label: 'Noticias',  route: '/notices',   icon: 'notices'   },

@@ -10,6 +10,7 @@ export const AppRoutes = {
   suppliers:     'suppliers',
   credits:       'credits',
   purchaseOrder: 'purchase-order',
+  expenses:      'expenses',
   demo:          'demo',
 } as const;
 

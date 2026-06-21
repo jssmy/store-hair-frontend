@@ -1,0 +1,77 @@
+<div class="efs">
+
+    <!-- ── Header ────────────────────────────────────────────────── -->
+    <div class="efs__header">
+        <div class="efs__header-icon" aria-hidden="true">
+            <i stp-icon name="plus-circle" class="icon--lg"></i>
+        </div>
+        <div class="efs__header-info">
+            <span class="efs__title font-semibold">Nuevo gasto</span>
+            <span class="efs__subtitle text-sm text-secondary">Registra un gasto operativo</span>
+        </div>
+        <button class="icon-btn efs__close" (click)="close()" aria-label="Cerrar">
+            <i stp-icon name="x" class="icon--sm"></i>
+        </button>
+    </div>
+
+    <!-- ── Form body ─────────────────────────────────────────────── -->
+    <div class="efs__body">
+
+        <stp-input
+            label="Descripción *"
+            [(value)]="description"
+            [hasError]="submitted() && description().trim().length === 0">
+        </stp-input>
+
+        <stp-input
+            stpNumeric
+            [allowDecimal]="true"
+            [min]="0.01"
+            label="Monto (USD) *"
+            [(value)]="amount"
+            [hasError]="submitted() && (+amount() <= 0 || amount() === '')">
+        </stp-input>
+
+        <stp-select
+            label="Categoría"
+            [options]="categoryOptions"
+            [(value)]="category">
+        </stp-select>
+
+        <stp-select
+            label="Estado"
+            [options]="statusOptions"
+            [(value)]="status">
+        </stp-select>
+
+        <stp-input
+            label="Notas (opcional)"
+            [(value)]="notes">
+        </stp-input>
+
+    </div>
+
+    <!-- ── Footer ────────────────────────────────────────────────── -->
+    <div class="efs__footer">
+        <stp-button
+            variant="surface"
+            btnStyle="ghost"
+            size="md"
+            radius="md"
+            [disabled]="submitting()"
+            (click)="close()">
+            Cancelar
+        </stp-button>
+        <stp-button
+            variant="primary"
+            size="md"
+            radius="md"
+            [loading]="submitting()"
+            [disabled]="submitting()"
+            (click)="submit()">
+            <i stp-icon name="check" class="icon--sm"></i>
+            Guardar gasto
+        </stp-button>
+    </div>
+
+</div>

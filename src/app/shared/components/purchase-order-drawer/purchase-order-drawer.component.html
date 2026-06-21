@@ -126,20 +126,73 @@
             </div>
         </div>
 
-        <!-- Tipo de cambio -->
+        <!-- Conversión de moneda -->
         <div class="po-section">
             <div class="po-section__label">
                 <i stp-icon name="currency-circle-dollar" class="icon--sm"></i>
-                Tipo de cambio
+                Conversión de moneda
             </div>
+
+            <!-- Total en COP (base, siempre visible cuando hay detalles) -->
+            @if (totalPrice() > 0) {
+            <div class="po-conversion-row">
+                <span class="po-conversion-row__label">
+                    <i stp-icon name="money" class="icon--xs"></i>
+                    Total en COP
+                </span>
+                <span class="po-conversion-row__value">
+                    COP {{ totalPrice().toFixed(0) }}
+                </span>
+            </div>
+            }
+
+            <!-- Tasa COP / USD -->
             <div class="po-field">
                 <stp-input
-                    [label]="supplierCurrencyName() ? 'Tipo de cambio (' + supplierCurrencyName() + ')' : 'Tipo de cambio'"
+                    label="Tasa de cambio COP / USD (COP por 1 USD)"
                     stpNumeric [allowDecimal]="true"
                     type="text"
-                    formControlName="exchangeRate">
+                    formControlName="tcUsd">
                 </stp-input>
             </div>
+
+            <!-- Total en USD -->
+            @if (totalUSD() > 0) {
+            <div class="po-conversion-row">
+                <span class="po-conversion-row__label">
+                    <i stp-icon name="arrows-left-right" class="icon--xs"></i>
+                    Total en USD
+                </span>
+                <span class="po-conversion-row__value">
+                    $ {{ totalUSD().toFixed(2) }} USD
+                </span>
+            </div>
+            }
+
+            <!-- Valor total en moneda del proveedor (input directo) -->
+            @if (supplierCurrencyCode()) {
+            <div class="po-field">
+                <stp-input
+                    [label]="supplierCurrencyName()
+                        ? 'Valor total en ' + supplierCurrencyCode() + ' (' + supplierCurrencyName() + ')'
+                        : 'Valor total en moneda del proveedor'"
+                    stpNumeric [allowDecimal]="true"
+                    type="text"
+                    formControlName="tcConvertedValue">
+                </stp-input>
+            </div>
+            }
+            @if (totalConverted() > 0) {
+            <div class="po-conversion-row">
+                <span class="po-conversion-row__label">
+                    <i stp-icon name="arrows-left-right" class="icon--xs"></i>
+                    Total en {{ supplierCurrencyCode() }}
+                </span>
+                <span class="po-conversion-row__value">
+                    {{ supplierCurrencyCode() }} {{ totalConverted().toFixed(2) }}
+                </span>
+            </div>
+            }
         </div>
 
         <!-- Detalles del lote -->
@@ -238,7 +291,7 @@
                             </stp-input>
                         </div>
                         <div class="po-field">
-                            <stp-input [label]="'Precio x gramo USD'" stpNumeric [allowDecimal]="true" type="text"
+                            <stp-input [label]="'Precio x gramo COP'" stpNumeric [allowDecimal]="true" type="text"
                                 formControlName="pricePerGram"
                                 [error]="detailControlErrorMessage(idx, 'pricePerGram')">
                             </stp-input>
@@ -253,7 +306,7 @@
                             Total estimado
                         </span>
                         <span class="po-detail-total__value">
-                            $ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                            COP {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(0) }}
                         </span>
                     </div>
                     }
@@ -283,7 +336,7 @@
                             </span>
                         </div>
                         <span class="po-detail-item__price">
-                            $ {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                            COP {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(0) }}
                         </span>
                         @if (!isReadOnly) {
                         <div class="po-detail-item__actions">
@@ -318,8 +371,8 @@
                 </div>
                 <div class="po-totals__divider"></div>
                 <div class="po-totals__item po-totals__item--price">
-                    <span>$ {{ totalPrice().toFixed(2) }}</span>
-                    <span class="po-totals__sub">total precio</span>
+                    <span>COP {{ totalPrice().toFixed(0) }}</span>
+                    <span class="po-totals__sub">total COP</span>
                 </div>
             </div>
             }

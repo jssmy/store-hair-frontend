@@ -105,7 +105,14 @@ export class PurchaseOrderDrawerComponent {
   readonly form = this.fb.group({
     supplierId: this.fb.control<number | null>(this.data.purchaseOrder?.supplier.id ?? null, Validators.required),
     supplierSearch: this.fb.control(this.data.purchaseOrder?.supplier.fullName || this.data.purchaseOrder?.supplier.businessName || ''),
-    exchangeRate: this.fb.control(this.data.purchaseOrder?.exchangeRate?.toString() ?? ''),
+    tcUsd: this.fb.control(
+      this.data.purchaseOrder?.tc_usd?.toString()
+      ?? this.data.purchaseOrder?.exchangeRate?.toString()
+      ?? '',
+    ),
+    tcConvertedValue: this.fb.control(
+      this.data.purchaseOrder?.tc_converted_value?.toString() ?? '',
+    ),
     details: this.fb.array(
       (this.data.purchaseOrder?.details ?? []).map(d => this.buildDetail({
         id: d.id,
@@ -168,6 +175,27 @@ export class PurchaseOrderDrawerComponent {
     return this.selectedSupplier()?.country?.currencyName ?? null;
   });
 
+  protected readonly supplierCurrencyCode = computed(() => {
+    if (this.isEdit) {
+      return this.editSupplier?.country?.currency
+        ?? this.data.purchaseOrder?.tc_converted_currency
+        ?? null;
+    }
+    return this.selectedSupplier()?.country?.currency ?? null;
+  });
+
+  // totalPrice() is the COP total (prices are entered in COP)
+  protected readonly totalUSD = computed(() => {
+    const rate = +(this.formValue().tcUsd ?? 0);
+    if (!rate) return 0;
+    return this.totalPrice() / rate;
+  });
+
+  protected readonly totalConverted = computed(() => {
+    return this.totalUSD() * (+(this.formValue().tcConvertedValue ?? 0) || 0);
+  });
+
+
   protected readonly filteredSuppliers = computed(() => {
     const v = this.formValue();
     const q = (v.supplierSearch ?? '').trim().toLowerCase();
@@ -199,9 +227,10 @@ export class PurchaseOrderDrawerComponent {
   protected readonly canSubmit = computed(() => {
     if (this.isReadOnly) return false;
     if (!this.formValue().supplierId) return false;
-    if ((this.formValue().details ?? []).length === 0) return false;
+    const hasDetails = (this.formValue().details ?? []).length > 0;
+    if (!hasDetails) return false;
     if (this.duplicateIndexes().size > 0) return false;
-    if (this.supplierCurrencyName() && !(+(this.formValue().exchangeRate ?? 0) > 0)) return false;
+    if (!(+(this.formValue().tcUsd ?? 0) > 0)) return false;
     return this.formStatus() === 'VALID';
   });
 
@@ -372,13 +401,12 @@ export class PurchaseOrderDrawerComponent {
     if (!this.canSubmit()) return;
     this.submitting.set(true);
 
-    const currencyName = this.supplierCurrencyName();
+    const currencyCode = this.supplierCurrencyCode();
+    const tcUsdVal = +(this.form.value.tcUsd ?? 0) || undefined;
+    const tcConvertedValueVal = +(this.form.value.tcConvertedValue ?? 0) || undefined;
+
     const dto = {
       supplierId: this.form.value.supplierId!,
-      ...(currencyName && {
-        exchangeRate: +(this.form.value.exchangeRate ?? 0),
-        exchangeCurrency: currencyName,
-      }),
       details: this.detailsArray.controls.map(ctrl => ({
         color: ctrl.value.color!,
         type: ctrl.value.type!,
@@ -386,6 +414,9 @@ export class PurchaseOrderDrawerComponent {
         weight: +ctrl.value.kilo!,
         price: +ctrl.value.pricePerGram!,
       })),
+      ...(tcUsdVal && { tc_usd: tcUsdVal }),
+      ...(currencyCode && { tc_converted_currency: currencyCode }),
+      ...(tcConvertedValueVal && { tc_converted_value: tcConvertedValueVal }),
     };
 
     const request$ = this.isEdit

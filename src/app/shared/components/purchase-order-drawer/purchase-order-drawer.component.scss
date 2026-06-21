@@ -775,6 +775,49 @@
   }
 }
 
+/* ── Conversion rows ─────────────────────────────────────── */
+
+.po-conversion-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0.75rem;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+
+  &__label {
+    display: flex;
+    align-items: center;
+    gap: 0.375rem;
+    font-size: var(--text-xs);
+    font-weight: var(--font-semibold);
+    color: var(--color-text-secondary);
+    text-transform: uppercase;
+    letter-spacing: var(--tracking-wider);
+  }
+
+  &__currency-name {
+    font-weight: var(--font-regular);
+    text-transform: none;
+    letter-spacing: 0;
+  }
+
+  &__value {
+    font-size: var(--text-base);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+  }
+
+  &--supplier {
+    background: color-mix(in srgb, var(--color-success) 8%, transparent);
+    border-color: color-mix(in srgb, var(--color-success) 20%, transparent);
+
+    .po-conversion-row__label { color: var(--color-success); }
+    .po-conversion-row__value { color: var(--color-success); }
+  }
+}
+
 /* ── Totals bar ───────────────────────────────────────────── */
 
 .po-totals {

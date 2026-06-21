@@ -25,6 +25,9 @@ export interface PurchaseOrder {
   details: PurchaseOrderDetail[];
   exchangeRate?: number;
   exchangeCurrency?: string;
+  tc_usd?: number;
+  tc_converted_currency?: string;
+  tc_converted_value?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -40,15 +43,17 @@ export interface CreatePurchaseOrderDetailDto {
 export interface CreatePurchaseOrderDto {
   supplierId: number;
   details: CreatePurchaseOrderDetailDto[];
-  exchangeRate?: number;
-  exchangeCurrency?: string;
+  tc_usd?: number;
+  tc_converted_currency?: string;
+  tc_converted_value?: number;
 }
 
 export interface UpdatePurchaseOrderDto {
   supplierId?: number;
   details?: CreatePurchaseOrderDetailDto[];
-  exchangeRate?: number;
-  exchangeCurrency?: string;
+  tc_usd?: number;
+  tc_converted_currency?: string;
+  tc_converted_value?: number;
 }
 
 export interface PurchaseOrderQueryParams {

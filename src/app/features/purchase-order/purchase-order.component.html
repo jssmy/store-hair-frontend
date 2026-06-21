@@ -75,7 +75,10 @@
                             </div>
 
                             <div class="po-row__aside">
-                                <span class="po-row__price">$ {{ totalPrice(order).toFixed(2) }}</span>
+                                <span class="po-row__price">COP {{ totalPrice(order).toFixed(0) }}</span>
+                                @if (totalPriceUSD(order) !== null) {
+                                <span class="po-row__price-usd">≈ $ {{ totalPriceUSD(order)!.toFixed(2) }} USD</span>
+                                }
                                 <span class="po-row__kilo">{{ totalWeight(order) }} g</span>
                                 <span class="po-row__det-count">
                                     {{ order.details.length }}
@@ -98,7 +101,7 @@
                                 <span>Tipo</span>
                                 <span>Largo</span>
                                 <span>Gramos</span>
-                                <span>USD</span>
+                                <span>COP/g</span>
                             </div>
 
                             <!-- Filas de detalle -->
@@ -125,7 +128,10 @@
                                 </span>
                                 <span class="po-details-foot__total">
                                     Total:
-                                    <strong>$ {{ totalPrice(order).toFixed(2) }}</strong>
+                                    <strong>COP {{ totalPrice(order).toFixed(0) }}</strong>
+                                    @if (totalPriceUSD(order) !== null) {
+                                    · <span class="po-details-foot__usd">$ {{ totalPriceUSD(order)!.toFixed(2) }} USD</span>
+                                    }
                                     · {{ totalWeight(order) }} g
                                 </span>
                                 @if (order.status === 'pending') {

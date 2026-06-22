@@ -253,7 +253,7 @@
                         </stp-input>
                     </div>
                     <div class="inv-field">
-                        <stp-input label="Precio por gramo ($)" stpNumeric [allowDecimal]="true" type="text"
+                        <stp-input label="Precio por gramo (COP)" stpNumeric [allowDecimal]="true" type="text"
                             formControlName="price"
                             [error]="productControlErrorMessage(idx, 'price')">
                         </stp-input>
@@ -265,9 +265,9 @@
                 <div class="inv-subtotal">
                     <span class="inv-subtotal__label">
                         <i stp-icon name="equals" class="icon--xs"></i>
-                        {{ ctrl.value['weight'] }} g × $ {{ ctrl.value['price'] }}/g
+                        {{ ctrl.value['weight'] }} g × COP {{ ctrl.value['price'] }}/g
                     </span>
-                    <span class="inv-subtotal__value">$ {{ productTotal(ctrl.value['price'], ctrl.value['weight']) }}</span>
+                    <span class="inv-subtotal__value">COP {{ productTotal(ctrl.value['price'], ctrl.value['weight']) }}</span>
                 </div>
                 }
 
@@ -334,8 +334,8 @@
                         }
                     </div>
                     <div class="inv-detail-item__pricing">
-                        <span class="inv-detail-item__unit-price">$ {{ ctrl.value['price'] || '0' }}/g</span>
-                        <span class="inv-detail-item__total-price">$ {{ productTotal(ctrl.value['price'], ctrl.value['weight']) }}</span>
+                        <span class="inv-detail-item__unit-price">COP {{ ctrl.value['price'] || '0' }}/g</span>
+                        <span class="inv-detail-item__total-price">COP {{ productTotal(ctrl.value['price'], ctrl.value['weight']) }}</span>
                     </div>
                     @if (!isReadOnly) {
                     <div class="inv-detail-item__actions">
@@ -365,7 +365,7 @@
                 </div>
                 <div class="inv-totals__divider"></div>
                 <div class="inv-totals__item inv-totals__item--price">
-                    <span>$ {{ loteTotals().totalPrice.toFixed(2) }}</span>
+                    <span>COP {{ loteTotals().totalPrice.toFixed(0) }}</span>
                     <span class="inv-totals__sub">precio total del lote</span>
                 </div>
             </div>

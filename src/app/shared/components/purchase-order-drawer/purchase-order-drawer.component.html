@@ -174,7 +174,7 @@
             <div class="po-field">
                 <stp-input
                     [label]="supplierCurrencyName()
-                        ? 'Valor total en ' + supplierCurrencyCode() + ' (' + supplierCurrencyName() + ')'
+                        ? 'Tasa de cambio ' + supplierCurrencyName() + ' / ' +  'USD'  + ' ('+supplierCurrencyName() + ' por 1 USD)'
                         : 'Valor total en moneda del proveedor'"
                     stpNumeric [allowDecimal]="true"
                     type="text"

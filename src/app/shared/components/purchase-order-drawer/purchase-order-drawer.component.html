@@ -1,5 +1,4 @@
-<div class="po-drawer" role="dialog" aria-modal="true" aria-label="Orden de Compra"
-    (click)="$event.stopPropagation()">
+<div class="po-drawer" role="dialog" aria-modal="true" aria-label="Orden de Compra" (click)="$event.stopPropagation()">
 
     <div class="po-drawer__handle" aria-hidden="true"></div>
 
@@ -41,13 +40,13 @@
         </div>
         @if (!isReadOnly) {
         <div class="po-status-card__actions">
-            <stp-button variant="danger" btnStyle="outlined" size="sm" radius="full"
-                [loading]="canceling()" (click)="cancelOrder()">
+            <stp-button variant="danger" btnStyle="outlined" size="sm" radius="full" [loading]="canceling()"
+                (click)="cancelOrder()">
                 <i stp-icon name="x" class="icon--xs"></i>
                 Cancelar
             </stp-button>
-            <stp-button variant="success" btnStyle="solid" size="sm" radius="full"
-                [loading]="approving()" (click)="approveOrder()">
+            <stp-button variant="success" btnStyle="solid" size="sm" radius="full" [loading]="approving()"
+                (click)="approveOrder()">
                 <i stp-icon name="check" class="icon--xs"></i>
                 Aprobar
             </stp-button>
@@ -73,15 +72,15 @@
                         <i stp-icon name="buildings" class="icon--sm"></i>
                     </span>
                     <div class="po-supplier-linked__info">
-                        <span class="po-supplier-linked__name">{{ editSupplier?.fullName || editSupplier?.businessName }}</span>
-                        <span class="po-supplier-linked__meta">{{ editSupplier!.dni ? 'DNI ' + editSupplier!.dni : 'RUC ' + editSupplier!.ruc }}</span>
+                        <span class="po-supplier-linked__name">{{ editSupplier?.fullName || editSupplier?.businessName
+                            }}</span>
+                        <span class="po-supplier-linked__meta">{{ editSupplier!.dni ? 'DNI ' + editSupplier!.dni : 'RUC
+                            ' + editSupplier!.ruc }}</span>
                     </div>
                     <i stp-icon name="lock" class="icon--xs icon--muted"></i>
                 </div>
                 } @else {
-                <stp-search
-                    placeholder="Buscar por nombre, RUC o DNI..."
-                    formControlName="supplierSearch"
+                <stp-search placeholder="Buscar por nombre, RUC o DNI..." formControlName="supplierSearch"
                     (cleared)="clearSupplier()">
                 </stp-search>
 
@@ -110,9 +109,11 @@
                     </span>
                     <div class="po-supplier-linked__info">
                         <span class="po-supplier-linked__name">{{ supplierDisplayName(selectedSupplier()!) }}</span>
-                        <span class="po-supplier-linked__meta">{{ selectedSupplier()!.ruc ? 'RUC ' + selectedSupplier()!.ruc : 'DNI ' + selectedSupplier()!.dni }}</span>
+                        <span class="po-supplier-linked__meta">{{ selectedSupplier()!.ruc ? 'RUC ' +
+                            selectedSupplier()!.ruc : 'DNI ' + selectedSupplier()!.dni }}</span>
                     </div>
-                    <button class="po-field__clear-chip" type="button" aria-label="Quitar proveedor" (click)="clearSupplier()">
+                    <button class="po-field__clear-chip" type="button" aria-label="Quitar proveedor"
+                        (click)="clearSupplier()">
                         <i stp-icon name="x" class="icon--xs"></i>
                     </button>
                 </div>
@@ -133,66 +134,43 @@
                 Conversión de moneda
             </div>
 
-            <!-- Total en COP (base, siempre visible cuando hay detalles) -->
-            @if (totalPrice() > 0) {
+            @if (supplierCurrencyCode()) {
+            <!-- ── Proveedor con moneda propia ── -->
+
+
+            <!-- Tasa COP / moneda de compra -->
+            <div class="po-field">
+                <stp-input [label]="supplierCurrencyName()
+                        ? 'Tasa COP / ' + supplierCurrencyName() + ' (COP por 1 ' + supplierCurrencyName() + ')'
+                        : 'Tasa COP / ' + supplierCurrencyCode() + ' (COP por 1 ' + supplierCurrencyCode() + ')'"
+                    stpNumeric [allowDecimal]="true" type="text" formControlName="tcCopPurchaseCurrency">
+                </stp-input>
+            </div>
+
+
+
+
+            } @else {
+            <!-- ── Proveedor sin moneda propia (precios ya en COP) ── -->
+            @if (totalCOP() > 0) {
             <div class="po-conversion-row">
                 <span class="po-conversion-row__label">
                     <i stp-icon name="money" class="icon--xs"></i>
                     Total en COP
                 </span>
                 <span class="po-conversion-row__value">
-                    COP {{ totalPrice().toFixed(0) }}
+                    COP {{ totalCOP().toFixed(0) }}
                 </span>
             </div>
             }
+            }
 
-            <!-- Tasa COP / USD -->
+            <!-- Tasa COP / USD (siempre visible) -->
             <div class="po-field">
-                <stp-input
-                    label="Tasa de cambio COP / USD (COP por 1 USD)"
-                    stpNumeric [allowDecimal]="true"
-                    type="text"
-                    formControlName="tcUsd">
+                <stp-input label="Tasa COP / USD (COP por 1 USD)" stpNumeric [allowDecimal]="true" type="text"
+                    formControlName="tcCopUsd">
                 </stp-input>
             </div>
-
-            <!-- Total en USD -->
-            @if (totalUSD() > 0) {
-            <div class="po-conversion-row">
-                <span class="po-conversion-row__label">
-                    <i stp-icon name="arrows-left-right" class="icon--xs"></i>
-                    Total en USD
-                </span>
-                <span class="po-conversion-row__value">
-                    $ {{ totalUSD().toFixed(2) }} USD
-                </span>
-            </div>
-            }
-
-            <!-- Valor total en moneda del proveedor (input directo) -->
-            @if (supplierCurrencyCode()) {
-            <div class="po-field">
-                <stp-input
-                    [label]="supplierCurrencyName()
-                        ? 'Tasa de cambio ' + supplierCurrencyName() + ' / ' +  'USD'  + ' ('+supplierCurrencyName() + ' por 1 USD)'
-                        : 'Valor total en moneda del proveedor'"
-                    stpNumeric [allowDecimal]="true"
-                    type="text"
-                    formControlName="tcConvertedValue">
-                </stp-input>
-            </div>
-            }
-            @if (totalConverted() > 0) {
-            <div class="po-conversion-row">
-                <span class="po-conversion-row__label">
-                    <i stp-icon name="arrows-left-right" class="icon--xs"></i>
-                    Total en {{ supplierCurrencyCode() }}
-                </span>
-                <span class="po-conversion-row__value">
-                    {{ supplierCurrencyCode() }} {{ totalConverted().toFixed(2) }}
-                </span>
-            </div>
-            }
         </div>
 
         <!-- Detalles del lote -->
@@ -225,155 +203,181 @@
 
             @for (ctrl of detailsArray.controls; track $index; let idx = $index) {
 
-                @if (editingIdx() === idx) {
-                <!-- Form card -->
-                <div class="po-detail-card" [formGroupName]="idx"
-                    [class.po-detail-card--error]="duplicateIndexes().has(idx)">
+            @if (editingIdx() === idx) {
+            <!-- Form card -->
+            <div class="po-detail-card" [formGroupName]="idx"
+                [class.po-detail-card--error]="duplicateIndexes().has(idx)">
 
-                    <div class="po-detail-card__header">
-                        <span class="po-detail-card__num">
-                            {{ isAddingNew() ? 'Nuevo detalle' : 'Editando detalle ' + (idx + 1) }}
-                        </span>
-                        @if (duplicateIndexes().has(idx)) {
-                        <span class="po-detail-card__dup-error">
-                            <i stp-icon name="warning" class="icon--xs"></i>
-                            Combinación duplicada
-                        </span>
-                        }
-                        <button type="button" class="icon-btn" aria-label="Cancelar edición" (click)="cancelEdit()">
-                            <i stp-icon name="x" class="icon--sm"></i>
-                        </button>
-                        <button type="button" class="icon-btn icon-btn--primary" aria-label="Confirmar" (click)="confirmEdit()">
-                            <i stp-icon name="check" class="icon--sm"></i>
-                        </button>
-                    </div>
-
-                    <!-- Color -->
-                    <div class="po-field">
-                        <label class="po-field__label">
-                            Color *
-                            @if (ctrl.value.color) {
-                            <span class="po-color-label">{{ colorLabel(ctrl.value.color) }}</span>
-                            }
-                        </label>
-                        <div class="po-color-row">
-                            @for (color of hairColors; track color) {
-                            <button type="button" class="po-color-swatch"
-                                [class.po-color-swatch--selected]="ctrl.value.color === color"
-                                [style.background]="hairColorHex[color]"
-                                [title]="hairColorLabels[color]"
-                                [attr.aria-label]="hairColorLabels[color]"
-                                (click)="updateColor(idx, color)">
-                            </button>
-                            }
-                        </div>
-                    </div>
-
-                    <!-- Tipo + Largo -->
-                    <div class="po-field-row">
-                        <div class="po-field">
-                            <stp-select label="Tipo" [options]="hairTypeSelectOptions" formControlName="type"></stp-select>
-                        </div>
-                        <div class="po-field">
-                            <stp-select label='Largo (pulgadas)' [options]="hairLengthSelectOptions"
-                                formControlName="length"
-                                [hasError]="detailsArray.at(idx).get('length')!.invalid && detailsArray.at(idx).get('length')!.touched">
-                            </stp-select>
-                        </div>
-                    </div>
-
-                    <!-- Peso + Precio -->
-                    <div class="po-field-row">
-                        <div class="po-field">
-                            <stp-input label="Peso (g)" stpNumeric [allowDecimal]="true" type="text"
-                                formControlName="kilo"
-                                [error]="detailControlErrorMessage(idx, 'kilo')">
-                            </stp-input>
-                        </div>
-                        <div class="po-field">
-                            <stp-input [label]="'Precio x gramo COP'" stpNumeric [allowDecimal]="true" type="text"
-                                formControlName="pricePerGram"
-                                [error]="detailControlErrorMessage(idx, 'pricePerGram')">
-                            </stp-input>
-                        </div>
-                    </div>
-
-                    <!-- Total calculado -->
-                    @if (+(ctrl.value.kilo || 0) > 0 && +(ctrl.value.pricePerGram || 0) > 0) {
-                    <div class="po-detail-total">
-                        <span class="po-detail-total__label">
-                            <i stp-icon name="calculator" class="icon--xs"></i>
-                            Total estimado
-                        </span>
-                        <span class="po-detail-total__value">
-                            COP {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(0) }}
-                        </span>
-                    </div>
-                    }
-
-                </div>
-                } @else {
-                <!-- Item compacto -->
-                <div class="po-detail-item" [class.po-detail-item--error]="duplicateIndexes().has(idx)">
-
-                    <div class="po-detail-item__main">
-                        <span class="po-detail-item__swatch"
-                            [class.po-detail-item__swatch--empty]="!ctrl.value.color"
-                            [style.background]="ctrl.value.color ? hairColorHex[ctrl.value.color] : null">
-                        </span>
-                        <div class="po-detail-item__info">
-                            <span class="po-detail-item__name">
-                                {{ ctrl.value.color ? colorLabel(ctrl.value.color) : '—' }}
-                                <span class="po-detail-item__sep">·</span>
-                                {{ hairTypeLabel(ctrl.value.type ?? '') }}
-                            </span>
-                            <span class="po-detail-item__meta">
-                                <i stp-icon name="ruler" class="icon--xs"></i>
-                                {{ ctrl.value.length || '—' }}"
-                                <span class="po-detail-item__sep">·</span>
-                                <i stp-icon name="scales" class="icon--xs"></i>
-                                {{ ctrl.value.kilo || '—' }} g
-                            </span>
-                        </div>
-                        <span class="po-detail-item__price">
-                            COP {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(0) }}
-                        </span>
-                        @if (!isReadOnly) {
-                        <div class="po-detail-item__actions">
-                            <button type="button" class="icon-btn icon-btn--primary" aria-label="Editar" (click)="startEdit(idx)">
-                                <i stp-icon name="pencil" class="icon--sm"></i>
-                            </button>
-                            <button type="button" class="icon-btn icon-btn--danger" aria-label="Eliminar" (click)="removeDetail(idx)">
-                                <i stp-icon name="trash" class="icon--sm"></i>
-                            </button>
-                        </div>
-                        }
-                    </div>
-
+                <div class="po-detail-card__header">
+                    <span class="po-detail-card__num">
+                        {{ isAddingNew() ? 'Nuevo detalle' : 'Editando detalle ' + (idx + 1) }}
+                    </span>
                     @if (duplicateIndexes().has(idx)) {
-                    <span class="po-detail-item__dup-warn">
+                    <span class="po-detail-card__dup-error">
                         <i stp-icon name="warning" class="icon--xs"></i>
-                        Color + Tipo + Largo duplicado
+                        Combinación duplicada
                     </span>
                     }
+                    <button type="button" class="icon-btn" aria-label="Cancelar edición" (click)="cancelEdit()">
+                        <i stp-icon name="x" class="icon--sm"></i>
+                    </button>
+                    <button type="button" class="icon-btn icon-btn--primary" aria-label="Confirmar"
+                        (click)="confirmEdit()">
+                        <i stp-icon name="check" class="icon--sm"></i>
+                    </button>
+                </div>
+
+                <!-- Color -->
+                <div class="po-field">
+                    <label class="po-field__label">
+                        Color *
+                        @if (ctrl.value.color) {
+                        <span class="po-color-label">{{ colorLabel(ctrl.value.color) }}</span>
+                        }
+                    </label>
+                    <div class="po-color-row">
+                        @for (color of hairColors; track color) {
+                        <button type="button" class="po-color-swatch"
+                            [class.po-color-swatch--selected]="ctrl.value.color === color"
+                            [style.background]="hairColorHex[color]" [title]="hairColorLabels[color]"
+                            [attr.aria-label]="hairColorLabels[color]" (click)="updateColor(idx, color)">
+                        </button>
+                        }
+                    </div>
+                </div>
+
+                <!-- Tipo + Largo -->
+                <div class="po-field-row">
+                    <div class="po-field">
+                        <stp-select label="Tipo" [options]="hairTypeSelectOptions" formControlName="type"></stp-select>
+                    </div>
+                    <div class="po-field">
+                        <stp-select label='Largo (pulgadas)' [options]="hairLengthSelectOptions"
+                            formControlName="length"
+                            [hasError]="detailsArray.at(idx).get('length')!.invalid && detailsArray.at(idx).get('length')!.touched">
+                        </stp-select>
+                    </div>
+                </div>
+
+                <!-- Peso + Precio -->
+                <div class="po-field-row">
+                    <div class="po-field">
+                        <stp-input label="Peso (g)" stpNumeric [allowDecimal]="true" type="text" formControlName="kilo"
+                            [error]="detailControlErrorMessage(idx, 'kilo')">
+                        </stp-input>
+                    </div>
+                    <div class="po-field">
+                        <stp-input [label]="supplierCurrencyCode()
+                                    ? 'Precio x gramo (' + supplierCurrencyCode() + ')'
+                                    : 'Precio x gramo (COP)'" stpNumeric [allowDecimal]="true" type="text"
+                            formControlName="pricePerGram" [error]="detailControlErrorMessage(idx, 'pricePerGram')">
+                        </stp-input>
+                    </div>
+                </div>
+
+                <!-- Total calculado -->
+                @if (+(ctrl.value.kilo || 0) > 0 && +(ctrl.value.pricePerGram || 0) > 0) {
+                <div class="po-detail-total">
+                    <span class="po-detail-total__label">
+                        <i stp-icon name="calculator" class="icon--xs"></i>
+                        Subtotal estimado
+                    </span>
+                    <span class="po-detail-total__value">
+                        {{ supplierCurrencyCode() || 'COP' }}
+                        {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                    </span>
                 </div>
                 }
+
+            </div>
+            } @else {
+            <!-- Item compacto -->
+            <div class="po-detail-item" [class.po-detail-item--error]="duplicateIndexes().has(idx)">
+
+                <div class="po-detail-item__main">
+                    <span class="po-detail-item__swatch" [class.po-detail-item__swatch--empty]="!ctrl.value.color"
+                        [style.background]="ctrl.value.color ? hairColorHex[ctrl.value.color] : null">
+                    </span>
+                    <div class="po-detail-item__info">
+                        <span class="po-detail-item__name">
+                            {{ ctrl.value.color ? colorLabel(ctrl.value.color) : '—' }}
+                            <span class="po-detail-item__sep">·</span>
+                            {{ hairTypeLabel(ctrl.value.type ?? '') }}
+                        </span>
+                        <span class="po-detail-item__meta">
+                            <i stp-icon name="ruler" class="icon--xs"></i>
+                            {{ ctrl.value.length || '—' }}"
+                            <span class="po-detail-item__sep">·</span>
+                            <i stp-icon name="scales" class="icon--xs"></i>
+                            {{ ctrl.value.kilo || '—' }} g
+                        </span>
+                    </div>
+                    <span class="po-detail-item__price">
+                        {{ supplierCurrencyCode() || 'COP' }}
+                        {{ (+(ctrl.value.kilo || 0) * +(ctrl.value.pricePerGram || 0)).toFixed(2) }}
+                    </span>
+                    @if (!isReadOnly) {
+                    <div class="po-detail-item__actions">
+                        <button type="button" class="icon-btn icon-btn--primary" aria-label="Editar"
+                            (click)="startEdit(idx)">
+                            <i stp-icon name="pencil" class="icon--sm"></i>
+                        </button>
+                        <button type="button" class="icon-btn icon-btn--danger" aria-label="Eliminar"
+                            (click)="removeDetail(idx)">
+                            <i stp-icon name="trash" class="icon--sm"></i>
+                        </button>
+                    </div>
+                    }
+                </div>
+
+                @if (duplicateIndexes().has(idx)) {
+                <span class="po-detail-item__dup-warn">
+                    <i stp-icon name="warning" class="icon--xs"></i>
+                    Color + Tipo + Largo duplicado
+                </span>
+                }
+            </div>
+            }
 
             }<!-- /items -->
 
             <!-- Totales -->
             @if (detailsArray.length > 0) {
             <div class="po-totals">
-                <div class="po-totals__item">
-                    <i stp-icon name="scales" class="icon--xs"></i>
-                    <span>{{ totalWeight().toFixed(0) }} g</span>
-                    <span class="po-totals__sub">total peso</span>
+                <div class="po-totals__row">
+                    <span class="po-totals__label">
+                        <i stp-icon name="scales" class="icon--xs"></i>
+                        Peso total
+                    </span>
+                    <span class="po-totals__val">{{ totalWeight().toFixed(0) }} g</span>
                 </div>
-                <div class="po-totals__divider"></div>
-                <div class="po-totals__item po-totals__item--price">
-                    <span>COP {{ totalPrice().toFixed(0) }}</span>
-                    <span class="po-totals__sub">total COP</span>
+                <div class="po-totals__row po-totals__row--primary">
+                    <span class="po-totals__label">
+                        <i stp-icon name="money" class="icon--xs"></i>
+                        Total {{ supplierCurrencyCode() || 'COP' }}
+                    </span>
+                    <span class="po-totals__val">
+                        {{ supplierCurrencyCode() || 'COP' }} {{ totalPrice().toFixed(2) }}
+                    </span>
                 </div>
+                @if (supplierCurrencyCode() && totalCOP() > 0) {
+                <div class="po-totals__row">
+                    <span class="po-totals__label">
+                        <i stp-icon name="arrows-left-right" class="icon--xs"></i>
+                        Equivalente COP
+                    </span>
+                    <span class="po-totals__val">COP {{ totalCOP().toFixed(2) }}</span>
+                </div>
+                }
+                @if (totalUSD() > 0) {
+                <div class="po-totals__row">
+                    <span class="po-totals__label">
+                        <i stp-icon name="arrows-left-right" class="icon--xs"></i>
+                        Equivalente USD
+                    </span>
+                    <span class="po-totals__val">$ {{ totalUSD().toFixed(2) }} USD</span>
+                </div>
+                }
             </div>
             }
         </div>
@@ -386,8 +390,8 @@
             {{ isEdit ? 'Cerrar' : 'Cancelar' }}
         </stp-button>
         @if (!isReadOnly) {
-        <stp-button variant="primary" btnStyle="solid" size="md"
-            [disabled]="!canSubmit()" [loading]="submitting()" (click)="submit()">
+        <stp-button variant="primary" btnStyle="solid" size="md" [disabled]="!canSubmit()" [loading]="submitting()"
+            (click)="submit()">
             {{ isEdit ? 'Guardar cambios' : 'Crear orden' }}
         </stp-button>
         }

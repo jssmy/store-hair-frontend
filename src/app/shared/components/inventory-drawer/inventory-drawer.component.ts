@@ -2,7 +2,7 @@ import { Component, DestroyRef, computed, effect, inject, signal } from '@angula
 import { AbstractControl, FormBuilder, FormArray, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { MAT_BOTTOM_SHEET_DATA, MatBottomSheetRef } from '@angular/material/bottom-sheet';
 import { takeUntilDestroyed, toSignal } from '@angular/core/rxjs-interop';
-import { debounceTime, distinctUntilChanged, map, startWith } from 'rxjs';
+import { debounceTime, distinctUntilChanged, forkJoin, map, startWith } from 'rxjs';
 import { ButtonComponent } from '../button/button.component';
 import { IconComponent } from '../icon/icon.component';
 import { InputComponent } from '../input/input.component';
@@ -18,11 +18,11 @@ import {
   HairType,
   Inventory,
   Lote,
-  LoteProduct,
   LoteStatus,
   HAIR_TYPE_OPTIONS,
   HAIR_LENGTH_OPTIONS,
   CreateProductDto,
+  CreateProductApiDto,
 } from '../../../features/products/products.data';
 import { InventoryService } from '../../../core/services/inventory.service';
 import { environment } from '../../../../environments/environment';
@@ -215,6 +215,9 @@ export class InventoryDrawerComponent {
   protected readonly invSuccess = signal(false);
   protected readonly markingComplete = signal(false);
   protected readonly completedNow = signal(false);
+  protected readonly step = signal<1 | 2>(1);
+  protected readonly createdLoteId = signal<number | null>(null);
+  protected readonly creatingLote = signal(false);
 
   // ── Computed ─────────────────────────────────────────────────────
 
@@ -328,12 +331,16 @@ export class InventoryDrawerComponent {
     };
   });
 
+  protected readonly canCreateLote = computed(() =>
+    !this.isEditMode && this.step() === 1 && !!this.loteSelectedPO()
+  );
+
   protected readonly canSubmitLote = computed(() => {
     if (this.isReadOnly) return false;
     const products = this.productsValue();
     if (products.length === 0) return false;
     if (this.formStatus() !== 'VALID') return false;
-    if (!this.isEditMode && !this.loteSelectedPO()) return false;
+    if (!this.isEditMode && this.step() !== 2) return false;
     return true;
   });
 
@@ -567,6 +574,20 @@ export class InventoryDrawerComponent {
 
   // ── Submit ───────────────────────────────────────────────────────
 
+  protected createLoteStep1(): void {
+    const po = this.loteSelectedPO();
+    if (!po) return;
+    this.creatingLote.set(true);
+    this.inventoryService.create({ purchaseOrderId: po.id }).subscribe({
+      next: (lote) => {
+        this.createdLoteId.set(lote.id);
+        this.creatingLote.set(false);
+        this.step.set(2);
+      },
+      error: () => this.creatingLote.set(false),
+    });
+  }
+
   protected markAsCompleted(): void {
     if (!this.editInventory) return;
     this.markingComplete.set(true);
@@ -613,34 +634,24 @@ export class InventoryDrawerComponent {
       return;
     }
 
-    const po = this.loteSelectedPO()!;
-    const loteProducts: LoteProduct[] = rawProducts.map(p => ({
-      id:     p.id,
-      name:   p.name.trim(),
-      type:   p.type,
-      color:  p.color,
-      weight: Number(p.weight),
-      length: Number(p.length),
-      price:  Number(p.price),
-      images: (this.productImages().get(p.id) ?? []).map(img => img.dataUrl),
-    }));
+    const loteId = this.createdLoteId()!;
+    const requests = rawProducts.map(p =>
+      this.inventoryService.createProduct({
+        loteId,
+        type:   p.type,
+        color:  p.color,
+        price:  Number(p.price),
+        length: Number(p.length),
+        weight: Number(p.weight),
+        images: (this.productImages().get(p.id) ?? []).map(img => img.dataUrl),
+      } satisfies CreateProductApiDto)
+    );
 
-    const result: Lote = {
-      purchaseOrderNumber: po.oc,
-      registeredBy:        'Usuario Actual',
-      registeredAt:        new Date().toISOString(),
-      supplierId:          po.supplier.id,
-      supplierName:        po.supplier.fullName || po.supplier.businessName || '',
-      products:            loteProducts,
-    };
-
-    this.inventoryService.create(
-      { purchaseOrderId: po.id, products }
-    ).subscribe({
+    forkJoin(requests).subscribe({
       next: () => {
         this.invSubmitting.set(false);
         this.invSuccess.set(true);
-        setTimeout(() => this.sheetRef.dismiss(result), 1200);
+        setTimeout(() => this.sheetRef.dismiss(null), 1200);
       },
       error: () => { this.invSubmitting.set(false); },
     });

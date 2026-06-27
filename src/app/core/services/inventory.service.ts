@@ -1,8 +1,9 @@
 import { HttpClient, HttpParams } from "@angular/common/http";
 import { inject, Injectable } from "@angular/core";
-import { Lote, CreateProductDto, Inventory, FindAllLoteQuery, CreateLoteDto, LoteStatus } from '../../features/products/products.data';
+import { Lote, CreateProductDto, CreateProductApiDto, Inventory, FindAllLoteQuery, CreateLoteDto, LoteStatus } from '../../features/products/products.data';
 import { environment } from "../../../environments/environment";
 import { PaginatedResponse } from '../models/pagination.model';
+import { Observable } from "rxjs";
 
 @Injectable({
     providedIn: 'root'
@@ -11,8 +12,12 @@ export class InventoryService {
 
     private readonly http = inject(HttpClient);
 
-    create(loteDto: CreateLoteDto) {
-        return this.http.post(environment.endpoints.lote, loteDto);
+    create(loteDto: CreateLoteDto): Observable<Inventory> {
+        return this.http.post<Inventory>(environment.endpoints.lote, loteDto);
+    }
+
+    createProduct(dto: CreateProductApiDto): Observable<unknown> {
+        return this.http.post(environment.endpoints.product, dto);
     }
 
     getAll(query: FindAllLoteQuery = {}) {

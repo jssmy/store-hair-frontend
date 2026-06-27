@@ -23,11 +23,12 @@ export interface PurchaseOrder {
   };
   supplier: Supplier;
   details: PurchaseOrderDetail[];
-  exchangeRate?: number;
-  exchangeCurrency?: string;
-  tc_usd?: number;
-  tc_converted_currency?: string;
-  tc_converted_value?: number;
+  tc_cop_usd?: number;
+  purchase_currency?: string;
+  tc_cop_purchase_currency?: number;
+  total_cop?: number;
+  usd_total?: number;
+  purchase_total?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -43,17 +44,17 @@ export interface CreatePurchaseOrderDetailDto {
 export interface CreatePurchaseOrderDto {
   supplierId: number;
   details: CreatePurchaseOrderDetailDto[];
-  tc_usd?: number;
-  tc_converted_currency?: string;
-  tc_converted_value?: number;
+  tc_cop_usd?: number;
+  purchase_currency?: string;
+  tc_cop_purchase_currency?: number;
 }
 
 export interface UpdatePurchaseOrderDto {
   supplierId?: number;
   details?: CreatePurchaseOrderDetailDto[];
-  tc_usd?: number;
-  tc_converted_currency?: string;
-  tc_converted_value?: number;
+  tc_cop_usd?: number;
+  purchase_currency?: string;
+  tc_cop_purchase_currency?: number;
 }
 
 export interface PurchaseOrderQueryParams {

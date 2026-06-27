@@ -101,7 +101,8 @@
                                 <span>Tipo</span>
                                 <span>Largo</span>
                                 <span>Gramos</span>
-                                <span>COP/g</span>
+                                <span>{{ order.purchase_currency || 'COP' }}/g</span>
+                                <span class="po-details-head__total">Total</span>
                             </div>
 
                             <!-- Filas de detalle -->
@@ -116,7 +117,8 @@
                                 <span>{{ hairTypeLabel(d.type) }}</span>
                                 <span>{{ d.length }}</span>
                                 <span>{{ d.weight }} g</span>
-                                <span class="po-detail-row__price"> {{ d.price }}</span>
+                                <span class="po-detail-row__price">{{ d.price }}</span>
+                                <span class="po-detail-row__total">{{ (d.price * d.weight).toFixed(2) }}</span>
                             </div>
                             }
 
@@ -126,14 +128,25 @@
                                     <i stp-icon name="pencil-simple" class="icon--xs"></i>
                                     Modificado {{ formatDate(order.updatedAt) }}
                                 </span>
-                                <span class="po-details-foot__total">
-                                    Total:
-                                    <strong>COP {{ totalPrice(order).toFixed(0) }}</strong>
-                                    @if (totalPriceUSD(order) !== null) {
-                                    · <span class="po-details-foot__usd">$ {{ totalPriceUSD(order)!.toFixed(2) }} USD</span>
+                                <div class="po-foot-metrics">
+                                    <span class="po-foot-metric">
+                                        <i stp-icon name="scales" class="icon--xs"></i>
+                                        {{ totalWeight(order) }} g
+                                    </span>
+                                    <span class="po-foot-metric po-foot-metric--primary">
+                                        {{ order.purchase_currency || 'COP' }} {{ totalPrice(order).toFixed(2) }}
+                                    </span>
+                                    @if (totalPriceCOP(order) !== null) {
+                                    <span class="po-foot-metric">
+                                        COP {{ totalPriceCOP(order)!.toFixed(0) }}
+                                    </span>
                                     }
-                                    · {{ totalWeight(order) }} g
-                                </span>
+                                    @if (totalPriceUSD(order) !== null) {
+                                    <span class="po-foot-metric po-foot-metric--usd">
+                                        $ {{ totalPriceUSD(order)!.toFixed(2) }} USD
+                                    </span>
+                                    }
+                                </div>
                                 @if (order.status === 'pending') {
                                 <stp-button class="po-details-foot__edit"
                                     [variant]="order.status === 'pending' ? 'primary' : 'surface'" btnStyle="ghost"

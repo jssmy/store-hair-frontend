@@ -9,7 +9,7 @@
             <p class="inv-drawer__eyebrow">Lote</p>
             <h2 class="inv-drawer__title">{{ editInventory.lt }}</h2>
             } @else {
-            <h2 class="inv-drawer__title">Registrar lote</h2>
+            <h2 class="inv-drawer__title">{{ step() === 1 ? 'Nueva lote' : 'Agregar productos' }}</h2>
             }
         </div>
         <button class="inv-drawer__close" type="button" aria-label="Cerrar" (click)="close()">
@@ -51,10 +51,32 @@
     </div>
     } @else {
 
+    <!-- ── Indicador de pasos (solo creación) ── -->
+    @if (!isEditMode) {
+    <div class="inv-steps">
+        <div class="inv-step" [class.inv-step--active]="step() === 1" [class.inv-step--done]="step() === 2">
+            <span class="inv-step__dot">
+                @if (step() === 2) {
+                <i stp-icon name="check" class="icon--xs"></i>
+                } @else {
+                1
+                }
+            </span>
+            <span class="inv-step__label">Orden de compra</span>
+        </div>
+        <span class="inv-steps__connector"></span>
+        <div class="inv-step" [class.inv-step--active]="step() === 2">
+            <span class="inv-step__dot">2</span>
+            <span class="inv-step__label">Productos</span>
+        </div>
+    </div>
+    }
+
     <!-- ── Cuerpo ── -->
     <div class="inv-drawer__body" [formGroup]="form">
 
         <!-- ── Sección: Orden de compra ── -->
+        @if (isEditMode || step() === 1) {
         <div class="inv-section">
             <div class="inv-section__label">
                 <i stp-icon name="receipt" class="icon--sm"></i>
@@ -153,8 +175,23 @@
             }
             }
         </div>
+        }
+
+        <!-- ── Sección: OC vinculada (solo paso 2 de creación) ── -->
+        @if (!isEditMode && step() === 2 && loteSelectedPO()) {
+        <div class="inv-po-step2">
+            <span class="icon-badge icon-badge--primary icon-badge--sm">
+                <i stp-icon name="receipt" class="icon--xs"></i>
+            </span>
+            <span class="inv-po-step2__oc">{{ loteSelectedPO()!.oc }}</span>
+            <span class="text-xs text-secondary">
+                {{ loteSelectedPO()!.supplier.fullName || loteSelectedPO()!.supplier.businessName }}
+            </span>
+        </div>
+        }
 
         <!-- ── Sección: Productos del lote ── -->
+        @if (isEditMode || step() === 2) {
         <div class="inv-section inv-section--products" formArrayName="products">
             <div class="inv-section__header">
                 <div class="inv-section__label">
@@ -392,6 +429,7 @@
             </div>
         </div>
         }
+        }
 
     </div><!-- /body -->
 
@@ -400,7 +438,14 @@
         <stp-button variant="surface" btnStyle="outlined" size="md" (click)="close()">
             {{ isEditMode ? 'Cerrar' : 'Cancelar' }}
         </stp-button>
-        @if (!isReadOnly) {
+        @if (!isEditMode && step() === 1) {
+        <stp-button variant="primary" btnStyle="solid" size="md"
+            [disabled]="!canCreateLote()" [loading]="creatingLote()"
+            (click)="createLoteStep1()">
+            Crear lote
+        </stp-button>
+        }
+        @if (!isReadOnly && (isEditMode || step() === 2)) {
         <stp-button variant="primary" btnStyle="solid" size="md" [disabled]="!canSubmitLote()"
             [loading]="invSubmitting()" (click)="submitLote()">
             {{ isEditMode ? 'Guardar cambios' : 'Confirmar lote' }}

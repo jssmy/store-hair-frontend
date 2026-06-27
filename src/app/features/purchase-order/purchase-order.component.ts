@@ -238,10 +238,16 @@ export class PurchaseOrderComponent implements AfterViewInit, OnDestroy {
     return order.details.reduce((s, d) => s + (Number(d.price) * Number(d.weight)), 0);
   }
 
-  protected totalPriceUSD(order: PurchaseOrder): number | null {
-    const rate = order.tc_usd ?? order.exchangeRate;
+  protected totalPriceCOP(order: PurchaseOrder): number | null {
+    const rate = order.tc_cop_purchase_currency;
     if (!rate) return null;
-    return this.totalPrice(order) / rate;
+    return this.totalPrice(order) * rate;
+  }
+
+  protected totalPriceUSD(order: PurchaseOrder): number | null {
+    const rate = order.tc_cop_usd;
+    if (!rate) return null;
+    return (this.totalPriceCOP(order) ?? 0) / rate;
   }
 
   protected statusFilterLabel(s: PurchaseOrderStatus | 'todos'): string {

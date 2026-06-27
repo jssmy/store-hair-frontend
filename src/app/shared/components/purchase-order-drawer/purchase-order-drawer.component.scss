@@ -821,47 +821,43 @@
 /* ── Totals bar ───────────────────────────────────────────── */
 
 .po-totals {
-  display: flex;
-  align-items: center;
-  gap: 0;
   border: 1.5px solid var(--color-border);
   border-radius: var(--radius-md);
   overflow: hidden;
 
-  &__item {
-    flex: 1;
+  &__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    padding: 0.5rem 0.875rem;
+    border-bottom: 1px solid var(--color-border);
+    background: var(--color-surface);
+
+    &:last-child { border-bottom: none; }
+
+    &--primary {
+      background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
+    }
+  }
+
+  &__label {
     display: flex;
     align-items: center;
     gap: 0.375rem;
-    padding: 0.625rem 0.875rem;
-    font-size: var(--text-sm);
-    font-weight: var(--font-semibold);
-    color: var(--color-text-secondary);
-    background: var(--color-surface);
-
-    span:first-of-type {
-      color: var(--color-text-primary);
-      font-weight: var(--font-bold);
-    }
-
-    &--price {
-      background: color-mix(in srgb, var(--color-primary) 6%, var(--color-surface));
-      color: var(--color-primary);
-
-      span:first-of-type { color: var(--color-primary); }
-    }
-  }
-
-  &__sub {
     font-size: var(--text-xs);
-    font-weight: var(--font-regular);
-    color: var(--color-text-disabled);
+    font-weight: var(--font-medium);
+    color: var(--color-text-secondary);
+    flex-shrink: 0;
   }
 
-  &__divider {
-    width: 1px;
-    align-self: stretch;
-    background: var(--color-border);
-    flex-shrink: 0;
+  &__val {
+    font-size: var(--text-sm);
+    font-weight: var(--font-bold);
+    color: var(--color-text-primary);
+    white-space: nowrap;
+    text-align: right;
+
+    .po-totals__row--primary & { color: var(--color-primary); }
   }
 }

@@ -140,10 +140,18 @@ export interface CreateProductDto {
     images: string[];
 }
 
+export interface CreateProductApiDto {
+  loteId: number;
+  type: string;
+  color: string;
+  price: number;
+  length: number;
+  weight: number;
+  images: string[];
+}
 
 export interface CreateLoteDto {
   purchaseOrderId: number;
-  products: CreateProductDto[];
 }
 
 export interface Lote {
